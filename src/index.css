@@ -1,6 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;800&family=Bevan&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.bevan-regular {
+  font-family: "Bevan", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abhaya-libre-regular {
+  font-family: "Abhaya Libre", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.abhaya-libre-extrabold {
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
+  font-style: normal;
+}
 
 *,
 *::before,
