@@ -30,11 +30,11 @@ export default function Login() {
         </span>
       </div>
       <form
-        className="flex flex-col space-y-5 w-full max-w-sm"
+        className="flex flex-col space-y-5 w-full max-w-sm text-left"
         onSubmit={handleSubmit}
       >
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Email</p>
+          <p className="abhaya-libre-regular text-xl mb-0">Email</p>
           <input
             type="text"
             className="p-2 border-2 rounded-lg border-black"
@@ -42,7 +42,7 @@ export default function Login() {
           />
         </span>
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Password</p>
+          <p className="abhaya-libre-regular text-xl mb-0">Password</p>
           <input
             type="password"
             className="p-2 border-2 rounded-lg border-black"
