@@ -52,7 +52,7 @@ export default function ProfileSetup() {
           placeholder="Tell us about yourself..."
           value={biography}
           onChange={(e) => setBiography(e.target.value)}
-          className="p-4 border-2 rounded-lg border-black w-full h-48 mt-2 text-left"
+          className="abhaya-libre-regular p-4 border-2 rounded-lg border-black w-full h-48 mt-2 text-left"
         />
       </div>
 
@@ -60,7 +60,7 @@ export default function ProfileSetup() {
       <button
         onClick={() => navigate("/onboarding/dietary")}
         disabled={!isFormComplete}
-        className={`p-2 rounded-xl text-lg w-96 ${isFormComplete
+        className={`abhaya-libre-regular p-2 rounded-xl text-lg w-96 ${isFormComplete
           ? "bg-[#D75600] text-white hover:opacity-90 transition"
           : "bg-[#D9D9D9] cursor-not-allowed text-[#7A7A7A]"
         }`}
@@ -71,7 +71,7 @@ export default function ProfileSetup() {
       {/* Skip For Now Button */}
       <button
         onClick={() => navigate("/onboarding/dietary")}
-        className="text-[#7A7A7A]"
+        className="abhaya-libre-regular text-[#7A7A7A]"
       >
         Skip for now
       </button>
