@@ -30,7 +30,7 @@ export default function ProfileSetup() {
       {/* Profile Picture*/}
       <label htmlFor="profilePicInput" className="relative">
         <div
-          className="w-64 h-64 rounded-full bg-[#D9D9D9] flex justify-center items-center"
+          className="w-[300px] h-[300px] rounded-full bg-[#D9D9D9] flex justify-center items-center"
           style={{ backgroundImage: `url(${profilePic})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         >
           {!profilePic && (
@@ -46,7 +46,7 @@ export default function ProfileSetup() {
       </label>
 
       {/* Biography Input */}
-      <div className="mt-6 w-96">
+      <div className="mt-6 w-[600px]">
         <span className="abhaya-libre-regular text-lg text-left block">Biography</span>
         <textarea
           placeholder="Tell us about yourself..."
@@ -60,8 +60,8 @@ export default function ProfileSetup() {
       <button
         onClick={() => navigate("/onboarding/dietary")}
         disabled={!isFormComplete}
-        className={`abhaya-libre-regular p-2 rounded-xl text-lg w-96 ${isFormComplete
-          ? "bg-[#D75600] text-white hover:opacity-90 transition"
+        className={`abhaya-libre-extrabold p-2 rounded-xl text-lg w-96 ${isFormComplete
+          ? "bg-[#D75600] text-white hover:opacity-80 transition"
           : "bg-[#D9D9D9] cursor-not-allowed text-[#7A7A7A]"
         }`}
       >
@@ -71,7 +71,7 @@ export default function ProfileSetup() {
       {/* Skip For Now Button */}
       <button
         onClick={() => navigate("/onboarding/dietary")}
-        className="abhaya-libre-regular text-[#7A7A7A]"
+        className="abhaya-libre-extrabold text-[#7A7A7A]"
       >
         Skip for now
       </button>
