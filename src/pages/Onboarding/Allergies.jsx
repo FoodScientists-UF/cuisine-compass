@@ -35,11 +35,11 @@ export default function Allergies() {
             <span className="abhaya-libre-extrabold text-3xl">Allergies</span>
             <span className="abhaya-libre-regular text-lg">Select your allergies</span>
 
-         <button 
+         {/* <button 
             onClick={() => navigate("/onboarding/dietary")} 
             className="absolute top-26 left-8 px-3 py-1 border abhaya-libre-regular border-gray-400 rounded-lg text-black text-sm hover:bg-gray-100 transition">
             Back
-         </button>
+         </button> */}
             {/* Predefined Allergies */}
             <div className="flex flex-col gap-y-2 w-[400px]">
                 {allergies.map((allergy) => (

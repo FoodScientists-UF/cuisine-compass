@@ -32,7 +32,6 @@ export default function DietaryPreferences() {
             <span className="abhaya-libre-regular text-lg">
                 Select your dietary preferences
             </span>
-
             
             {preferences.map((preference) => (
                 <button
