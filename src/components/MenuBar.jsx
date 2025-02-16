@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Menu, Input, Button, Image, Container } from "semantic-ui-react";
-import logo from "../layouts/images/CuisineCompassLogo.png";
-import title from "../layouts/images/CuisineCompass.png";
+// import logo from "../assets/images/CuisineCompassLogo.png";
+// import title from "../assets/images/CuisineCompass.png";
 
 class MenuBar extends Component {
   state = { activeItem: "Explore" };
@@ -20,10 +20,10 @@ class MenuBar extends Component {
         {/* First Row: Logo, Title, Search Bar, Profile Button */}
         <Menu secondary>
           <Menu.Item>
-            <Image src={logo} size="tiny" />
+          <Image src="/images/CuisineCompassLogo.png" />
           </Menu.Item>
           <Menu.Item>
-            <Image src={title} size="medium" />
+          <Image src="/images/CuisineCompass.png" />
           </Menu.Item>
           <Menu.Item style={{ flexGrow: 1 }}>
             <Input
@@ -36,7 +36,7 @@ class MenuBar extends Component {
             <Button
               circular
               icon="user"
-              onClick={() => (window.location.href = "/user")}
+              onClick={() => (window.location.href = "/login")}
             ></Button>
           </Menu.Item>
         </Menu>

@@ -1,16 +1,16 @@
-import CuisineCompass from "./layouts/CuisineCompass";
-import PageWrapper from "./components/PageWrapper";
+import CuisineCompass from "./pages/Explore Page/CuisineCompass.jsx";
+// import PageWrapper from "./components/PageWrapper";
 import "semantic-ui-css/semantic.min.css";
 import "./App.css";
-import MenuBar from "./layouts/MenuBar";
+import MenuBar from "./components/MenuBar"; 
 
 function App() {
   return (
     <>
-      <PageWrapper>
+      {/* <PageWrapper> */}
         <MenuBar />
         <CuisineCompass />
-      </PageWrapper>
+      {/* </PageWrapper> */}
     </>
   );
 }
