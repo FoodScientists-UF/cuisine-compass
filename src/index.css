@@ -16,11 +16,18 @@
   font-style: normal;
 }
 
+.abhaya-libre-medium {
+  font-family: "Abhaya Libre", serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
 .abhaya-libre-extrabold {
   font-family: "Abhaya Libre", serif;
   font-weight: 800;
   font-style: normal;
 }
+
 
 *,
 *::before,
