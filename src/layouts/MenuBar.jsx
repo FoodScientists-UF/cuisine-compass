@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
 import { Menu, Input, Button, Image, Container } from "semantic-ui-react";
 import logo from "../layouts/images/CuisineCompassLogo.png";
 import title from "../layouts/images/CuisineCompass.png";
@@ -6,7 +7,9 @@ import title from "../layouts/images/CuisineCompass.png";
 class MenuBar extends Component {
   state = { activeItem: "Explore" };
 
-  handleItemClick = (e, { name }) => this.setState({ activeItem: name });
+  handleItemClick = (e, { name }) => {
+    this.setState({ activeItem: name })
+  };
 
   render() {
     const { color } = this.props;
@@ -44,18 +47,24 @@ class MenuBar extends Component {
         {/* Second Row: Navigation Menu */}
         <Menu pointing secondary>
           <Menu.Item
+            as={Link}
+            to="/explore"
             name="Explore"
             active={activeItem === "Explore"}
             onClick={this.handleItemClick}
             color={activeItem === "Explore" ? "orange" : "black"}
           />
           <Menu.Item
+            as={Link}
+            to="/following"
             name="Following"
             active={activeItem === "Following"}
             onClick={this.handleItemClick}
             color={activeItem === "Following" ? "orange" : "black"}
           />
           <Menu.Item
+            as={Link}
+            to="/about"
             name="About"
             active={activeItem === "About"}
             onClick={this.handleItemClick}

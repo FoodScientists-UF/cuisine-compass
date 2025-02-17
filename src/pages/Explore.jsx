@@ -1,13 +1,12 @@
 import React from "react";
 import { Container, Card, Image } from "semantic-ui-react";
 import "semantic-ui-css/semantic.min.css";
-import MenuBar from "./MenuBar";
-import img1 from "./images/Img1.jpg";
-import img2 from "./images/Img2.jpg";
-import img3 from "./images/Img3.jpg";
-import img4 from "./images/Img4.jpg";
-import img5 from "./images/Img5.jpg";
-import "./CuisineCompass.css"; // Import external CSS for better layout control
+import img1 from "../layouts/images/Img1.jpg";
+import img2 from "../layouts/images/Img2.jpg";
+import img3 from "../layouts/images/Img3.jpg";
+import img4 from "../layouts/images/Img4.jpg";
+import img5 from "../layouts/images/Img5.jpg";
+import "./Explore.css"; // Import external CSS for better layout control
 
 const recipes = [
   { id: 1, title: "Spaghetti Carbonara", image: img1 },
@@ -17,7 +16,7 @@ const recipes = [
   { id: 5, title: "Smoothie Bowl", image: img5 },
 ];
 
-const CuisineCompass = () => {
+const ExplorePage = () => {
   return (
     <Container>
       <div className="pinterest-grid">
@@ -34,4 +33,4 @@ const CuisineCompass = () => {
   );
 };
 
-export default CuisineCompass;
+export default ExplorePage;
