@@ -31,31 +31,72 @@ export default function Signup() {
         className="flex flex-col space-y-5 w-full max-w-sm"
         onSubmit={handleSubmit}
       >
+
+        {/* First Name and Last Name Inputs */}
+        <div className="flex space-x-4">
+          <span className="flex flex-col space-y-0.5 w-1/2">
+            <p className="abhaya-libre-regular text-xl">First Name</p>
+            <input
+              type="text"
+              placeholder="Johnny"
+              className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+              required
+            />
+          </span>
+
+          <span className="flex flex-col space-y-0.5 w-1/2">
+            <p className="abhaya-libre-regular text-xl">Last Name</p>
+            <input
+              type="text"
+              placeholder="Appleseed"
+              className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+              required
+            />
+          </span>
+        </div>
+
+        {/* Email Input */}
         <span className="flex flex-col space-y-0.5">
           <p className="abhaya-libre-regular text-xl">Email</p>
           <input
             type="text"
-            className="p-2 border-2 rounded-lg border-black"
+            placeholder="johnnyapple@gmail.com"
+            className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             required
           />
         </span>
+
+        {/* Username Input */}
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Password</p>
+          <p className="abhaya-libre-regular text-xl">Create Username</p>
+          <input
+            type="text"
+            placeholder="johnnyappleseed234"
+            className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+            required
+          />
+        </span>
+
+        {/* Password Input */}
+        <span className="flex flex-col space-y-0.5">
+          <p className="abhaya-libre-regular text-xl">Create Password</p>
           <input
             type="password"
-            className="p-2 border-2 rounded-lg border-black"
+            placeholder="Appleseed0!"
+            className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             required
           />
         </span>
+
         <button
           type="submit"
           className="p-2 rounded-xl bg-[#D75600] text-white abhaya-libre-extrabold text-lg hover:opacity-80 transition"
         >
-          Sign Up
+          Create Account
         </button>
-        <span className="flex flex-row gap-x-1 justify-center">
+        <span className="abhaya-libre-regular flex flex-row gap-x-1 justify-center">
           Already have an account?
-          <a className="text-blue-500 underline" href="/login">
+          <a className="abhaya-libre-regular text-blue-500 underline" href="/login">
             Log In!
           </a>
         </span>
