@@ -7,6 +7,8 @@ export default function Onboarding() {
   {/* Find where to go when hitting back button*/}
   const getBackPath = () => {
     switch (location.pathname) {
+      case "/onboarding":
+        return "/signup";
       case "/onboarding/dietary":
         return "/onboarding";
       case "/onboarding/allergies":

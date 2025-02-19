@@ -35,7 +35,7 @@ export default function Signup() {
         {/* First Name and Last Name Inputs */}
         <div className="flex space-x-4">
           <span className="flex flex-col space-y-0.5 w-1/2">
-            <p className="abhaya-libre-regular text-xl">First Name</p>
+            <p className="abhaya-libre-regular text-xl mb-0">First Name</p>
             <input
               type="text"
               placeholder="Johnny"
@@ -45,7 +45,7 @@ export default function Signup() {
           </span>
 
           <span className="flex flex-col space-y-0.5 w-1/2">
-            <p className="abhaya-libre-regular text-xl">Last Name</p>
+            <p className="abhaya-libre-regular text-xl mb-0">Last Name</p>
             <input
               type="text"
               placeholder="Appleseed"
@@ -57,7 +57,7 @@ export default function Signup() {
 
         {/* Email Input */}
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Email</p>
+          <p className="abhaya-libre-regular text-xl mb-0">Email</p>
           <input
             type="text"
             placeholder="johnnyapple@gmail.com"
@@ -68,7 +68,7 @@ export default function Signup() {
 
         {/* Username Input */}
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Create Username</p>
+          <p className="abhaya-libre-regular text-xl mb-0">Create Username</p>
           <input
             type="text"
             placeholder="johnnyappleseed234"
@@ -79,7 +79,7 @@ export default function Signup() {
 
         {/* Password Input */}
         <span className="flex flex-col space-y-0.5">
-          <p className="abhaya-libre-regular text-xl">Create Password</p>
+          <p className="abhaya-libre-regular text-xl mb-0">Create Password</p>
           <input
             type="password"
             placeholder="Appleseed0!"
