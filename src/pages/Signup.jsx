@@ -4,10 +4,46 @@ import { useState } from "react";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Handle password change
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
+  // Handle confirm password change
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
+  
+  // Validate password through regex
+  const validatePassword = (password) => {
+    return {
+      length: password.length >= 8,
+      lowercase: /[a-z]/.test(password),
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+  };
+
+  // Check password requirements
+  const passwordChecks = validatePassword(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = e.target[0].value;
+
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setPasswordError(""); // Clear error if passwords match
+
     const password = e.target[1].value;
 
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -87,27 +123,37 @@ export default function Signup() {
             type="password"
             placeholder="Appleseed0!"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+            onChange={handlePasswordChange}
             required
           />
         </span>
 
-        <ul className="list-disc list-inside abhaya-libre-regular text-[#767575]" style={{ lineHeight: "1.2" }}>
-          <li>At least 8 characters</li>
-          <li>1 lowercase</li>
-          <li>1 uppercase</li>
-          <li>1 number</li>
-          <li>1 special character</li>
+        {/* Password Requirements */}
+        <ul className="list-none abhaya-libre-regular text-[#767575]" style={{ lineHeight: "1.2" }}>
+          {[
+            { text: "At least 8 characters", check: passwordChecks.length },
+            { text: "1 lowercase", check: passwordChecks.lowercase },
+            { text: "1 uppercase", check: passwordChecks.uppercase },
+            { text: "1 number", check: passwordChecks.number },
+            { text: "1 special character", check: passwordChecks.special },
+          ].map((req, index) => (
+            <li key={index} className="flex items-center gap-2">
+              {req.check ? "✔" : "•"}
+              {req.text}
+            </li>
+          ))}
         </ul>
 
-        {/* Confirm Password Input */}
         <span className="flex flex-col space-y-0.5">
           <p className="abhaya-libre-regular text-xl mb-0">Confirm Password</p>
           <input
             type="password"
             placeholder="Appleseed0!"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+            onChange={handleConfirmPasswordChange}
             required
           />
+          {passwordError && <p className="text-red-500">{passwordError}</p>}
         </span>
         
         <button
