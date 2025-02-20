@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ export default function Signup() {
   };
 
   return (
-    <div className="h-screen flex justify-center items-center flex-col gap-y-10">
+    <div className="min-h-screen flex justify-center items-center flex-col gap-y-10 py-20">
+
+      {/* Logo and Title */}
       <img src="/logo.png" alt="Logo" className="w-32 h-32" />
       <div className="flex justify-center flex-col items-center gap-y-3 text-[#D75600]">
         <h1 className="text-5xl bevan-regular">Cuisine Compass</h1>
@@ -88,6 +91,25 @@ export default function Signup() {
           />
         </span>
 
+        <ul className="list-disc list-inside abhaya-libre-regular text-[#767575]" style={{ lineHeight: "1.2" }}>
+          <li>At least 8 characters</li>
+          <li>1 lowercase</li>
+          <li>1 uppercase</li>
+          <li>1 number</li>
+          <li>1 special character</li>
+        </ul>
+
+        {/* Confirm Password Input */}
+        <span className="flex flex-col space-y-0.5">
+          <p className="abhaya-libre-regular text-xl mb-0">Confirm Password</p>
+          <input
+            type="password"
+            placeholder="Appleseed0!"
+            className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
+            required
+          />
+        </span>
+        
         <button
           type="submit"
           className="p-2 rounded-xl bg-[#D75600] text-white abhaya-libre-extrabold text-lg hover:opacity-80 transition"
