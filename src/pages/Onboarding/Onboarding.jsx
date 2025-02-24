@@ -7,6 +7,8 @@ export default function Onboarding() {
   {/* Find where to go when hitting back button*/}
   const getBackPath = () => {
     switch (location.pathname) {
+      case "/onboarding":
+        return "/signup";
       case "/onboarding/dietary":
         return "/onboarding";
       case "/onboarding/allergies":
@@ -37,9 +39,14 @@ export default function Onboarding() {
       {/* Back button */}
       <button
         onClick={() => navigate(getBackPath())}
-        className="absolute top-26 left-8 px-3 py-1 border abhaya-libre-regular border-gray-400 rounded-lg text-black text-sm hover:bg-gray-100 transition mt-16">
-        Back
+        className="absolute top-26 left-8 mt-16">
+        <img 
+          src="/back_arrow.png" 
+          alt="Back" 
+          className="w-10 h-10 hover:opacity-60 transition"
+        />
       </button>
+
 
       {/* Main content centered */}
       <div className="flex justify-center items-center flex-1">

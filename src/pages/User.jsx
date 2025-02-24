@@ -1,8 +1,10 @@
 import { supabase } from "../supabaseClient";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; 
 
 export default function User() {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getUser = async () => {
@@ -10,6 +12,9 @@ export default function User() {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+      if (!user) {
+        navigate("/login");
+      }
     };
     getUser();
   }, []);
