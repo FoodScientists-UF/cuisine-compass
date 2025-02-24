@@ -6,7 +6,7 @@ import img2 from "../layouts/images/Img2.jpg";
 import img3 from "../layouts/images/Img3.jpg";
 import img4 from "../layouts/images/Img4.jpg";
 import img5 from "../layouts/images/Img5.jpg";
-import "./Explore.css"; // Import external CSS for better layout control
+import "./Explore.css";
 
 const recipes = [
   { id: 1, title: "Spaghetti Carbonara", image: img1 },
