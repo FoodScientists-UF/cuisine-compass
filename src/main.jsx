@@ -16,6 +16,7 @@ import FindFriends from "./pages/Onboarding/FindFriends.jsx";
 import User from "./pages/User.jsx";
 import PageWrapper from "./components/PageWrapper";
 import MenuBar from "./layouts/MenuBar";
+import ViewRecipe from "./pages/ViewRecipe.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="explore" element={<Explore />} />
           <Route path="following" element={<Following />} />
           <Route path="about" element={<About />} />
+          <Route path="recipe" element={<ViewRecipe />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
