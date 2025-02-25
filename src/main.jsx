@@ -36,7 +36,6 @@ createRoot(document.getElementById("root")).render(
             <Route path="explore" element={<Explore />} />
             <Route path="following" element={<Following />} />
             <Route path="about" element={<About />} />
-            <Route path="recipe" element={<ViewRecipe />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
