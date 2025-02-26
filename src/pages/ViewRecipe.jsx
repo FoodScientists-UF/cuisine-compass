@@ -11,12 +11,12 @@ export default function ViewRecipe() {
   const [recipeTitle, setRecipeTitle] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState("");
-  
+
   useEffect(() => {
     async function fetchRecipe() {
       const { data, error } = await supabase
         .from("Recipes")
-        .select("title", "description", "cook_time")
+        .select("title, description, cook_time")
         .eq("id", id)
         .single();
 
@@ -65,7 +65,7 @@ export default function ViewRecipe() {
 
           {/* Recipe Description */}
           <p className="text-3xl abhaya-libre-regular text-black-600 mt-8">
-          {description || "No description available"}
+            {description || "No description available"}
           </p>
 
           {/* Cooking Details */}
