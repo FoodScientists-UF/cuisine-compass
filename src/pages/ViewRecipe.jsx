@@ -9,14 +9,18 @@ export default function ViewRecipe() {
   const sizes = ["1X", "2X", "3X"];
 
   const [recipeTitle, setRecipeTitle] = useState("");
+  const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState("");
+  const [prepTime, setPrepTime] = useState("");
+  const [servingSize, setServingSize] = useState("");
+  const [ingredients, setIngredients] = useState([]);
 
   useEffect(() => {
     async function fetchRecipe() {
       const { data, error } = await supabase
         .from("Recipes")
-        .select("title, description, cook_time")
+        .select("title, user_id, description, cook_time, prep_time, serving_size")
         .eq("id", id)
         .single();
 
@@ -27,6 +31,35 @@ export default function ViewRecipe() {
         setRecipeTitle(data.title);
         setDescription(data.description);
         setCookTime(data.cook_time);
+        setPrepTime(data.prep_time);
+        setServingSize(data.serving_size);
+
+        {/* Fetch username */}
+        const { data: profileData, error: profileError } = await supabase
+        .from("Profiles")
+        .select("username")
+        .eq("id", data.user_id)
+        .single();
+
+        if (profileError) {
+          console.error("Error fetching username:" + profileError);
+        } else {
+          setUsername(profileData.username);
+        }
+
+        {/* Fetch ingredients */}
+        const { data: ingredientsData, error: ingredientsError } = await supabase
+          .from("Ingredients")
+          .select("name, amount")
+          .eq("recipe_id", id);
+
+        if (ingredientsError) {
+          console.error("Error fetching ingredients:" + ingredientsError);
+        } else {
+          console.log("Fetched data:", ingredientsData);
+          setIngredients(ingredientsData);
+        }
+
       }
     }
 
@@ -60,7 +93,7 @@ export default function ViewRecipe() {
 
           {/* Username */}
           <p className="text-2xl abhaya-libre-semibold text-black-600">
-            @username
+            @{username}
           </p>
 
           {/* Recipe Description */}
@@ -76,7 +109,7 @@ export default function ViewRecipe() {
                 Prep Time
               </p>
               <p className="text-3xl abhaya-libre-regular text-black-600">
-                15 min
+                {prepTime} min
               </p>
             </div>
 
@@ -86,7 +119,7 @@ export default function ViewRecipe() {
                 Cook Time
               </p>
               <p className="text-3xl abhaya-libre-regular text-black-600">
-                {cookTime}
+                {cookTime} min
               </p>
             </div>
 
@@ -95,7 +128,9 @@ export default function ViewRecipe() {
               <p className="text-3xl abhaya-libre-semibold text-black-600">
                 Servings
               </p>
-              <p className="text-3xl abhaya-libre-regular text-black-600">4</p>
+              <p className="text-3xl abhaya-libre-regular text-black-600">
+                {servingSize}
+              </p>
             </div>
           </div>
         </div>
@@ -136,27 +171,11 @@ export default function ViewRecipe() {
 
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
-          <li className="text-2xl abhaya-libre-regular text-black-600 mt-8">
-            1 lb. spaghetti
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            2 large eggs
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            1 cup grated Pecorino Romano cheese
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            1 cup grated Parmesan cheese
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            Freshly ground black pepper
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            8 slices bacon
-          </li>
-          <li className="text-2xl abhaya-libre-regular text-black-600">
-            2 cloves garlic, minced
-          </li>
+          {ingredients.map((ingredient, index) => (
+            <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
+              {ingredient.amount} {ingredient.name}
+            </li>
+          ))}
         </ul>
 
         {/* Directions */}
