@@ -76,7 +76,7 @@ export default function Goals() {
 
       {/* Continue Button */}
       <button
-        onClick={handleSubmit}
+        onClick={() => navigate("/Explore")}
         className="mt-4 pb-2 p-2 rounded-xl bg-[#D75600] text-white abhaya-libre-extrabold text-lg w-96 hover:opacity-80 transition"
       >
         Continue
