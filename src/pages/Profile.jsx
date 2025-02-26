@@ -9,6 +9,10 @@ export default function Profile() {
   const [userName, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [recipeCount, setRecipeCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+
 
   useEffect(() => {
     if (!session) return;
@@ -51,8 +55,39 @@ export default function Profile() {
         setRecipeCount(count); // Store recipe count in state
       };
 
+      const fetchFollowersCount = async () => {
+        const { count, error } = await supabase
+          .from("Following") // Table that tracks follow relationships
+          .select("*", { count: "exact" })
+          .eq("following_id", userId); // Count people who follow me
+    
+        if (error) {
+          console.error("Error fetching followers count:", error.message);
+          return;
+        }
+    
+        setFollowersCount(count);
+      };
+    
+      const fetchFollowingCount = async () => {
+        const { count, error } = await supabase
+          .from("Following") // Table that tracks follow relationships
+          .select("*", { count: "exact" })
+          .eq("follower_id", userId); // Count people I follow
+    
+        if (error) {
+          console.error("Error fetching following count:", error.message);
+          return;
+        }
+    
+        setFollowingCount(count);
+      };
+    
+
     fetchRecipeCount();
     fetchUserProfile();
+    fetchFollowersCount();
+    fetchFollowingCount();
   }, [session]);
   
 
@@ -79,8 +114,11 @@ export default function Profile() {
         @{userName} 
       </h1>
       <p className="stats">
-        {recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}
-    </p>
+        <span>{recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}  </span>
+       <span> {followersCount} {followersCount === 1 ? "follower" : "followers"}  </span>
+        <span> {followingCount} following</span>
+      </p>
+
       <div className="bio"> 
         {bio}
       </div>
