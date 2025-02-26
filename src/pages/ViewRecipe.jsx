@@ -1,14 +1,39 @@
-import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
-import "./Explore.css";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
-import { useState } from "react";
+import { supabase } from "../AuthProvider";
 
 export default function ViewRecipe() {
   const { id } = useParams();
-
   const [selectedSize, setSelectedSize] = useState("1X");
-
   const sizes = ["1X", "2X", "3X"];
+
+  const [recipeTitle, setRecipeTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [cookTime, setCookTime] = useState("");
+  
+  useEffect(() => {
+    async function fetchRecipe() {
+      const { data, error } = await supabase
+        .from("Recipes")
+        .select("title", "description", "cook_time")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching recipe:" + error);
+      } else {
+        console.log("Fetched data:", data);
+        setRecipeTitle(data.title);
+        setDescription(data.description);
+        setCookTime(data.cook_time);
+      }
+    }
+
+    if (id) {
+      fetchRecipe();
+    }
+  }, [id]);
 
   return (
     <div className="min-h-screen flex flex-col p-10 space-y-8 py-20">
@@ -26,7 +51,7 @@ export default function ViewRecipe() {
           {/* Recipe Title */}
           <div className="flex items-center justify-between">
             <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
-              Spaghetti Carbonara {id}
+              {recipeTitle}
             </h1>
             <button className="bg-[#D75600] text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition">
               Save
@@ -40,14 +65,7 @@ export default function ViewRecipe() {
 
           {/* Recipe Description */}
           <p className="text-3xl abhaya-libre-regular text-black-600 mt-8">
-            Lorem ipsum odor amet, consectetuer adipiscing elit. Tristique quis
-            cubilia penatibus senectus dapibus placerat at sem. Ullamcorper
-            ullamcorper augue egestas purus duis mus efficitur rhoncus torquent.
-            Ut hac sed luctus magnis ornare inceptos cubilia. Imperdiet nascetur
-            dictumst turpis sed lobortis ullamcorper aptent. Auctor phasellus
-            ipsum elit maecenas duis convallis ex massa. Dis morbi dignissim
-            venenatis enim pharetra. Est sollicitudin vehicula mi turpis blandit
-            viverra
+          {description || "No description available"}
           </p>
 
           {/* Cooking Details */}
@@ -68,7 +86,7 @@ export default function ViewRecipe() {
                 Cook Time
               </p>
               <p className="text-3xl abhaya-libre-regular text-black-600">
-                30 min
+                {cookTime}
               </p>
             </div>
 
