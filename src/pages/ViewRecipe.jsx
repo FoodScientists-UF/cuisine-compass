@@ -50,7 +50,7 @@ export default function ViewRecipe() {
         {/* Fetch ingredients */}
         const { data: ingredientsData, error: ingredientsError } = await supabase
           .from("Ingredients")
-          .select("name, amount")
+          .select("name, unit, amount")
           .eq("recipe_id", id);
 
         if (ingredientsError) {
@@ -166,16 +166,24 @@ export default function ViewRecipe() {
         </div>
 
         <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none">
-          Original recipe (1X) yields 1 serving
+          Original recipe (1X) yields {servingSize} {servingSize > 1 ? 'servings' : 'serving'}
         </h1>
 
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
-          {ingredients.map((ingredient, index) => (
-            <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
-              {ingredient.amount} {ingredient.name}
-            </li>
-          ))}
+          {ingredients.map((ingredient, index) => {
+            const amount = ingredient.amount * parseInt(selectedSize.substring(0, 1));
+
+            return amount > 0 ? (
+              <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
+                {amount} {ingredient.unit} {ingredient.name}
+              </li>
+            ) : (
+              <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
+                {ingredient.name}
+              </li>
+            );
+          })}
         </ul>
 
         {/* Directions */}
