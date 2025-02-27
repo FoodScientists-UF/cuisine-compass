@@ -1,24 +1,30 @@
-import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { supabase, AuthContext } from "../AuthProvider";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { session } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const email = e.target[0].value;
-    const password = e.target[1].value;
+    if (session) navigate("/");
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (error) {
-      alert("Error logging in: ", error.message);
+      alert("Error logging in: " + error.message);
     } else {
       alert("Log in successful!");
-      navigate("/");
+      navigate("/onboarding");
     }
   };
+
+  //if (session) navigate("/");
 
   return (
     <div className="h-screen flex justify-center items-center flex-col gap-y-10">
@@ -37,6 +43,7 @@ export default function Login() {
           <p className="abhaya-libre-regular text-xl mb-0">Email</p>
           <input
             type="text"
+            name="email"
             className="p-2 border-2 rounded-lg border-black"
             required
           />
@@ -45,6 +52,7 @@ export default function Login() {
           <p className="abhaya-libre-regular text-xl mb-0">Password</p>
           <input
             type="password"
+            name="password"
             className="p-2 border-2 rounded-lg border-black"
             required
           />

@@ -8,7 +8,7 @@ class MenuBar extends Component {
   state = { activeItem: "Explore" };
 
   handleItemClick = (e, { name }) => {
-    this.setState({ activeItem: name })
+    this.setState({ activeItem: name });
   };
 
   render() {
@@ -39,7 +39,7 @@ class MenuBar extends Component {
             <Button
               circular
               icon="user"
-              onClick={() => (window.location.href = "/user")}
+              onClick={() => (window.location.href = "/login")}
             ></Button>
           </Menu.Item>
         </Menu>

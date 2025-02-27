@@ -1,12 +1,13 @@
-import { supabase } from "../supabaseClient";
+import { supabase, AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const { session } = useContext(AuthContext);
 
   // Handle password change
   const handlePasswordChange = (e) => {
@@ -18,7 +19,6 @@ export default function Signup() {
     setConfirmPassword(e.target.value);
   };
 
-  
   // Validate password through regex
   const validatePassword = (password) => {
     return {
@@ -35,7 +35,9 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const email = e.target[0].value;
+    const password = e.target.password.value;
+
+    //if (session) navigate("/onboarding");
 
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match.");
@@ -44,20 +46,32 @@ export default function Signup() {
 
     setPasswordError(""); // Clear error if passwords match
 
-    const password = e.target[1].value;
+    const email = e.target.email.value;
+    const name = e.target.firstName.value + " " + e.target.lastName.value;
+    const username = e.target.username.value;
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
     if (error) {
-      alert("Error signing up: ", error.message);
-    } else {
-      alert("Sign up successful!");
-      navigate("/onboarding");
+      alert("Error signing up: " + error.message);
+      return;
     }
+    const { data: upsertData, error: upsertError } = await supabase
+      .from("Profiles")
+      .upsert({ id: data.user.id, name, username })
+      .select();
+    if (upsertError) {
+      alert("Error signing up: " + upsertError.message);
+      return;
+    }
+    alert("Sign up successful!");
+    navigate("/onboarding");
   };
 
   return (
     <div className="min-h-screen flex justify-center items-center flex-col gap-y-10 py-20">
-
       {/* Logo and Title */}
       <img src="/logo.png" alt="Logo" className="w-32 h-32" />
       <div className="flex justify-center flex-col items-center gap-y-3 text-[#D75600]">
@@ -70,13 +84,13 @@ export default function Signup() {
         className="flex flex-col space-y-5 w-full max-w-sm"
         onSubmit={handleSubmit}
       >
-
         {/* First Name and Last Name Inputs */}
         <div className="flex space-x-4">
           <span className="flex flex-col space-y-0.5 w-1/2">
             <p className="abhaya-libre-regular text-xl mb-0">First Name</p>
             <input
               type="text"
+              name="firstName"
               placeholder="Johnny"
               className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
               required
@@ -87,6 +101,7 @@ export default function Signup() {
             <p className="abhaya-libre-regular text-xl mb-0">Last Name</p>
             <input
               type="text"
+              name="lastName"
               placeholder="Appleseed"
               className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
               required
@@ -99,6 +114,7 @@ export default function Signup() {
           <p className="abhaya-libre-regular text-xl mb-0">Email</p>
           <input
             type="text"
+            name="email"
             placeholder="johnnyapple@gmail.com"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             required
@@ -110,6 +126,7 @@ export default function Signup() {
           <p className="abhaya-libre-regular text-xl mb-0">Create Username</p>
           <input
             type="text"
+            name="username"
             placeholder="johnnyappleseed234"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             required
@@ -121,6 +138,7 @@ export default function Signup() {
           <p className="abhaya-libre-regular text-xl mb-0">Create Password</p>
           <input
             type="password"
+            name="password"
             placeholder="Appleseed0!"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             onChange={handlePasswordChange}
@@ -129,7 +147,10 @@ export default function Signup() {
         </span>
 
         {/* Password Requirements */}
-        <ul className="list-none abhaya-libre-regular text-[#767575]" style={{ lineHeight: "1.2" }}>
+        <ul
+          className="list-none abhaya-libre-regular text-[#767575]"
+          style={{ lineHeight: "1.2" }}
+        >
           {[
             { text: "At least 8 characters", check: passwordChecks.length },
             { text: "1 lowercase", check: passwordChecks.lowercase },
@@ -148,6 +169,7 @@ export default function Signup() {
           <p className="abhaya-libre-regular text-xl mb-0">Confirm Password</p>
           <input
             type="password"
+            name="confirmPassword"
             placeholder="Appleseed0!"
             className="abhaya-libre-regular p-2 border-2 rounded-lg border-black placeholder-gray-400"
             onChange={handleConfirmPasswordChange}
@@ -155,7 +177,7 @@ export default function Signup() {
           />
           {passwordError && <p className="text-red-500">{passwordError}</p>}
         </span>
-        
+
         <button
           type="submit"
           className="p-2 rounded-xl bg-[#D75600] text-white abhaya-libre-extrabold text-lg hover:opacity-80 transition"
@@ -164,7 +186,10 @@ export default function Signup() {
         </button>
         <span className="abhaya-libre-regular flex flex-row gap-x-1 justify-center">
           Already have an account?
-          <a className="abhaya-libre-regular text-blue-500 underline" href="/login">
+          <a
+            className="abhaya-libre-regular text-blue-500 underline"
+            href="/login"
+          >
             Log In!
           </a>
         </span>
