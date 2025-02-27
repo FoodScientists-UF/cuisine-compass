@@ -166,7 +166,7 @@ export default function ViewRecipe() {
         </div>
 
         <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none">
-          Original recipe (1X) yields {servingSize} {servingSize > 1 ? 'servings' : 'serving'}
+          This will yield {servingSize * parseInt(selectedSize.substring(0, 1))} {servingSize > 1 ? 'servings' : 'serving'}
         </h1>
 
         {/* List of Ingredients */}
