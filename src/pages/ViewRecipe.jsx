@@ -15,6 +15,7 @@ export default function ViewRecipe() {
   const [prepTime, setPrepTime] = useState("");
   const [servingSize, setServingSize] = useState("");
   const [ingredients, setIngredients] = useState([]);
+  const [instructions, setInstructions] = useState([]);
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -60,6 +61,18 @@ export default function ViewRecipe() {
           setIngredients(ingredientsData);
         }
 
+        {/* Fetch instructions */}
+        const { data: instructionsData, error: instructionsError } = await supabase
+          .from("Instructions")
+          .select("step_number, content")
+          .eq("recipe_id", id);
+
+        if (ingredientsError) {
+          console.error("Error fetching instructions:" + instructionsError);
+        } else {
+          console.log("Fetched data:", instructionsData);
+          setInstructions(instructionsData);
+        }
       }
     }
 
@@ -190,18 +203,18 @@ export default function ViewRecipe() {
         <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
           Directions
         </h1>
-        <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none">
-          Step 1
-        </h1>
-        <p className="text-2xl abhaya-libre-regular text-black-600">
-          Lorem ipsum odor amet, consectetuer adipiscing elit.
-        </p>
-        <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none">
-          Step 2
-        </h1>
-        <p className="text-2xl abhaya-libre-regular text-black-600">
-          Tristique quis cubilia penatibus senectus dapibus placerat at sem.
-        </p>
+
+        {/* List of Instructions */}
+        {instructions.map((instruction, index) => (
+          <div key={index} className="mb-6">
+            <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none">
+              Step {instruction.step_number}
+            </h1>
+            <p className="text-2xl abhaya-libre-regular text-black-600">
+              {instruction.content}
+            </p>
+          </div>
+        ))}
 
         {/* Divider Line */}
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
