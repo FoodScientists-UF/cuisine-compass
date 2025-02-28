@@ -229,15 +229,29 @@ export default function ViewRecipe() {
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
           {ingredients.map((ingredient, index) => {
-            const amount =
-              ingredient.amount * parseInt(selectedSize.substring(0, 1));
+            const initialAmount = ingredient.amount;
+            const amount = ingredient.amount * parseInt(selectedSize.substring(0, 1));
+            const nonPluralUnits = ["oz", "tsp", "tbsp", "ml", "g", "kg", "lb"];
+
+            let displayUnit = ingredient.unit || "";
+            let displayName = ingredient.name;
+            
+            if (amount > 1) {
+              if (!ingredient.unit) {
+                // No unit, pluralize name
+                displayName = displayName.endsWith("s") ? displayName : `${displayName}s`;
+              } else if (!nonPluralUnits.includes(ingredient.unit)) {
+                // Pluralize unit if applicable
+                displayUnit = displayUnit.endsWith("s") ? displayUnit : `${displayUnit}s`;
+              }
+            }
 
             return amount > 0 ? (
               <li
                 key={index}
                 className="text-2xl abhaya-libre-regular text-black-600"
               >
-                {amount} {ingredient.unit} {ingredient.name}
+                {amount} {displayUnit} {displayName}
               </li>
             ) : (
               <li
