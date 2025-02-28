@@ -16,12 +16,46 @@ export default function ViewRecipe() {
   const [servingSize, setServingSize] = useState("");
   const [ingredients, setIngredients] = useState([]);
   const [instructions, setInstructions] = useState([]);
+  const [imageUrl, setImageUrl] = useState("");
+
+  useEffect(() => {
+    if (imageUrl) return;
+    if (recipeTitle) {
+      async function fetchImage(title) {
+        const searchUrl = new URL("https://api.unsplash.com/search/photos");
+        searchUrl.search = new URLSearchParams({
+          client_id: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
+          page: 1,
+          per_page: 1,
+          query: title.toLowerCase(),
+        });
+        console.log(searchUrl);
+        const response = await fetch(searchUrl);
+        const data = await response.json();
+        console.log(data);
+        const imageResult = Object.values(data.results)[0];
+        if (imageResult && imageResult.urls && imageResult.urls.full) {
+          setImageUrl(imageResult.urls.full);
+          const { data, error } = await supabase
+            .from("Recipes")
+            .update({ image_url: imageResult.urls.full })
+            .eq("id", id);
+          if (error) {
+            console.error("Error updating image URL:" + error.message);
+          }
+        }
+      }
+      fetchImage(recipeTitle);
+    }
+  }, [recipeTitle]);
 
   useEffect(() => {
     async function fetchRecipe() {
       const { data, error } = await supabase
         .from("Recipes")
-        .select("title, user_id, description, cook_time, prep_time, serving_size")
+        .select(
+          "title, user_id, description, cook_time, prep_time, serving_size, image_url"
+        )
         .eq("id", id)
         .single();
 
@@ -29,30 +63,36 @@ export default function ViewRecipe() {
         console.error("Error fetching recipe:" + error);
       } else {
         console.log("Fetched data:", data);
+        if (data.image_url) setImageUrl(data.image_url);
         setRecipeTitle(data.title);
         setDescription(data.description);
         setCookTime(data.cook_time);
         setPrepTime(data.prep_time);
         setServingSize(data.serving_size);
 
-        {/* Fetch username */}
+        {
+          /* Fetch username */
+        }
         const { data: profileData, error: profileError } = await supabase
-        .from("Profiles")
-        .select("username")
-        .eq("id", data.user_id)
-        .single();
+          .from("Profiles")
+          .select("username")
+          .eq("id", data.user_id)
+          .single();
 
         if (profileError) {
-          console.error("Error fetching username:" + profileError);
+          console.error("Error fetching username:" + profileError.message);
         } else {
           setUsername(profileData.username);
         }
 
-        {/* Fetch ingredients */}
-        const { data: ingredientsData, error: ingredientsError } = await supabase
-          .from("Ingredients")
-          .select("name, unit, amount")
-          .eq("recipe_id", id);
+        {
+          /* Fetch ingredients */
+        }
+        const { data: ingredientsData, error: ingredientsError } =
+          await supabase
+            .from("Ingredients")
+            .select("name, unit, amount")
+            .eq("recipe_id", id);
 
         if (ingredientsError) {
           console.error("Error fetching ingredients:" + ingredientsError);
@@ -61,11 +101,14 @@ export default function ViewRecipe() {
           setIngredients(ingredientsData);
         }
 
-        {/* Fetch instructions */}
-        const { data: instructionsData, error: instructionsError } = await supabase
-          .from("Instructions")
-          .select("step_number, content")
-          .eq("recipe_id", id);
+        {
+          /* Fetch instructions */
+        }
+        const { data: instructionsData, error: instructionsError } =
+          await supabase
+            .from("Instructions")
+            .select("step_number, content")
+            .eq("recipe_id", id);
 
         if (ingredientsError) {
           console.error("Error fetching instructions:" + instructionsError);
@@ -87,7 +130,7 @@ export default function ViewRecipe() {
       <div className="w-full flex flex-row items-start space-x-8">
         {/* Recipe Image */}
         <img
-          src={img1}
+          src={imageUrl}
           alt="recipe"
           className="h-[600px] w-[500px] rounded-2xl object-cover"
         />
@@ -179,20 +222,28 @@ export default function ViewRecipe() {
         </div>
 
         <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none">
-          This will yield {servingSize * parseInt(selectedSize.substring(0, 1))} {servingSize > 1 ? 'servings' : 'serving'}
+          This will yield {servingSize * parseInt(selectedSize.substring(0, 1))}{" "}
+          {servingSize > 1 ? "servings" : "serving"}
         </h1>
 
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
           {ingredients.map((ingredient, index) => {
-            const amount = ingredient.amount * parseInt(selectedSize.substring(0, 1));
+            const amount =
+              ingredient.amount * parseInt(selectedSize.substring(0, 1));
 
             return amount > 0 ? (
-              <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
+              <li
+                key={index}
+                className="text-2xl abhaya-libre-regular text-black-600"
+              >
                 {amount} {ingredient.unit} {ingredient.name}
               </li>
             ) : (
-              <li key={index} className="text-2xl abhaya-libre-regular text-black-600">
+              <li
+                key={index}
+                className="text-2xl abhaya-libre-regular text-black-600"
+              >
                 {ingredient.name}
               </li>
             );
