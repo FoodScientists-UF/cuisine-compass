@@ -16,6 +16,7 @@ import Goals from "./pages/Onboarding/Goals.jsx";
 import FindFriends from "./pages/Onboarding/FindFriends.jsx";
 import PageWrapper from "./components/PageWrapper";
 import MenuBar from "./layouts/MenuBar";
+import Profile from "./pages/Profile.jsx";
 import { AuthProvider } from "./AuthProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
@@ -35,6 +36,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="explore" element={<Explore />} />
             <Route path="following" element={<Following />} />
             <Route path="about" element={<About />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
