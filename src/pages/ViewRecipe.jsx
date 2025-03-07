@@ -22,27 +22,26 @@ export default function ViewRecipe() {
     if (imageUrl) return;
     if (recipeTitle) {
       async function fetchImage(title) {
-        const searchUrl = new URL("https://api.unsplash.com/search/photos");
-        searchUrl.search = new URLSearchParams({
-          client_id: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
-          page: 1,
-          per_page: 1,
-          query: title.toLowerCase(),
-        });
-        console.log(searchUrl);
-        const response = await fetch(searchUrl);
-        const data = await response.json();
-        console.log(data);
-        const imageResult = Object.values(data.results)[0];
-        if (imageResult && imageResult.urls && imageResult.urls.full) {
-          setImageUrl(imageResult.urls.full);
+        const { data: dataFunc, error: errorFunc } =
+          await supabase.functions.invoke("fetch-image", {
+            body: JSON.stringify({ title: title.toLowerCase() }),
+          });
+        if (errorFunc) {
+          console.error(
+            "Error fetching image from function:",
+            errorFunc.message
+          );
+          return;
+        } else if (!dataFunc.error) {
+          setImageUrl(dataFunc.image_url);
           const { data, error } = await supabase
             .from("Recipes")
-            .update({ image_url: imageResult.urls.full })
+            .update({ image_url: dataFunc.image_url })
             .eq("id", id);
           if (error) {
             console.error("Error updating image URL:" + error.message);
           }
+          return;
         }
       }
       fetchImage(recipeTitle);
@@ -230,19 +229,24 @@ export default function ViewRecipe() {
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
           {ingredients.map((ingredient, index) => {
             const initialAmount = ingredient.amount;
-            const amount = ingredient.amount * parseInt(selectedSize.substring(0, 1));
+            const amount =
+              ingredient.amount * parseInt(selectedSize.substring(0, 1));
             const nonPluralUnits = ["oz", "tsp", "tbsp", "ml", "g", "kg", "lb"];
 
             let displayUnit = ingredient.unit || "";
             let displayName = ingredient.name;
-            
+
             if (amount > 1) {
               if (!ingredient.unit) {
                 // No unit, pluralize name
-                displayName = displayName.endsWith("s") ? displayName : `${displayName}s`;
+                displayName = displayName.endsWith("s")
+                  ? displayName
+                  : `${displayName}s`;
               } else if (!nonPluralUnits.includes(ingredient.unit)) {
                 // Pluralize unit if applicable
-                displayUnit = displayUnit.endsWith("s") ? displayUnit : `${displayUnit}s`;
+                displayUnit = displayUnit.endsWith("s")
+                  ? displayUnit
+                  : `${displayUnit}s`;
               }
             }
 
