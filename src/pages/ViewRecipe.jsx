@@ -17,6 +17,7 @@ export default function ViewRecipe() {
   const [ingredients, setIngredients] = useState([]);
   const [instructions, setInstructions] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [nutritionalInformation, setNutritionalInformation] = useState([]);
 
   useEffect(() => {
     if (imageUrl) return;
@@ -28,8 +29,7 @@ export default function ViewRecipe() {
           });
         if (errorFunc) {
           console.error(
-            "Error fetching image from function:",
-            errorFunc.message
+            "Error fetching image from function: " + errorFunc.message
           );
           return;
         } else if (!dataFunc.error) {
@@ -49,7 +49,7 @@ export default function ViewRecipe() {
   }, [recipeTitle]);
 
   useEffect(() => {
-    async function fetchRecipe() {
+    async function fetchRecipe(id) {
       const { data, error } = await supabase
         .from("Recipes")
         .select(
@@ -88,38 +88,106 @@ export default function ViewRecipe() {
           /* Fetch ingredients */
         }
         const { data: ingredientsData, error: ingredientsError } =
-          await supabase
-            .from("Ingredients")
-            .select("name, unit, amount")
-            .eq("recipe_id", id);
+          await supabase.from("Recipes").select("ingredients").eq("id", id);
 
         if (ingredientsError) {
           console.error("Error fetching ingredients:" + ingredientsError);
         } else {
-          console.log("Fetched data:", ingredientsData);
-          setIngredients(ingredientsData);
+          console.log(
+            "Fetched ingredients data:",
+            ingredientsData[0].ingredients
+          );
+          setIngredients(ingredientsData[0].ingredients);
         }
 
         {
           /* Fetch instructions */
         }
         const { data: instructionsData, error: instructionsError } =
-          await supabase
-            .from("Instructions")
-            .select("step_number, content")
-            .eq("recipe_id", id);
+          await supabase.from("Recipes").select("instructions").eq("id", id);
 
         if (ingredientsError) {
           console.error("Error fetching instructions:" + instructionsError);
         } else {
-          console.log("Fetched data:", instructionsData);
-          setInstructions(instructionsData);
+          console.log(
+            "Fetched instructions data:",
+            instructionsData[0].instructions
+          );
+          setInstructions(instructionsData[0].instructions);
+        }
+
+        const { data: nutritionalData, error: nutritionalError } =
+          await supabase.from("Recipes").select("nutrition").eq("id", id);
+
+        if (nutritionalError) {
+          console.error("Error fetching nutritional info:" + nutritionalError);
+        }
+
+        if (nutritionalData[0].nutrition) {
+          console.log("Fetched nutrition data:", nutritionalData[0].nutrition);
+          setNutritionalInformation(nutritionalData[0].nutrition);
+        } else if (data.title) {
+          const { data: dataFunc, error: errorFunc } =
+            await supabase.functions.invoke("fetch-nutrition", {
+              body: JSON.stringify({ ingredient: data.title }),
+            });
+
+          if (errorFunc) {
+            console.error(
+              "Error fetching nutritional info from function: " +
+                errorFunc.message
+            );
+          } else if (!dataFunc.error) {
+            // Format nutrition data for display
+            const nutritionFields = [
+              "calories",
+              "serving_size_g",
+              "fat_total_g",
+              "fat_saturated_g",
+              "protein_g",
+              "sodium_mg",
+              "potassium_mg",
+              "cholesterol_mg",
+              "carbohydrates_total_g",
+              "fiber_g",
+              "sugar_g",
+            ];
+
+            const formattedNutrition = nutritionFields
+              .filter((field) => dataFunc[field] !== undefined)
+              .map((field) => {
+                const displayName = field
+                  .replace(/_/g, " ")
+                  .replace(/^./, (str) => str.toUpperCase())
+                  .split(" ")[0];
+
+                return {
+                  nutrient: displayName,
+                  amount: `${dataFunc[field]}${
+                    field.includes("_g")
+                      ? "g"
+                      : field.includes("_mg")
+                      ? "mg"
+                      : ""
+                  }`,
+                };
+              });
+            console.log("Formatted Nutrition: ", formattedNutrition);
+            setNutritionalInformation(formattedNutrition);
+            const { data, error } = await supabase
+              .from("Recipes")
+              .update({ nutrition: formattedNutrition })
+              .eq("id", id);
+            if (error) {
+              console.error("Error updating nutritional info:" + error.message);
+            }
+          }
         }
       }
     }
 
     if (id) {
-      fetchRecipe();
+      fetchRecipe(id);
     }
   }, [id]);
 
@@ -228,6 +296,7 @@ export default function ViewRecipe() {
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
           {ingredients.map((ingredient, index) => {
+            console.log("Ingredient", ingredient);
             const initialAmount = ingredient.amount;
             const amount =
               ingredient.amount * parseInt(selectedSize.substring(0, 1));
@@ -277,10 +346,10 @@ export default function ViewRecipe() {
         {instructions.map((instruction, index) => (
           <div key={index} className="mb-6">
             <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none">
-              Step {instruction.step_number}
+              Step {index + 1}
             </h1>
             <p className="text-2xl abhaya-libre-regular text-black-600">
-              {instruction.content}
+              {instruction}
             </p>
           </div>
         ))}
@@ -352,38 +421,33 @@ export default function ViewRecipe() {
 
         {/* Nutritional Info Table */}
         {/* https://flowbite.com/docs/components/tables/ */}
-        <div className="relative overflow-x-auto flex">
-          <table className="w-[500px] text-lg text-left abhaya-libre-extrabold text-white bg-[#D75600] rounded-2xl overflow-hidden">
-            <thead className="text-lg uppercase bg-[#bf4c00]">
-              <tr>
-                <th scope="col" className="px-6 py-3 border-r border-white">
-                  Nutrient
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-white">
-                <td className="px-6 py-4 border-r border-white">Calories</td>
-                <td className="px-6 py-4">500g</td>
-              </tr>
-              <tr className="border-b border-white">
-                <td className="px-6 py-4 border-r border-white">Protein</td>
-                <td className="px-6 py-4">20g</td>
-              </tr>
-              <tr className="border-b border-white">
-                <td className="px-6 py-4 border-r border-white">Carbs</td>
-                <td className="px-6 py-4">60g</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 border-r border-white">Fat</td>
-                <td className="px-6 py-4">15g</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        {nutritionalInformation.length > 0 && (
+          <div className="relative overflow-x-auto flex">
+            <table className="w-[500px] text-lg text-left abhaya-libre-extrabold text-white bg-[#D75600] rounded-2xl overflow-hidden">
+              <thead className="text-lg uppercase bg-[#bf4c00]">
+                <tr>
+                  <th scope="col" className="px-6 py-3 border-r border-white">
+                    Nutrient
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Amount
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {nutritionalInformation.map((info, index) => (
+                  <tr key={index} className="border-b border-white">
+                    <td className="px-6 py-4 border-r border-white">
+                      {info.nutrient}
+                    </td>
+                    <td className="px-6 py-4">{info.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
