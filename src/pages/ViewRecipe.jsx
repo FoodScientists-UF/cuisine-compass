@@ -19,6 +19,15 @@ export default function ViewRecipe() {
   const [imageUrl, setImageUrl] = useState("");
   const [nutritionalInformation, setNutritionalInformation] = useState([]);
 
+  const [reviews, setReviews] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 4;
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  
+  
   useEffect(() => {
     if (imageUrl) return;
     if (recipeTitle) {
@@ -114,6 +123,31 @@ export default function ViewRecipe() {
             instructionsData[0].instructions
           );
           setInstructions(instructionsData[0].instructions);
+        }
+
+        {/* Fetch reviews */ }
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from("Reviews")
+          .select("review_text, created_at, Profiles(username)")
+          .eq("recipe_id", id);
+        if (reviewsError) {
+          console.error("Error fetching reviews:" + reviewsError);
+        } else {
+          console.log("Fetched reviews data:", reviewsData);
+
+          // format dates
+          reviewsData.forEach((review) => {
+            review.created_at = new Date(review.created_at).toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }
+            );
+            review.review_text = review.review_text || "No review text";
+          });
+          setReviews(reviewsData);
         }
 
         const { data: nutritionalData, error: nutritionalError } =
@@ -363,31 +397,26 @@ export default function ViewRecipe() {
         </h1>
 
         {/* Review Boxes */}
-        <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
-          {/* Comment */}
-          <p className="text-2xl abhaya-libre-regular text-[#555555]">
-            "Lorem ipsum odor amet, consectetuer adipiscing elit."
-          </p>
-
-          {/* Fixed Bottom Section */}
-          <div className="absolute bottom-4 left-4 flex">
-            <img
-              src={img1}
-              alt="profile"
-              className="h-12 w-12 rounded-full object-cover"
-            />
-            <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
-              @username
-            </p>
-            <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
-              Feb 23, 2025
-            </p>
-          </div>
+        <div className="relative w-full h-80 overflow-hidden">
+          {currentReviews.map((review, index) => (
+            <div key={index} className="absolute inset-0 transition-opacity duration-300 ease-in-out">
+              <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
+                <p className="text-2xl abhaya-libre-regular text-[#555555]">
+                  "{review.review_text || 'No review text'}"
+                </p>
+                <div className="absolute bottom-4 left-4 flex">
+                  <img src={img1} alt="profile" className="h-12 w-12 rounded-full object-cover" />
+                  <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
+                    @{review.Profiles?.username || "Anonymous"}
+                  </p>
+                  <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
+                    {review.created_at || "No date available."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-
-        <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4"></div>
-        <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4"></div>
-        <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4"></div>
 
         {/* Pages */}
         <div className="flex flex-row space-x-4 mt-4">
