@@ -7,6 +7,7 @@ export default function ViewRecipe() {
   const { id } = useParams();
   const [selectedSize, setSelectedSize] = useState("1X");
   const sizes = ["1X", "2X", "3X"];
+  const [haveCooked, setHaveCooked] = useState(false);
 
   const [recipeTitle, setRecipeTitle] = useState("");
   const [username, setUsername] = useState("");
@@ -21,12 +22,8 @@ export default function ViewRecipe() {
 
   const [reviews, setReviews] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const reviewsPerPage = 4;
+  const reviewsPerPage = 2;
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  const indexOfLastReview = currentPage * reviewsPerPage;
-  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
-  
   
   useEffect(() => {
     if (imageUrl) return;
@@ -299,9 +296,26 @@ export default function ViewRecipe() {
       {/* Additional Recipe Content (Below the divider) */}
       <div className="w-full">
         {/* Ingredients */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
-          Ingredients
-        </h1>
+        <div className="flex justify-between items-center w-full">
+          <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+            Ingredients
+          </h1>
+          
+          {/* Toggle Switch */}
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={haveCooked} 
+              onChange={() => setHaveCooked(!haveCooked)}
+              className="sr-only peer" 
+            />
+            <div className="w-16 h-10 bg-gray-300 rounded-full peer-checked:bg-[#D75600] peer transition-colors"></div>
+            <div className="absolute left-1 top-1 w-8 h-8 bg-white rounded-full peer-checked:translate-x-6 transition-transform"></div>
+            <div className="ml-3 text-2xl abhaya-libre-regular text-black-600">
+              I cooked this recipe
+            </div>
+          </label>
+        </div>
 
         {/* Serving Size */}
         <div className="flex border-2 border-[#D75600] rounded-full overflow-hidden w-64">
@@ -392,15 +406,22 @@ export default function ViewRecipe() {
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
         {/* Reviews */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
-          Reviews
-        </h1>
+        <div className="flex justify-between items-center w-full mt-4">
+          <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+            Reviews
+          </h1>
+          {haveCooked && (
+            <p className="text-2xl abhaya-libre-semibold text-[#D75600] cursor-pointer">
+              + Write a Review
+            </p>
+          )}
+        </div>
 
         {/* Review Boxes */}
-        <div className="relative w-full h-80 overflow-hidden">
-          {currentReviews.map((review, index) => (
-            <div key={index} className="absolute inset-0 transition-opacity duration-300 ease-in-out">
-              <div className="w-full h-60 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
+        <div className="w-full space-y-4">
+          {reviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, index) => (
+            <div key={index} className="w-full rounded-2xl bg-[#F3F3F3] p-4">
+              <div className="w-full h-40 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
                 <p className="text-2xl abhaya-libre-regular text-[#555555]">
                   "{review.review_text || 'No review text'}"
                 </p>
@@ -419,27 +440,38 @@ export default function ViewRecipe() {
         </div>
 
         {/* Pages */}
-        <div className="flex flex-row space-x-4 mt-4">
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            ←
-          </button>
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            1
-          </button>
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            2
-          </button>
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            3
-          </button>
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            4
-          </button>
-          <button className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A]">
-            →
-          </button>
-        </div>
+        {reviews.length > reviewsPerPage && (
+          <div className="flex flex-row space-x-4 mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A] disabled:opacity-50"
+            >
+              ←
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => setCurrentPage(index + 1)}
+                className={`w-12 h-12 flex items-center justify-center rounded-full abhaya-libre-extrabold text-[#7A7A7A] 
+                  ${currentPage === index + 1 ? "border-2 border-black bg-[#F3F3F3]" : "bg-[#F3F3F3]"}`}
+              >
+                {index + 1}
+              </button>
+            ))}
 
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A] disabled:opacity-50"
+            >
+              →
+            </button>
+          </div>
+        )}
+
+        
         {/* Divider Line */}
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
