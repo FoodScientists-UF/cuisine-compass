@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
-import { supabase } from "../AuthProvider";
+import { supabase, AuthContext } from "../AuthProvider";
 import { FaRegHeart } from "react-icons/fa";
 
 export default function ViewRecipe() {
   const { id } = useParams();
+  const { session } = useContext(AuthContext);
   const [selectedSize, setSelectedSize] = useState("1X");
   const sizes = ["1X", "2X", "3X"];
   const [haveCooked, setHaveCooked] = useState(false);
@@ -26,7 +27,7 @@ export default function ViewRecipe() {
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 2;
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  
+
   useEffect(() => {
     if (imageUrl) return;
     if (recipeTitle) {
@@ -58,172 +59,124 @@ export default function ViewRecipe() {
 
   useEffect(() => {
     async function fetchRecipe(id) {
-      const { data, error } = await supabase
+      const { data: recipeData, error: recipeError } = await supabase
         .from("Recipes")
         .select(
-          "title, user_id, description, cook_time, prep_time, serving_size, image_url"
+          "title, user_id, description, cook_time, prep_time, serving_size, image_url, ingredients, instructions"
         )
         .eq("id", id)
         .single();
 
-      if (error) {
-        console.error("Error fetching recipe:" + error);
-      } else {
-        console.log("Fetched data:", data);
-        if (data.image_url) setImageUrl(data.image_url);
-        setRecipeTitle(data.title);
-        setDescription(data.description);
-        setCookTime(data.cook_time);
-        setPrepTime(data.prep_time);
-        setServingSize(data.serving_size);
+      if (recipeError) throw recipeError;
+      else {
+        console.log("Recipe:", recipeData);
+        if (recipeData.image_url) setImageUrl(recipeData.image_url);
+        setRecipeTitle(recipeData.title);
+        setDescription(recipeData.description);
+        setCookTime(recipeData.cook_time);
+        setPrepTime(recipeData.prep_time);
+        setServingSize(recipeData.serving_size);
+        setIngredients(recipeData.ingredients);
+        setInstructions(recipeData.instructions);
+      }
 
-        {/* Fetch likes */}
-        const { data: likesData, error: likesError } = await supabase
+      const [likes, profile, cooked, reviews, nutritional] = await Promise.all([
+        supabase
           .from("Likes")
-          .select('*', { count: 'exact' })
-          .eq("recipe_id", id)
-          .single();
-        if (likesError) {
-          console.error("Error fetching likes:" + likesError);
-        } else {
-          setLikes(likesData.count);
-        }
-
-        {/* Fetch username */}
-        const { data: profileData, error: profileError } = await supabase
+          .select("*", { count: "exact" })
+          .eq("recipe_id", id),
+        supabase
           .from("Profiles")
           .select("username")
-          .eq("id", data.user_id)
-          .single();
-
-        if (profileError) {
-          console.error("Error fetching username:" + profileError.message);
-        } else {
-          setUsername(profileData.username);
-        }
-
-        {/* Fetch ingredients */}
-        const { data: ingredientsData, error: ingredientsError } =
-          await supabase.from("Recipes").select("ingredients").eq("id", id);
-
-        if (ingredientsError) {
-          console.error("Error fetching ingredients:" + ingredientsError);
-        } else {
-          console.log(
-            "Fetched ingredients data:",
-            ingredientsData[0].ingredients
-          );
-          setIngredients(ingredientsData[0].ingredients);
-        }
-
-        {
-          /* Fetch instructions */
-        }
-        const { data: instructionsData, error: instructionsError } =
-          await supabase.from("Recipes").select("instructions").eq("id", id);
-
-        if (ingredientsError) {
-          console.error("Error fetching instructions:" + instructionsError);
-        } else {
-          console.log(
-            "Fetched instructions data:",
-            instructionsData[0].instructions
-          );
-          setInstructions(instructionsData[0].instructions);
-        }
-
-        {/* Fetch reviews */ }
-        const { data: reviewsData, error: reviewsError } = await supabase
+          .eq("id", recipeData.user_id)
+          .single(),
+        session && session.user && session.user.id
+          ? supabase
+              .from("Cooked Recipes")
+              .select("*")
+              .eq("recipe_id", id)
+              .eq("user_id", session.user.id)
+              .limit(1)
+              .maybeSingle()
+          : null,
+        supabase
           .from("Reviews")
           .select("review_text, created_at, Profiles(username)")
-          .eq("recipe_id", id);
-        if (reviewsError) {
-          console.error("Error fetching reviews:" + reviewsError);
-        } else {
-          console.log("Fetched reviews data:", reviewsData);
+          .eq("recipe_id", id),
+        supabase.from("Recipes").select("nutrition").eq("id", id),
+      ]);
 
-          // format dates
-          reviewsData.forEach((review) => {
-            review.created_at = new Date(review.created_at).toLocaleDateString(
-              "en-US",
-              {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              }
-            );
-            review.review_text = review.review_text || "No review text";
-          });
-          setReviews(reviewsData);
-        }
+      if (likes.error) throw likes.error;
+      else setLikes(likes.count);
 
-        const { data: nutritionalData, error: nutritionalError } =
-          await supabase.from("Recipes").select("nutrition").eq("id", id);
+      if (profile.error) throw profile.error;
+      else setUsername(profile.data.username);
 
-        if (nutritionalError) {
-          console.error("Error fetching nutritional info:" + nutritionalError);
-        }
+      if (cooked) {
+        if (cooked.data && cooked.data.have_cooked != null)
+          setHaveCooked(cooked.data.have_cooked);
+        else if (cooked.error) throw cooked.error;
+      }
 
-        if (nutritionalData[0].nutrition) {
-          console.log("Fetched nutrition data:", nutritionalData[0].nutrition);
-          setNutritionalInformation(nutritionalData[0].nutrition);
-        } else if (data.title) {
-          const { data: dataFunc, error: errorFunc } =
-            await supabase.functions.invoke("fetch-nutrition", {
-              body: JSON.stringify({ ingredient: data.title }),
-            });
-
-          if (errorFunc) {
-            console.error(
-              "Error fetching nutritional info from function: " +
-                errorFunc.message
-            );
-          } else if (!dataFunc.error) {
-            // Format nutrition data for display
-            const nutritionFields = [
-              "calories",
-              "serving_size_g",
-              "fat_total_g",
-              "fat_saturated_g",
-              "protein_g",
-              "sodium_mg",
-              "potassium_mg",
-              "cholesterol_mg",
-              "carbohydrates_total_g",
-              "fiber_g",
-              "sugar_g",
-            ];
-
-            const formattedNutrition = nutritionFields
-              .filter((field) => dataFunc[field] !== undefined)
-              .map((field) => {
-                const displayName = field
-                  .replace(/_/g, " ")
-                  .replace(/^./, (str) => str.toUpperCase())
-                  .split(" ")[0];
-
-                return {
-                  nutrient: displayName,
-                  amount: `${dataFunc[field]}${
-                    field.includes("_g")
-                      ? "g"
-                      : field.includes("_mg")
-                      ? "mg"
-                      : ""
-                  }`,
-                };
-              });
-            console.log("Formatted Nutrition: ", formattedNutrition);
-            setNutritionalInformation(formattedNutrition);
-            const { data, error } = await supabase
-              .from("Recipes")
-              .update({ nutrition: formattedNutrition })
-              .eq("id", id);
-            if (error) {
-              console.error("Error updating nutritional info:" + error.message);
+      if (reviews.error) throw reviews.error;
+      else {
+        console.log("Fetched reviews data:", reviews.data);
+        reviews.data.forEach((review) => {
+          review.created_at = new Date(review.created_at).toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
             }
-          }
-        }
+          );
+          review.review_text = review.review_text || "No review text";
+        });
+        setReviews(reviews.data);
+      }
+
+      if (nutritional.error) throw nutritional.error;
+      else if (nutritional.data.nutrition) {
+        console.log("Fetched nutrition data:", nutritional.data.nutrition);
+        setNutritionalInformation(nutritional.data.nutrition);
+      } else {
+        const { data: dataFunc, error: errorFunc } =
+          await supabase.functions.invoke("fetch-nutrition", {
+            body: JSON.stringify({ ingredient: recipeData.title }),
+          });
+
+        if (errorFunc) throw errorFunc;
+        // Format nutrition data for display
+        const nutritionFields = [
+          "calories",
+          "serving_size_g",
+          "fat_total_g",
+          "fat_saturated_g",
+          "protein_g",
+          "sodium_mg",
+          "potassium_mg",
+          "cholesterol_mg",
+          "carbohydrates_total_g",
+          "fiber_g",
+          "sugar_g",
+        ];
+
+        const formattedNutrition = nutritionFields
+          .filter((field) => dataFunc[field] !== undefined)
+          .map((field) => {
+            const displayName = field
+              .replace(/_/g, " ")
+              .replace(/^./, (str) => str.toUpperCase())
+              .split(" ")[0];
+
+            return {
+              nutrient: displayName,
+              amount: `${dataFunc[field]}${
+                field.includes("_g") ? "g" : field.includes("_mg") ? "mg" : ""
+              }`,
+            };
+          });
+        setNutritionalInformation(formattedNutrition);
       }
     }
 
@@ -231,6 +184,33 @@ export default function ViewRecipe() {
       fetchRecipe(id);
     }
   }, [id]);
+
+  async function setCooked() {
+    if (!session.user.id) return;
+    setHaveCooked(!haveCooked);
+    const { data, error } = await supabase
+      .from("Cooked Recipes")
+      .upsert({
+        recipe_id: id,
+        user_id: session.user.id,
+        have_cooked: !haveCooked,
+      })
+      .select();
+    if (error) {
+      console.error("Error updating have_cooked:" + error.message);
+    } else setHaveCooked(data[0].have_cooked);
+  }
+
+  async function handleSave() {
+    if (!session.user.id) return;
+    const { data, error } = await supabase
+      .from("Saved Recipes")
+      .upsert({ recipe_id: id, user_id: session.user.id })
+      .select();
+    if (error) {
+      console.error("Error saving recipe:" + error.message);
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col p-10 space-y-8 py-20">
@@ -250,7 +230,10 @@ export default function ViewRecipe() {
             <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
               {recipeTitle}
             </h1>
-            <button className="bg-[#D75600] text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition">
+            <button
+              className="bg-[#D75600] text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition"
+              onClick={handleSave}
+            >
               Save
             </button>
           </div>
@@ -258,7 +241,9 @@ export default function ViewRecipe() {
           {/* Likes Button */}
           <div className="flex items-center space-x-2">
             <FaRegHeart className="text-3xl text-black" />
-            <span className="text-3xl abhaya-libre-regular text-black-600">{likes}</span>
+            <span className="text-3xl abhaya-libre-regular text-black-600">
+              {likes}
+            </span>
           </div>
 
           {/* Username */}
@@ -316,14 +301,14 @@ export default function ViewRecipe() {
           <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
             Ingredients
           </h1>
-          
+
           {/* Toggle Switch */}
           <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={haveCooked} 
-              onChange={() => setHaveCooked(!haveCooked)}
-              className="sr-only peer" 
+            <input
+              type="checkbox"
+              checked={haveCooked}
+              onChange={setCooked}
+              className="sr-only peer"
             />
             <div className="w-16 h-10 bg-gray-300 rounded-full peer-checked:bg-[#D75600] peer transition-colors"></div>
             <div className="absolute left-1 top-1 w-8 h-8 bg-white rounded-full peer-checked:translate-x-6 transition-transform"></div>
@@ -360,7 +345,6 @@ export default function ViewRecipe() {
         {/* List of Ingredients */}
         <ul style={{ listStyleType: "disc", paddingLeft: "2rem" }}>
           {ingredients.map((ingredient, index) => {
-            console.log("Ingredient", ingredient);
             const initialAmount = ingredient.amount;
             const amount =
               ingredient.amount * parseInt(selectedSize.substring(0, 1));
@@ -435,24 +419,33 @@ export default function ViewRecipe() {
 
         {/* Review Boxes */}
         <div className="w-full space-y-4">
-          {reviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, index) => (
-            <div key={index} className="w-full rounded-2xl bg-[#F3F3F3] p-4">
-              <div className="w-full h-40 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
-                <p className="text-2xl abhaya-libre-regular text-[#555555]">
-                  "{review.review_text || 'No review text'}"
-                </p>
-                <div className="absolute bottom-4 left-4 flex">
-                  <img src={img1} alt="profile" className="h-12 w-12 rounded-full object-cover" />
-                  <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
-                    @{review.Profiles?.username || "Anonymous"}
+          {reviews
+            .slice(
+              (currentPage - 1) * reviewsPerPage,
+              currentPage * reviewsPerPage
+            )
+            .map((review, index) => (
+              <div key={index} className="w-full rounded-2xl bg-[#F3F3F3] p-4">
+                <div className="w-full h-40 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
+                  <p className="text-2xl abhaya-libre-regular text-[#555555]">
+                    "{review.review_text || "No review text"}"
                   </p>
-                  <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
-                    {review.created_at || "No date available."}
-                  </p>
+                  <div className="absolute bottom-4 left-4 flex">
+                    <img
+                      src={img1}
+                      alt="profile"
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                    <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
+                      @{review.Profiles?.username || "Anonymous"}
+                    </p>
+                    <p className="text-2xl abhaya-libre-regular text-[#555555] ml-4">
+                      {review.created_at || "No date available."}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {/* Pages */}
@@ -465,20 +458,26 @@ export default function ViewRecipe() {
             >
               ←
             </button>
-            
+
             {Array.from({ length: totalPages }, (_, index) => (
               <button
                 key={index + 1}
                 onClick={() => setCurrentPage(index + 1)}
                 className={`w-12 h-12 flex items-center justify-center rounded-full abhaya-libre-extrabold text-[#7A7A7A] 
-                  ${currentPage === index + 1 ? "border-2 border-black bg-[#F3F3F3]" : "bg-[#F3F3F3]"}`}
+                  ${
+                    currentPage === index + 1
+                      ? "border-2 border-black bg-[#F3F3F3]"
+                      : "bg-[#F3F3F3]"
+                  }`}
               >
                 {index + 1}
               </button>
             ))}
 
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="w-12 h-12 flex items-center justify-center bg-[#F3F3F3] rounded-full abhaya-libre-extrabold text-[#7A7A7A] disabled:opacity-50"
             >
@@ -487,7 +486,6 @@ export default function ViewRecipe() {
           </div>
         )}
 
-        
         {/* Divider Line */}
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
