@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase } from "../AuthProvider";
+import { FaRegHeart } from "react-icons/fa";
 
 export default function ViewRecipe() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ export default function ViewRecipe() {
   const [haveCooked, setHaveCooked] = useState(false);
 
   const [recipeTitle, setRecipeTitle] = useState("");
+  const [likes, setLikes] = useState(0);
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState("");
@@ -75,9 +77,19 @@ export default function ViewRecipe() {
         setPrepTime(data.prep_time);
         setServingSize(data.serving_size);
 
-        {
-          /* Fetch username */
+        {/* Fetch likes */}
+        const { data: likesData, error: likesError } = await supabase
+          .from("Likes")
+          .select('*', { count: 'exact' })
+          .eq("recipe_id", id)
+          .single();
+        if (likesError) {
+          console.error("Error fetching likes:" + likesError);
+        } else {
+          setLikes(likesData.count);
         }
+
+        {/* Fetch username */}
         const { data: profileData, error: profileError } = await supabase
           .from("Profiles")
           .select("username")
@@ -90,9 +102,7 @@ export default function ViewRecipe() {
           setUsername(profileData.username);
         }
 
-        {
-          /* Fetch ingredients */
-        }
+        {/* Fetch ingredients */}
         const { data: ingredientsData, error: ingredientsError } =
           await supabase.from("Recipes").select("ingredients").eq("id", id);
 
@@ -245,8 +255,14 @@ export default function ViewRecipe() {
             </button>
           </div>
 
+          {/* Likes Button */}
+          <div className="flex items-center space-x-2">
+            <FaRegHeart className="text-3xl text-black" />
+            <span className="text-3xl abhaya-libre-regular text-black-600">{likes}</span>
+          </div>
+
           {/* Username */}
-          <p className="text-2xl abhaya-libre-semibold text-black-600">
+          <p className="text-2xl abhaya-libre-semibold text-black-600 mt-4">
             @{username}
           </p>
 
