@@ -8,6 +8,7 @@ import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Signout from "./pages/Signout.jsx";
+import CreateRecipe from "./pages/CreateRecipe.jsx";
 import Onboarding from "./pages/Onboarding/Onboarding.jsx";
 import ProfileSetup from "./pages/Onboarding/ProfileSetup.jsx";
 import DietaryPreferences from "./pages/Onboarding/DietaryPreferences.jsx";
@@ -35,6 +36,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="explore" element={<Explore />} />
             <Route path="following" element={<Following />} />
             <Route path="about" element={<About />} />
+            <Route path="createrecipe" element={<CreateRecipe />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
