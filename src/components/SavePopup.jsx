@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Checkbox } from "semantic-ui-react";
+import { FiPlus } from "react-icons/fi";
 
 export default function SavePopup({ collections, savedCollections, callback }) {
   const isCollectionSaved = (collection) => {
@@ -35,7 +36,10 @@ export default function SavePopup({ collections, savedCollections, callback }) {
         </div>
         <div className="bg-gray-400 h-[0.5px]"></div>
         <div className="flex flex-row items-center gap-x-5">
-          <img className="w-12 h-12 rounded-md bg-gray-300" />
+          <div className="relative w-12 h-12"> 
+            <img className="w-12 h-12 rounded-md bg-gray-300" />
+            <FiPlus className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black w-5 h-5"/>
+          </div>
           <button className="abhaya-libre-regular text-xl hover:text-orange-500 transition">
             Create a collection
           </button>

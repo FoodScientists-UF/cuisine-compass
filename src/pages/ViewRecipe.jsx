@@ -2,8 +2,9 @@ import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase, AuthContext } from "../AuthProvider";
-import { FaRegHeart, FaChevronDown } from "react-icons/fa";
+import { FaRegHeart, FaChevronDown} from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
+import WriteReviewPopup from "../components/WriteReviewPopup";
 
 export default function ViewRecipe() {
   const { id } = useParams();
@@ -11,6 +12,7 @@ export default function ViewRecipe() {
   const [selectedSize, setSelectedSize] = useState("1X");
   const sizes = ["1X", "2X", "3X"];
   const [showSavePopup, setShowSavePopup] = useState(false);
+  const [showWriteReviewPopup, setShowWriteReviewPopup] = useState(false);
 
   const [haveCooked, setHaveCooked] = useState(false);
   /* Saved collections contains all collections the recipe has been saved to
@@ -492,14 +494,27 @@ export default function ViewRecipe() {
             Reviews
           </h1>
           {haveCooked && (
-            <p className="text-2xl abhaya-libre-semibold text-[#D75600] cursor-pointer">
-              + Write a Review
-            </p>
+            <>
+              <button 
+                className="text-2xl abhaya-libre-semibold text-[#D75600] cursor-pointer hover:opacity-80 transition"
+                onClick={() => setShowWriteReviewPopup(!showWriteReviewPopup)}>
+                + Write a Review
+              </button>
+              {showWriteReviewPopup && (
+                <WriteReviewPopup onClose={() => setShowWriteReviewPopup(false)} />
+              )}
+            </>
           )}
         </div>
 
         {/* Review Boxes */}
         <div className="w-full space-y-4">
+          {/* No reviews message */}
+          {!reviews.length && 
+            <p className="text-2xl abhaya-libre-regular text-[#555555]">
+              No reviews yet.
+            </p>
+          }
           {reviews
             .slice(
               (currentPage - 1) * reviewsPerPage,
