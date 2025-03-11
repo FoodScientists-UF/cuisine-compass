@@ -228,7 +228,7 @@ export default function ViewRecipe() {
     if (id) {
       fetchRecipe(id);
     }
-  }, [id]);
+  }, [id, session && session.user && session.user.id]);
 
   async function setCooked() {
     if (!session.user.id) return;
@@ -246,9 +246,42 @@ export default function ViewRecipe() {
     } else setHaveCooked(data[0].have_cooked);
   }
 
-  async function handleSave() {
-    if (!session.user.id) return;
-    setShowSavePopup(!showSavePopup);
+  async function handleSave(collection, checked) {
+    if (!session || !session.user || !session.user.id) return;
+    console.log("Saving to collection:", collection);
+    console.log("Checked:", checked);
+    setSavedCollections(
+      checked
+        ? savedCollections.filter((c) => c.folder_id != collection.id)
+        : [
+            ...savedCollections,
+            {
+              folder_id: collection.id,
+              collection: {
+                name: collection.name,
+              },
+            },
+          ]
+    );
+
+    const { data, error } = checked
+      ? await supabase
+          .from("saved_recipes")
+          .delete()
+          .eq("recipe_id", id)
+          .eq("folder_id", collection.id)
+          .eq("user_id", session.user.id)
+      : await supabase.from("saved_recipes").upsert({
+          user_id: session.user.id,
+          recipe_id: id,
+          folder_id: collection.id,
+        });
+
+    if (error) {
+      console.error("Error updating saved recipes:" + error.message);
+    } else {
+      console.log("Saved recipes updated:", data);
+    }
   }
 
   return (
@@ -272,11 +305,17 @@ export default function ViewRecipe() {
             <div className="relative">
               <button
                 className="bg-[#D75600] flex flex-row items-center gap-x-2 text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition"
-                onClick={handleSave}
+                onClick={() => setShowSavePopup(!showSavePopup)}
               >
                 Save <FaChevronDown />
               </button>
-              {showSavePopup && <SavePopup collections={allCollections} />}
+              {showSavePopup && (
+                <SavePopup
+                  collections={allCollections}
+                  savedCollections={savedCollections}
+                  callback={handleSave}
+                />
+              )}
             </div>
           </div>
 
