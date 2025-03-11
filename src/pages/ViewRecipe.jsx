@@ -2,14 +2,21 @@ import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase, AuthContext } from "../AuthProvider";
-import { FaRegHeart } from "react-icons/fa";
+import { FaRegHeart, FaChevronDown } from "react-icons/fa";
+import SavePopup from "../components/SavePopup";
 
 export default function ViewRecipe() {
   const { id } = useParams();
   const { session } = useContext(AuthContext);
   const [selectedSize, setSelectedSize] = useState("1X");
   const sizes = ["1X", "2X", "3X"];
+  const [showSavePopup, setShowSavePopup] = useState(false);
+
   const [haveCooked, setHaveCooked] = useState(false);
+  /* Saved collections contains all collections the recipe has been saved to
+  allCollections contains all collections the user has created */
+  const [savedCollections, setSavedCollections] = useState([]);
+  const [allCollections, setAllCollections] = useState([]);
 
   const [recipeTitle, setRecipeTitle] = useState("");
   const [likes, setLikes] = useState(0);
@@ -80,7 +87,15 @@ export default function ViewRecipe() {
         setInstructions(recipeData.instructions);
       }
 
-      const [likes, profile, cooked, reviews, nutritional] = await Promise.all([
+      const [
+        likes,
+        profile,
+        cooked,
+        savedCollections,
+        allCollections,
+        reviews,
+        nutritional,
+      ] = await Promise.all([
         supabase
           .from("Likes")
           .select("*", { count: "exact" })
@@ -99,6 +114,20 @@ export default function ViewRecipe() {
               .limit(1)
               .maybeSingle()
           : null,
+        session && session.user && session.user.id
+          ? supabase
+              .from("saved_recipes")
+              .select(
+                "folder_id, collection:saved_collections!saved_recipes_folder_id_fkey (name)"
+              )
+              .eq("user_id", session.user.id)
+          : null,
+        session && session.user && session.user.id
+          ? supabase
+              .from("saved_collections")
+              .select("*")
+              .eq("user_id", session.user.id)
+          : null,
         supabase
           .from("Reviews")
           .select("review_text, created_at, Profiles(username)")
@@ -116,6 +145,22 @@ export default function ViewRecipe() {
         if (cooked.data && cooked.data.have_cooked != null)
           setHaveCooked(cooked.data.have_cooked);
         else if (cooked.error) throw cooked.error;
+      }
+
+      if (savedCollections) {
+        if (savedCollections.error) throw savedCollections.error;
+        else {
+          console.log("Fetched saved collections data:", savedCollections.data);
+          setSavedCollections(savedCollections.data);
+        }
+      }
+
+      if (allCollections) {
+        if (allCollections.error) throw allCollections.error;
+        else {
+          console.log("Fetched all collections data:", allCollections.data);
+          setAllCollections(allCollections.data);
+        }
       }
 
       if (reviews.error) throw reviews.error;
@@ -203,13 +248,7 @@ export default function ViewRecipe() {
 
   async function handleSave() {
     if (!session.user.id) return;
-    const { data, error } = await supabase
-      .from("Saved Recipes")
-      .upsert({ recipe_id: id, user_id: session.user.id })
-      .select();
-    if (error) {
-      console.error("Error saving recipe:" + error.message);
-    }
+    setShowSavePopup(!showSavePopup);
   }
 
   return (
@@ -230,12 +269,15 @@ export default function ViewRecipe() {
             <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
               {recipeTitle}
             </h1>
-            <button
-              className="bg-[#D75600] text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition"
-              onClick={handleSave}
-            >
-              Save
-            </button>
+            <div className="relative">
+              <button
+                className="bg-[#D75600] flex flex-row items-center gap-x-2 text-white px-6 py-2 rounded-full text-lg abhaya-libre-semibold hover:opacity-80 transition"
+                onClick={handleSave}
+              >
+                Save <FaChevronDown />
+              </button>
+              {showSavePopup && <SavePopup collections={allCollections} />}
+            </div>
           </div>
 
           {/* Likes Button */}
