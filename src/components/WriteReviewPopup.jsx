@@ -19,10 +19,7 @@ export default function WriteReviewPopup({ onClose, recipeId }) {
       .single();
 
     if (error) throw error;
-    else {
-      console.log(data);
-      onClose();
-    }
+    else onClose();
   };
 
   return (
