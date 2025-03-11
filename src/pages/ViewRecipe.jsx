@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase, AuthContext } from "../AuthProvider";
-import { FaRegHeart, FaChevronDown} from "react-icons/fa";
+import { FaRegHeart, FaChevronDown } from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
 import WriteReviewPopup from "../components/WriteReviewPopup";
 
@@ -495,13 +495,17 @@ export default function ViewRecipe() {
           </h1>
           {haveCooked && (
             <>
-              <button 
+              <button
                 className="text-2xl abhaya-libre-semibold text-[#D75600] cursor-pointer hover:opacity-80 transition"
-                onClick={() => setShowWriteReviewPopup(!showWriteReviewPopup)}>
+                onClick={() => setShowWriteReviewPopup(!showWriteReviewPopup)}
+              >
                 + Write a Review
               </button>
               {showWriteReviewPopup && (
-                <WriteReviewPopup onClose={() => setShowWriteReviewPopup(false)} />
+                <WriteReviewPopup
+                  onClose={() => setShowWriteReviewPopup(false)}
+                  recipeId={id}
+                />
               )}
             </>
           )}
@@ -510,11 +514,11 @@ export default function ViewRecipe() {
         {/* Review Boxes */}
         <div className="w-full space-y-4">
           {/* No reviews message */}
-          {!reviews.length && 
+          {!reviews.length && (
             <p className="text-2xl abhaya-libre-regular text-[#555555]">
               No reviews yet.
             </p>
-          }
+          )}
           {reviews
             .slice(
               (currentPage - 1) * reviewsPerPage,
