@@ -228,7 +228,7 @@ export default function ViewRecipe() {
     if (id) {
       fetchRecipe(id);
     }
-  }, [id, session && session.user && session.user.id]);
+  }, [id, session?.user?.id]);
 
   async function setCooked() {
     if (!session.user.id) return;
