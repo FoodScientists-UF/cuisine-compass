@@ -5,6 +5,7 @@ import { supabase, AuthContext } from "../AuthProvider";
 import { FaRegHeart, FaChevronDown } from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
 import WriteReviewPopup from "../components/WriteReviewPopup";
+import defaultAvatar from "../layouts/images/default-avatar.png";
 
 export default function ViewRecipe() {
   const { id } = useParams();
@@ -132,7 +133,7 @@ export default function ViewRecipe() {
           : null,
         supabase
           .from("Reviews")
-          .select("review_text, created_at, Profiles(username)")
+          .select("review_text, created_at, Profiles(username, avatar_url)")
           .eq("recipe_id", id),
         supabase.from("Recipes").select("nutrition").eq("id", id),
       ]);
@@ -178,6 +179,7 @@ export default function ViewRecipe() {
             }
           );
           review.review_text = review.review_text || "No review text";
+          review.avatar_url = review.Profiles?.avatar_url || defaultAvatar;
         });
         setReviews(reviews.data);
       }
@@ -532,7 +534,7 @@ export default function ViewRecipe() {
                   </p>
                   <div className="absolute bottom-4 left-4 flex">
                     <img
-                      src={img1}
+                      src={review.avatar_url}
                       alt="profile"
                       className="h-12 w-12 rounded-full object-cover"
                     />
