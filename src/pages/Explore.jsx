@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Container, Card, Image } from "semantic-ui-react";
+import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import "semantic-ui-css/semantic.min.css";
 import img1 from "../layouts/images/Img1.jpg";
 import img2 from "../layouts/images/Img2.jpg";
@@ -17,6 +18,15 @@ const recipes = [
 ];
 
 const ExplorePage = () => {
+  const [bookmarked, setBookmarked] = useState({});
+
+  const toggleBookmark = (id) => {
+    setBookmarked((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   return (
     <Container>
       <div className="pinterest-grid">
@@ -24,6 +34,9 @@ const ExplorePage = () => {
           <div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image} className="pinterest-image" />
+              <div className="bookmark-icon" onClick={() => toggleBookmark(recipe.id)}>
+                {bookmarked[recipe.id] ? <FaBookmark size={20} color="white" /> : <FaRegBookmark size={20} color="white" />}
+              </div>
               <div className="overlay">
                 <div className="recipe-info">
                   <h3>{recipe.title}</h3>
