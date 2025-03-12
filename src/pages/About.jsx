@@ -5,7 +5,9 @@ import alexa from "../layouts/images/alexa.jpeg";
 import julia from "../layouts/images/julia.jpeg";
 import julian from "../layouts/images/julian.jpeg";
 import camryn from "../layouts/images/camryn.jpeg";
-import img1 from "../layouts/images/Img1.jpg";
+import value1 from "../layouts/images/value1.jpg";
+import value2 from "../layouts/images/value2.jpg";
+import value3 from "../layouts/images/value3.jpg";
 
 const About = () => {
   return (
@@ -50,9 +52,7 @@ const About = () => {
           Our Mission
         </Header>
         <p style={{ textAlign: "left", fontSize: "1.2em" }}>
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-          industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+        Cuisine Compass empowers individuals to discover, share, and create meals that fit their dietary needs, budget, and lifestyle. Our platform fosters a supportive community where users can exchange recipes, track nutrition, and find inspiration, all while addressing food insecurity—particularly among students. Whether you're navigating dietary restrictions, cooking on a budget, or simply looking to expand your culinary skills, Cuisine Compass is your guide to accessible and inclusive home cooking.
         </p>
       </Segment>
 
@@ -62,32 +62,32 @@ const About = () => {
         </Header>
         <Card.Group centered itemsPerRow={3}>
           <Card>
-            <Image src={img1} alt="Value 1" wrapped ui={false} />
+            <Image src={value1} alt="Value 1" wrapped ui={false} />
             <Card.Content textAlign="center">
-              <Card.Header>Lorem Ipsum</Card.Header>
+              <Card.Header>Inclusivity & Accessibility</Card.Header>
               <Card.Description>
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+              We believe that everyone deserves access to delicious, nutritious meals, regardless of dietary restrictions, budget, or experience level. Cuisine Compass is designed to provide a diverse range of recipes that cater to various lifestyles and needs.
               </Card.Description>
             </Card.Content>
           </Card>
 
           <Card>
-            <Image src={img1} alt="Value 2" wrapped ui={false} />
+            <Image src={value2} alt="Value 2" wrapped ui={false} />
             <Card.Content textAlign="center">
-              <Card.Header>Lorem Ipsum</Card.Header>
+              <Card.Header>Community & Connection</Card.Header>
               <Card.Description>
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-              </Card.Description>
+              Food brings people together, and we are committed to creating a space where users can support one another, share their cooking experiences, and celebrate their culinary creativity.
+                </Card.Description>
             </Card.Content>
           </Card>
 
           <Card>
-            <Image src={img1} alt="Value 3" wrapped ui={false} />
+            <Image src={value3} alt="Value 3" wrapped ui={false} />
             <Card.Content textAlign="center">
-              <Card.Header>Lorem Ipsum</Card.Header>
+              <Card.Header>Sustainability & Impact</Card.Header>
               <Card.Description>
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-              </Card.Description>
+              Cuisine Compass recognizes the role of food in both personal well-being and social responsibility. By helping users make the most of their ingredients and plan meals effectively, we aim to reduce food waste and promote mindful consumption.
+                </Card.Description>
             </Card.Content>
           </Card>
         </Card.Group>
