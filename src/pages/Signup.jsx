@@ -47,7 +47,8 @@ export default function Signup() {
     setPasswordError(""); // Clear error if passwords match
 
     const email = e.target.email.value;
-    const name = e.target.firstName.value + " " + e.target.lastName.value;
+    const first_name = e.target.firstName.value;
+    const last_name = e.target.lastName.value;
     const username = e.target.username.value;
 
     const { data, error } = await supabase.auth.signUp({
@@ -60,7 +61,7 @@ export default function Signup() {
     }
     const { data: upsertData, error: upsertError } = await supabase
       .from("Profiles")
-      .upsert({ id: data.user.id, name, username })
+      .upsert({ id: data.user.id, first_name, last_name, username })
       .select();
     if (upsertError) {
       alert("Error signing up: " + upsertError.message);
