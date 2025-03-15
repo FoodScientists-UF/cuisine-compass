@@ -226,7 +226,7 @@ export default function Profile() {
 
       {/* Main Content */}
       <div className="profile-content">
-        <img src={pic} alt="profile pic" className="profile-pic" />
+        <img src={pic} className="profile-pic" />
         <h1 className="name">{firstName} {lastName}</h1>
         <h1 className="username">@{userName}</h1>
 
