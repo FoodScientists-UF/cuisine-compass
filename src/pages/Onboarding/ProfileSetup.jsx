@@ -32,7 +32,7 @@ export default function ProfileSetup() {
 
     const { data, error } = await supabase.storage
       .from("profile_pictures")
-      .upload(`${session.user.id}.${file.name.split(".").pop()}`, file, {
+      .upload(`${session.user.id}`, file, {
         cacheControl: "3600",
         upsert: true,
       });

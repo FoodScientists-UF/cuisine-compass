@@ -84,8 +84,18 @@ export default function Profile() {
   };
   
   useEffect(() => {
-    if (!session) return;
+    if (!session?.user?.id) return;
     const userId = session.user.id;
+
+    const fetchUserPicture = async () => {
+      const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(userId);
+      if (error) {
+        console.error("Error downloading profile picture:", error.message);
+        return;
+      }
+      setPic(data.publicUrl);
+    }
+
 
     const fetchUserProfile = async () => {
       const { data, error } = await supabase
@@ -100,7 +110,7 @@ export default function Profile() {
         }
         setFirstName(data.first_name);
       setLastName(data.last_name);
-      setPic(data.avatar_url);
+      //setPic(data.avatar_url);
       setUsername(data.username);
       setBio(data.biography);
     };
@@ -178,7 +188,7 @@ export default function Profile() {
 
     const fetchLikedRecipes = async () => {
       const {data, error} = await supabase  
-        .from("Likes Recipes")
+        .from("Likes")
         .select("recipe_id")
         .eq("user_id", session.user.id);
 
@@ -190,14 +200,16 @@ export default function Profile() {
       setLikedRecipes(data);
     };
 
-     fetchLikedRecipes();
-     fetchCookedRecipes();
-     fetchCollections();
-     fetchRecipeCount();
-     fetchUserProfile();
-     fetchFollowersCount();
-     fetchFollowingCount();
-     fetchUserProfile();
+    Promise.all([
+      fetchUserPicture(),
+      fetchLikedRecipes(),
+      fetchCookedRecipes(),
+      fetchCollections(),
+      fetchRecipeCount(),
+      fetchUserProfile(),
+      fetchFollowersCount(),
+      fetchFollowingCount()
+    ]);
 
   }, [session?.user?.id, recipeCount, cookedRecipes.length, likedRecipes.length]);
 
