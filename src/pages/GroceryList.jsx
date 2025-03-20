@@ -13,6 +13,8 @@ export default function GroceryList() {
     const navigate = useNavigate();
     const [lists, setLists] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
+    const[order, setOrder] = useState("oldest");
+    const [showNotePopup, setShowNotePopup] = useState(false);
 
     // Toggle Dropdown
     const toggleDropdown = () => {
@@ -23,12 +25,19 @@ export default function GroceryList() {
         async function fetchGroceryLists() {
             const { data, error } = await supabase
                 .from("Grocery List")
-                .select("id, item, created_at");
+                .select("id, items, title, created_at");
 
             if (error) {
                 console.error("Error fetching grocery lists:", error);
                 return;
             }
+            if(order == "oldest"){
+                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } 
+            if(order == "newest"){
+                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            }
+            
             data.forEach((list) => {
                 list.created_at = new Date(list.created_at).toLocaleDateString(
                 "en-US",
@@ -44,7 +53,7 @@ export default function GroceryList() {
         }
 
         fetchGroceryLists();
-    }, []);
+    }, [order]);
 
     return (
         <div className="profile-container">
@@ -59,11 +68,10 @@ export default function GroceryList() {
                         <HiOutlineAdjustmentsHorizontal />
                         {showDropdown && (
                         <div className="filter-dropdown">
-                            <p>Sort by:</p>
+                            <p className="filter-dropdown-header">Sort by:</p>
                             <ul>
-                                <li>Oldest</li>
-                                <li>Newest</li>
-                                <li>Search for Date</li>
+                                <li onClick={() => setOrder("oldest")}>Oldest</li>
+                                <li onClick={() => setOrder("newest")}>Newest</li>
                             </ul>
                         </div>
                         )}
@@ -71,20 +79,28 @@ export default function GroceryList() {
                 </div>
                 <button className="add-new-list">
                     <BsPlusCircle className="add-icon"  /> 
-                    <div className="grocery-list-text">Create New Note or List</div>
-                    {/* <CreateNote /> */}
+                    <div className="create-list-text"
+                    onClick={() => setShowNotePopup(!showNotePopup)}
+                    >Create New Note or List</div>
+                    
                 </button>
+                {showNotePopup && (
+                    <CreateNote
+                    onClose={() => setShowNotePopup(false)} />
+                )}
                 
                 <div className="list-container">
                     {lists.length > 0 ? (
                         lists.map((list) => (
                             <div key={list.id} className="list-card">
-                                <div className="list-card-header">Grocery List - {list.created_at}</div>
+                                <div className="list-card-header">{list.title || `Grocery List - ${list.created_at}`}</div>
+                                <hr className="w-full border-t-1 border-black" />
                                 <ul className="list-card-text">
-                                    {Array.isArray(list.item)
-                                        ? list.item.map((item, index) => <li key={index}>{item}</li>)
-                                        : <li>{list.item}</li>}
+                                    {Array.isArray(list.items)
+                                        ? list.items.map((items, index) => <li className="grocery-item" key={index}>{items}</li>)
+                                        : <li className="grocery-item">{list.items}</li>}
                                 </ul>
+                                
                             </div>
                         ))
                     ) : (
