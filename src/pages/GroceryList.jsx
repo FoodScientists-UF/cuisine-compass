@@ -86,6 +86,11 @@ export default function GroceryList() {
 
                     {/* Icons (Add, Edit, Filter) */}
                     <div className="grocery-icons-container">
+
+                        <button className="filter-icon" onClick={() => setShowNotePopup(!showNotePopup)}> 
+                            <BsPlusCircle  />
+                        </button>
+
                         {/* Edit button */}
                         <button className="filter-icon" onClick={() => setEdit(!edit)}> 
                             <MdOutlineModeEditOutline />
@@ -106,13 +111,13 @@ export default function GroceryList() {
                         </button>
                     </div>
                 </div>
-                <button className="add-new-list">
+                {/*<button className="add-new-list">
                     <BsPlusCircle className="add-icon"  /> 
                     <div className="create-list-text"
                         onClick={() => setShowNotePopup(!showNotePopup)}
                         >Create New Note or List
                     </div>
-                </button>
+                </button> */}
                 {showNotePopup && (
                     <CreateNote
                     onClose={() => setShowNotePopup(false)} />

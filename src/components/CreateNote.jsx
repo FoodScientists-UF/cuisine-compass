@@ -43,7 +43,7 @@ export default function CreateNote({ onClose }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <form
-        className="bg-[#F2F2F2] p-6 rounded-2xl shadow-lg w-[500px] text-center relative border-2 border-black"
+        className="bg-[#F2F2F2] p-6 rounded-2xl shadow-lg w-[500px] h-[500px] text-center relative border-2 border-black"
         onSubmit={handlePublishNote}
       >
         <button
@@ -60,14 +60,15 @@ export default function CreateNote({ onClose }) {
         />
         
         <textarea
-          className="text-20px w-full p-2 abhaya-libre-medium h-32 bg-[#F2F2F2]"
+          className="text-20px w-full p-2 abhaya-libre-medium h-[350px] bg-[#F2F2F2]"
           placeholder="Start your note..."
           name="items"
           style={{
             backgroundImage:
               "linear-gradient(to bottom, #000 1px, transparent 2px)",
-            backgroundSize: "100% 1.6em", 
-            lineHeight: "1.6",
+            backgroundSize: "100% 2em", 
+            lineHeight: "2",
+            fontSize: "24px",
             paddingLeft: "0.5em", 
             outline: "none",
           }}
