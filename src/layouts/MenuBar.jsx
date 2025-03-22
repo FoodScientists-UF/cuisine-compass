@@ -70,7 +70,7 @@ class MenuBarComponent extends Component {
             <Button
               circular
               icon="user"
-              onClick={() => (window.location.href = "/login")}
+              onClick={() => (window.location.href = "/profile")}
               style={{
                 backgroundImage: `url(${
                   this.state.pic ? this.state.pic : "/profile_placeholder.png"
