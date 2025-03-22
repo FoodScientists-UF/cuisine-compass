@@ -421,7 +421,7 @@
   font-weight: 500;
 }
 
-.filter-container {
+.grocery-icons-container {
   position: relative;
   display: inline-block;
 }
@@ -433,8 +433,12 @@
   flex-shrink: 0;
 }
 
+.delete-icon{
+  color: #D75600;
+}
+
 .filter-dropdown {
-  position: relative;
+  position: absolute;
   top: 0px;
   left: -160px;
   background: white;
@@ -484,13 +488,16 @@
   flex-shrink: 0;
 }
 
-.list-card-header{
+.list-card-header {
+  display: flex;
+  justify-content: space-between; /* Pushes items to the edges */
+  align-items: center;
   color: #535353;
   font-family: "Abhaya Libre", serif;
   font-size: 20px;
   font-weight: 800;
-  margin-left: 10px;
-  margin-top: 10px;
+  margin: 10px;
+  position: relative; /* Ensure relative positioning for absolute elements */
 }
 
 .list-card-text {

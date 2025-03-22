@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import ProfileNavBar from "../components/ProfileNavBar";
 import { BsPlusCircle } from "react-icons/bs";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import { MdOutlineModeEditOutline } from "react-icons/md";
+import { FaCircleMinus } from "react-icons/fa6";
 import { supabase, AuthContext } from "../AuthProvider";
 import CreateNote from "../components/CreateNote";
 import "../pages/Profile.css";
@@ -13,12 +15,28 @@ export default function GroceryList() {
     const navigate = useNavigate();
     const [lists, setLists] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
-    const[order, setOrder] = useState("oldest");
+    const [order, setOrder] = useState("oldest");
     const [showNotePopup, setShowNotePopup] = useState(false);
+    const [edit, setEdit] = useState(false);
 
     // Toggle Dropdown
     const toggleDropdown = () => {
         setShowDropdown(!showDropdown);
+    };
+
+    const deleteGroceryList = async (id) => {
+        const { error } = await supabase
+            .from("Grocery List")
+            .delete()
+            .eq("id", id);
+    
+        if (error) {
+            console.error("Error deleting grocery list:", error);
+            return;
+        }
+    
+        // Remove the deleted item from state
+        setLists((prevLists) => prevLists.filter((list) => list.id !== id));
     };
 
     useEffect(() => {
@@ -62,27 +80,38 @@ export default function GroceryList() {
             <div className="vl"></div>
             
             <div className="grocery-container">
+                {/* Header */}
                 <div className="grocery-list-header">
                     Grocery Lists
-                    <button className="filter-icon" onClick={toggleDropdown}>
-                        <HiOutlineAdjustmentsHorizontal />
-                        {showDropdown && (
-                        <div className="filter-dropdown">
-                            <p className="filter-dropdown-header">Sort by:</p>
-                            <ul>
-                                <li onClick={() => setOrder("oldest")}>Oldest</li>
-                                <li onClick={() => setOrder("newest")}>Newest</li>
-                            </ul>
-                        </div>
-                        )}
-                    </button>
+
+                    {/* Icons (Add, Edit, Filter) */}
+                    <div className="grocery-icons-container">
+                        {/* Edit button */}
+                        <button className="filter-icon" onClick={() => setEdit(!edit)}> 
+                            <MdOutlineModeEditOutline />
+                        </button>
+
+                        {/* Filter */}
+                        <button className="filter-icon" onClick={toggleDropdown}>
+                            <HiOutlineAdjustmentsHorizontal />
+                            {showDropdown && (
+                            <div className="filter-dropdown">
+                                <p className="filter-dropdown-header">Sort by:</p>
+                                <ul>
+                                    <li onClick={() => setOrder("oldest")}>Oldest</li>
+                                    <li onClick={() => setOrder("newest")}>Newest</li>
+                                </ul>
+                            </div>
+                            )}
+                        </button>
+                    </div>
                 </div>
                 <button className="add-new-list">
                     <BsPlusCircle className="add-icon"  /> 
                     <div className="create-list-text"
-                    onClick={() => setShowNotePopup(!showNotePopup)}
-                    >Create New Note or List</div>
-                    
+                        onClick={() => setShowNotePopup(!showNotePopup)}
+                        >Create New Note or List
+                    </div>
                 </button>
                 {showNotePopup && (
                     <CreateNote
@@ -93,7 +122,10 @@ export default function GroceryList() {
                     {lists.length > 0 ? (
                         lists.map((list) => (
                             <div key={list.id} className="list-card">
-                                <div className="list-card-header">{list.title || `Grocery List - ${list.created_at}`}</div>
+                                <div className="list-card-header">
+                                    {list.title || `Grocery List - ${list.created_at}`}
+                                    {edit && <FaCircleMinus className="delete-icon" onClick={() => deleteGroceryList(list.id)}/>}
+                                </div>
                                 <hr className="w-full border-t-1 border-black" />
                                 <ul className="list-card-text">
                                     {Array.isArray(list.items)

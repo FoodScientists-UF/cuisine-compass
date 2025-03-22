@@ -1,21 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaUser, FaRegUser } from "react-icons/fa6";
 import { PiForkKnife, PiForkKnifeFill } from "react-icons/pi";
 // import { BsCardChecklist } from "react-icons/bs";
 import { RiFileList3Fill, RiFileList3Line } from "react-icons/ri";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../pages/Profile.css";
 
 export default function ProfileNavBar() {
     const navigate = useNavigate();
-    const [active, setActive] = useState("profile");
+    const location = useLocation();
+    const [active, setActive] = useState("");
+
+    useEffect(() => {
+        if (location.pathname.includes("profile")) setActive("profile");
+        else if (location.pathname.includes("grocery-list")) setActive("grocery");
+        // else if (location.pathname.includes("tracker")) setActive("tracker");
+    }, [location.pathname]);
 
     return (
         <div className="profile-sidebar">
             <div
                 className="sidebar-icon"
                 onClick={() => {
-                    setActive("profile");
                     navigate("/profile");
                 }}
             >
@@ -34,7 +40,6 @@ export default function ProfileNavBar() {
             <div
                 className="sidebar-icon"
                 onClick={() => {
-                    setActive("grocery");
                     navigate("/grocery-list");
                 }}
             >
