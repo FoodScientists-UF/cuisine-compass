@@ -169,6 +169,7 @@ export default function ViewRecipe() {
       if (reviews.error) throw reviews.error;
       else {
         console.log("Fetched reviews data:", reviews.data);
+        reviews.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         reviews.data.forEach((review) => {
           review.created_at = new Date(review.created_at).toLocaleDateString(
             "en-US",

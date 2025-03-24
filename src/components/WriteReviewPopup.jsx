@@ -25,7 +25,7 @@ export default function WriteReviewPopup({ onClose, recipeId }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <form
-        className="bg-white p-6 rounded-2xl shadow-lg w-[500px] text-center relative"
+        className="bg-white p-6 rounded-2xl shadow-lg w-[500px] h-[500px] text-center relative"
         onSubmit={handlePostReview}
       >
         <button
