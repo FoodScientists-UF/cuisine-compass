@@ -15,6 +15,27 @@ export default function CreateNote({ onClose }) {
 
   const { session } = useContext(AuthContext);
 
+  // Split text if the item length is > 40 (help with wrapping text)
+  function splitText(text) {
+    if (typeof text !== "string" || text.length <= 40) return [text];
+
+    const words = text.split(" ");
+    let lines = [];
+    let currentLine = "";
+
+    words.forEach(word => {
+        if ((currentLine + word).length <= 40) {
+            currentLine += (currentLine ? " " : "") + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    });
+
+    if (currentLine) lines.push(currentLine);
+    return lines;
+}
+
   const handlePublishNote = async (e) => {
     if (!session?.user?.id) return;
     e.preventDefault();
@@ -24,7 +45,7 @@ export default function CreateNote({ onClose }) {
     const itemsText = formData.get("items");
 
     const itemsArray = itemsText
-      ? itemsText.split("\n").map((item) => item.trim())
+      ? itemsText.split("\n").flatMap((item) => splitText(item.trim()))
       : [];
 
     const { data, error } = await supabase

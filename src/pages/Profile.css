@@ -486,6 +486,8 @@
   border: 1px solid #000;
   background: #F2F2F2;
   flex-shrink: 0;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
 }
 
 .list-card-header {
