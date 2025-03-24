@@ -1,3 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;800&family=Bevan&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .profile-container {
     display: flex;
     justify-content: center;
@@ -49,7 +54,7 @@
     padding: 6px 12px;
     border-radius: 16px;
     font-size: 14px;
-    font-family: "Abhaya Libre ExtraBold";
+    font-family: "Abhaya Libre", serif;
     white-space: nowrap;
     opacity: 0;
     transform: translateX(-10px);
@@ -92,7 +97,7 @@
   
   .name {
     color: #000;
-    font-family: "Abhaya Libre ExtraBold";
+    font-family: "Abhaya Libre", serif;
     font-size: 20px;
     font-weight: 800;
     line-height: normal;
@@ -102,7 +107,7 @@
 .username{
     color: rgba(0, 0, 0, 0.50);
     text-align: center;
-    font-family: "Abhaya Libre ExtraBold";
+    font-family: "Abhaya Libre", serif;
     font-size: 20px;
     font-weight: 800;
     line-height: normal;
@@ -112,7 +117,7 @@
 .bio{
     color: #000;
     text-align: center;
-    font-family: "Abhaya Libre ExtraBold";
+    font-family: "Abhaya Libre", serif;
     font-size: 18px;
     font-style: normal;
     font-weight: 500;
@@ -123,7 +128,7 @@
 .stats{
     color: #000;
     text-align: center;
-    font-family: "Abhaya Libre ExtraBold";
+    font-family: "Abhaya Libre", serif;
     font-size: 18px;
     font-style: normal;
     font-weight: 800;
@@ -152,7 +157,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
 
 
   font-weight: bold;
@@ -184,7 +189,7 @@
   color: black;
   cursor: pointer;
   transition: background-color;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
 
 
 }
@@ -206,7 +211,7 @@
 .collections{
   color: #000;
   text-align: center;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-size: 18px;
   font-style: bold;
   font-weight: 500;
@@ -216,7 +221,7 @@
  
 .collection-name{
   font-size: 18px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-weight: bold;
   text-align: left;
   flex-grow: 1;
@@ -231,7 +236,7 @@
   align-items: center;
   justify-content: center;
   z-index: 20;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-size: 18px;
   text-align: left;
   line-height: 30px; 
@@ -246,7 +251,7 @@
   text-align: center;
   position: relative;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-size: 18px;
   text-align: left;
   line-height: 30px; 
@@ -266,9 +271,9 @@
 /* Dialog Title */
 .dialog-title {
   font-size: 200px;
-  font-weight: bold;
+  font-weight: 800;
   margin-bottom: 15px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-size: 20px;
   text-align: center;
   font-style: bold;
@@ -277,10 +282,10 @@
 
 .dialog-label-two{
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 800;
   margin-top: 20px;
   margin-bottom: 15px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   font-size: 18px;
   text-align: center;
   font-style: bold;
@@ -294,7 +299,8 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 15px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
 }
 
 .dialog-private {
@@ -303,7 +309,8 @@
   gap: 40px;
   font-size: 16px;
   margin-bottom: 20px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
   font-size: 16px;
   font-style: normal;
 }
@@ -326,7 +333,8 @@
   border: none;
   cursor: pointer;
   width: 100%;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
 }
 
 .dialog-create-btn:hover {
@@ -339,7 +347,7 @@
   gap: 20px;
   flex-wrap: wrap;
   margin-top: 20px;
-   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
 .collection-card {
@@ -348,19 +356,162 @@
   padding: 15px;
   border-radius: 12px;
   text-align: center;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
   margin-top:10px;
-
+  font-weight: 800;
 }
 
 .collection-title {
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 5px;
-  font-family: "Abhaya Libre ExtraBold";
+  font-family: "Abhaya Libre", serif;
 }
 
 .collection-recipe-count {
   font-size: 14px;
   color: gray;
+}
+
+.grocery-container{
+  margin-right: auto;
+  padding-left: 120px;
+  text-align: left;
+  width: 100%;
+}
+
+.grocery-list-header{
+  color: #D75600;
+  font-family: "Abhaya Libre", serif;
+  font-size: 35px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: normal;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-new-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  background: #F2F2F2;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.add-new-list:hover {
+  opacity: 80%;
+}
+
+.add-icon {
+  font-size: 35px;
+  color: #535353;
+}
+
+.create-list-text {
+  color: #535353;
+  font-family: "Abhaya Libre", serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.grocery-icons-container {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-icon{
+  width: 45px;
+  height: 45px;
+  color: #535353;
+  flex-shrink: 0;
+}
+
+.delete-icon{
+  color: #D75600;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 0px;
+  left: -160px;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  padding: 10px 0;
+  width: 200px;
+}
+
+.filter-dropdown-header {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: "Abhaya Libre", serif;
+  font-size: 20px;
+  font-weight: 800;
+  color:#D75600;
+}
+
+.filter-dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: "Abhaya Libre", serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.filter-dropdown li:hover {
+  background-color: #F3F3F3;
+}
+
+.list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.list-card {
+  width: calc(33.33% - 20px);
+  max-width: 400px;
+  height: 200px;
+  border-radius: 5px;
+  border: 1px solid #000;
+  background: #F2F2F2;
+  flex-shrink: 0;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
+}
+
+.list-card-header {
+  display: flex;
+  justify-content: space-between; /* Pushes items to the edges */
+  align-items: center;
+  color: #535353;
+  font-family: "Abhaya Libre", serif;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 10px;
+  position: relative; /* Ensure relative positioning for absolute elements */
+}
+
+.list-card-text {
+  color: #535353;
+  font-family: "Abhaya Libre", serif;
+  font-size: 20px;
+  font-weight: 500;
+  align-content: center;
+  margin-left: 10px;
+}
+
+.grocery-item {
+  border-bottom: 1px solid #000000;
+  margin-right: 10px;
 }

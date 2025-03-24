@@ -5,7 +5,6 @@ import logo from "../layouts/images/CuisineCompassLogo.png";
 import title from "../layouts/images/CuisineCompass.png";
 import { supabase, AuthContext } from "../AuthProvider";
 
-
 const MenuBar = (props) => {
   const auth = useContext(AuthContext);
   
@@ -70,7 +69,7 @@ class MenuBarComponent extends Component {
             <Button
               circular
               icon="user"
-              onClick={() => (window.location.href = "/login")}
+              onClick={() => (window.location.href = "/profile")}
               style={{
                 backgroundImage: `url(${
                   this.state.pic ? this.state.pic : "/profile_placeholder.png"
@@ -90,6 +89,7 @@ class MenuBarComponent extends Component {
             name="Explore"
             active={activeItem === "Explore"}
             onClick={this.handleItemClick}
+            style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px" }}
             color={activeItem === "Explore" ? "orange" : "black"}
           />
           <Menu.Item
@@ -98,6 +98,7 @@ class MenuBarComponent extends Component {
             name="Following"
             active={activeItem === "Following"}
             onClick={this.handleItemClick}
+            style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px" }}
             color={activeItem === "Following" ? "orange" : "black"}
           />
           <Menu.Item
@@ -106,6 +107,7 @@ class MenuBarComponent extends Component {
             name="About"
             active={activeItem === "About"}
             onClick={this.handleItemClick}
+            style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px"}}
             color={activeItem === "About" ? "orange" : "black"}
           />
         </Menu>
