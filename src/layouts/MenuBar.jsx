@@ -9,7 +9,9 @@ import { supabase, AuthContext } from "../AuthProvider";
 const MenuBar = (props) => {
   const auth = useContext(AuthContext);
   
-  return <MenuBarComponent {...props} session={auth.session} />;
+  const session = auth?.session || null;
+  
+  return <MenuBarComponent {...props} session={session} />;
 };
 class MenuBarComponent extends Component {
   state = { activeItem: "Explore", pic: "" };
@@ -70,7 +72,7 @@ class MenuBarComponent extends Component {
             <Button
               circular
               icon="user"
-              onClick={() => (window.location.href = "/login")}
+              onClick={() => (window.location.href = (this.props.session ? "/profile" : "/login"))}
               style={{
                 backgroundImage: `url(${
                   this.state.pic ? this.state.pic : "/profile_placeholder.png"
