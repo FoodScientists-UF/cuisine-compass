@@ -20,7 +20,6 @@ export default function Login() {
       alert("Error logging in: " + error.message);
     } else {
       alert("Log in successful!");
-      navigate("/onboarding");
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Image } from "semantic-ui-react";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
+import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
