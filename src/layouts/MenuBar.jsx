@@ -50,7 +50,7 @@ class MenuBarComponent extends Component {
     return (
       <Container
         fluid
-        style={{ paddingBottom: "10px", borderBottom: "2px solid #ddd" }}
+        style={{ paddingBottom: "10px" }}
       >
         {/* First Row: Logo, Title, Search Bar, Profile Button */}
         <Menu secondary>
