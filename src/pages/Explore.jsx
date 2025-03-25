@@ -1,4 +1,5 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Image } from "semantic-ui-react";
@@ -16,6 +17,7 @@ const ExplorePage = () => {
   const [allCollections, setAllCollections] = useState([]);
   const [savedCollections, setSavedCollections] = useState([]);
   const [bookmarkPopup, setBookmarkPopup] = useState(null);
+  const bookmarkRefs = useRef({});
 
   useEffect(() => {
     fetchRecipes();
@@ -60,7 +62,11 @@ const ExplorePage = () => {
       setAllCollections(allCollections.data);
   }
 
-  const toggleBookmark = (id) => {
+  const toggleBookmark = (id, event) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    
     bookmarkPopup === id ? setBookmarkPopup(null) : setBookmarkPopup(id);
   };
 
@@ -106,19 +112,27 @@ const ExplorePage = () => {
   return (
     <Container>
       <div className="pinterest-grid">
-        {recipes.map((recipe) => (
-          <div key={recipe.id} className="pinterest-card">
-            
+        {recipes.map((recipe) => {
+          // Instead of creating a new ref for each recipe, use the refs map
+          return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image_url} className="pinterest-image" onClick={() => navigate(`/recipe/${recipe.id}`)}/>
-              <div className="bookmark-icon">
-                <FaRegBookmark size={20} color="white" onClick={() => toggleBookmark(recipe.id)}/>
-                {bookmarkPopup === recipe.id && <SavePopup
+              <div 
+                className="bookmark-icon" 
+                ref={el => bookmarkRefs.current[recipe.id] = el}
+              >
+                <FaRegBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)}/>
+                {bookmarkPopup === recipe.id && ReactDOM.createPortal(<SavePopup
                                   collections={allCollections}
                                   savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
                                   recipeId={recipe.id}
                                   callback={handleSave}
-                                />}
+                                  style={{ 
+                                    position: "absolute", 
+                                    top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
+                                    left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
+                                  }}
+                                />, document.body)}
               </div>
               <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                 <div className="recipe-info">
@@ -139,8 +153,8 @@ const ExplorePage = () => {
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          </div>)
+        })}
       </div>
     </Container>
   );

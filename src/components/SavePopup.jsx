@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Checkbox } from "semantic-ui-react";
 import { FiPlus } from "react-icons/fi";
 
-export default function SavePopup({ collections, savedCollections, recipeId, callback }) {
+export default function SavePopup({ collections, savedCollections, recipeId, callback, style={} }) {
   const isCollectionSaved = (collection) => {
     return savedCollections.map((c) => c.folder_id).includes(collection.id);
   };
   return (
-    <div className={`absolute mt-2 right-0 w-[22rem] rounded-lg shadow-lg border border-gray-200 z-10 bg-white`}>
+    <div className={`absolute mt-2 right-0 w-[22rem] rounded-lg shadow-lg border border-gray-200 z-10 bg-white`} style={style}>
       <div className="p-4 flex flex-col gap-y-4">
         <span className="text-xl abhaya-libre-semibold text-center">Save</span>
         <div className="flex flex-col gap-y-4">
