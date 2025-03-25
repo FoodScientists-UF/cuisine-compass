@@ -262,6 +262,7 @@ export default function ViewRecipe() {
               ...savedCollections,
               {
                 folder_id: collection.id,
+                recipe_id: recipeId,
                 collection: {
                   name: collection.name,
                 },
