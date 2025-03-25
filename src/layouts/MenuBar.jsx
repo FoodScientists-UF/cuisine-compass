@@ -70,7 +70,7 @@ class MenuBarComponent extends Component {
           <Menu.Item position="right">
             <Button
               circular
-              icon="user"
+              icon={this.state.pic ? "none" : "user"}
               onClick={() => (window.location.href = (this.props.session ? "/profile" : "/login"))}
               style={{
                 backgroundImage: `url(${
