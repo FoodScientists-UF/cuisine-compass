@@ -5,11 +5,49 @@ import { useNavigate } from "react-router-dom";
 import {useContext, useState} from "react";
 
 
+
+export default function CreateRecipe() {
+    const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
+    const [steps, setSteps] = useState([{ id: 1, description: ""}]);
+    const [recipePic, setRecipePic] = useState(null);
+    const [recipeTitle, setRecipeTitle] = useState("");
+    const [recipeDescription, setRecipeDescription] = useState("");
+
+    const navigate = useNavigate();
 //Send everything to the backend
 // Save the created recipe to the "Created" collection on Profile page. Redirect there? 
-//Also will need to check if one has not been created already then create one. 
+//Also will need to check if one has not been created already then create one.
+
  const handleSubmit = async (e) => {
-    //     e.preventDefault();
+    e.preventDefault();
+
+    if(!recipeTitle.trim()){
+        alert("Please enter a title for your recipe");
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase
+        .from("Recipes")
+        .upsert([
+        { 
+        id: crypto.randomUUID(), // Generate a unique ID
+        title: recipeTitle.trim(), 
+        user_id: session.user.id, 
+       
+    }
+        ])
+        .select(); // Select to get the newly inserted/updated row
+    
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        alert("Recipe created successfully!");
+        
+        } catch (error) {
+        alert("Error creating collection: " + error.message);
+        }
 
     //     const title = e.target.title.value;
 
@@ -18,7 +56,10 @@ import {useContext, useState} from "react";
     //       .upsert({ id: data.user.id, title})
     //       .select(); 
     // Redirect to the profile page when clicked
-    navigate("/about"); 
+
+
+
+    navigate("/login"); 
 };
 
 // Handle recipe picture selection
@@ -29,12 +70,6 @@ const handleRecipePicChange = (e) => {
       setRecipePic(URL.createObjectURL(selectedFile));
     }
   };
-
-export default function CreateRecipe() {
-
-    const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
-    const [steps, setSteps] = useState([{ id: 1, description: ""}]);
-    const [recipePic, setRecipePic] = useState(null);
 
     // Add a new ingredient
     const addIngredient = () => {
@@ -80,6 +115,7 @@ export default function CreateRecipe() {
                  type="text"
                  placeholder="e.g. Butter Chicken"
                  name="recipeTitle"
+                 value={recipeTitle}
                  className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-left"
                  style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                 />
@@ -316,10 +352,10 @@ export default function CreateRecipe() {
       </label>
 
         {/*gray dividing line*/}
-        <div className="w-[300px] border-t-2 border-gray-300 absolute top-[650px] left-[288px]"></div>
+        {/*fix the absolute*/}
+        <div className="w-[300px] border-t-2 border-gray-300 relative top-[650px] left-[288px]"></div>
 
     </div>
 
     );
 };
-   
