@@ -71,7 +71,7 @@ export default function GroceryList() {
         }
 
         fetchGroceryLists();
-    }, [order]);
+    }, [order, showNotePopup]);
 
     return (
         <div className="profile-container">
