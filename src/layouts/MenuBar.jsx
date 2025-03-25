@@ -8,7 +8,7 @@ import { supabase, AuthContext } from "../AuthProvider";
 const MenuBar = (props) => {
   const auth = useContext(AuthContext);
   
-  return <MenuBarComponent {...props} session={auth.session} />;
+  return <MenuBarComponent {...props} session={auth?.session} />;
 };
 class MenuBarComponent extends Component {
   state = { activeItem: "Explore", pic: "" };
