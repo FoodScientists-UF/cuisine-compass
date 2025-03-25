@@ -6,6 +6,7 @@ import MenuBar from './layouts/MenuBar';
 import Explore from './pages/Explore';
 import Following from './pages/Following';
 import About from './pages/About';
+import { AuthProvider } from './AuthProvider';
 
 describe('Routing', () => {
 
@@ -25,15 +26,17 @@ describe('Routing', () => {
     it('should render Explore page on / route', () => {
         render(
             <MemoryRouter initialEntries={['/']}>
-                <Routes>
-                    <Route path="/" element={
-                        <PageWrapper>
-                            <MenuBar />
-                        </PageWrapper>
-                    }>
-                        <Route index element={<Explore />} />
-                    </Route>
-                </Routes>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={
+                            <PageWrapper>
+                                <MenuBar />
+                            </PageWrapper>
+                        }>
+                            <Route index element={<Explore />} />
+                        </Route>
+                    </Routes>
+                </AuthProvider>
             </MemoryRouter>
         );
         // Look for the Explore content or its link
