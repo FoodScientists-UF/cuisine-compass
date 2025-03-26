@@ -150,24 +150,29 @@ const ExplorePage = () => {
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image_url} className="pinterest-image" onClick={() => navigate(`/recipe/${recipe.id}`)}/>
-              <div 
-                className="bookmark-icon" 
-                ref={el => bookmarkRefs.current[recipe.id] = el}
-              >
-                <FaRegBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)}/>
-                {bookmarkPopup === recipe.id && ReactDOM.createPortal(<SavePopup
-                                  collections={allCollections}
-                                  savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
-                                  recipeId={recipe.id}
-                                  callback={handleSave}
-                                  style={{ 
-                                    position: "absolute", 
-                                    top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
-                                    left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
-                                  }}
-                                  onCollectionCreated={createCollection}
-                                />, document.body)}
+              <div className="bookmark-icon" ref={el => bookmarkRefs.current[recipe.id] = el}>
+                {savedCollections.some(c => c.recipe_id === recipe.id) ? (
+                  <FaBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)} />
+                ) : (
+                  <FaRegBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)} />
+                )}
+                {bookmarkPopup === recipe.id && ReactDOM.createPortal(
+                  <SavePopup
+                    collections={allCollections}
+                    savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
+                    recipeId={recipe.id}
+                    callback={handleSave}
+                    style={{ 
+                      position: "absolute", 
+                      top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
+                      left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
+                    }}
+                    onCollectionCreated={createCollection}
+                  />, 
+                  document.body
+                )}
               </div>
+
               <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                 <div className="recipe-info">
                   <h3>{recipe.title}</h3>
