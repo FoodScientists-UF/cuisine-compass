@@ -186,6 +186,7 @@ const ExplorePage = () => {
                                     top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
                                     left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
                                   }}
+                                  onCollectionCreated={createCollection}
                                 />, document.body)}
               </div>
               <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
