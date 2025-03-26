@@ -13,7 +13,7 @@ const About = () => {
   return (
     <Container>
       <Segment padded="very" vertical>
-        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800}}>
+        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800, fontSize: "2em"}}>
           Meet the Team
         </Header>
         <Grid columns={5} stackable centered>
@@ -48,7 +48,7 @@ const About = () => {
       </Segment>
 
       <Segment padded="very" vertical>
-        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800}}>
+        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800, fontSize: "2em"}}>
           Our Mission
         </Header>
         <p style={{ textAlign: "left", fontSize: "1.5em", fontFamily: '"Abhaya Libre", serif', fontWeight: 400 }}>
@@ -57,7 +57,7 @@ const About = () => {
       </Segment>
 
       <Segment padded="very" vertical>
-        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800}}>
+        <Header as="h2" textAlign="left" color="orange" style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 800, fontSize: "2em"}}>
           Our Values
         </Header>
         <Card.Group centered itemsPerRow={3}>
