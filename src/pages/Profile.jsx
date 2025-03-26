@@ -11,6 +11,7 @@ import "./Profile.css";
 export default function Profile() {
   const navigate = useNavigate();
   const { session } = useContext(AuthContext);
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [pic, setPic] = useState("");
