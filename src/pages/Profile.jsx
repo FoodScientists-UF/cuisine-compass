@@ -23,15 +23,8 @@ export default function Profile() {
   const [followingCount, setFollowingCount] = useState(0);
   const [cookedRecipes, setCookedRecipes] = useState([]);
   const [likedRecipes, setLikedRecipes] = useState([]);
-
-  // Handle profile picture selection
-  const handleProfilePicChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setProfilePic(URL.createObjectURL(selectedFile));
-    }
-  };
+  const [collectionImage, setCollectionImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
 
   // Dropdown & Dialog States
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
@@ -58,6 +51,25 @@ export default function Profile() {
   const handleCreateCollection = async (e) => {
     e.preventDefault(); // Prevent default form submission (if applicable)
   
+    let uploadedImageUrl = null;
+    if (imageFile) {
+      const fileName = `${session.user.id}-${crypto.randomUUID()}`;
+      const { data: imageData, error: uploadError } = await supabase.storage
+        .from("collection-picture")
+        .upload(fileName, imageFile, { upsert: true });
+    
+      if (uploadError) {
+        alert("Error uploading collection image: " + uploadError.message);
+        return;
+      }
+    
+      const { data: urlData } = supabase.storage
+        .from("collection-picture")
+        .getPublicUrl(fileName);
+    
+      uploadedImageUrl = urlData.publicUrl;
+    }
+    
     if (!collectionName.trim()) {
       alert("Please enter a collection name");
       return;
@@ -71,7 +83,8 @@ export default function Profile() {
             id: crypto.randomUUID(),
             name: collectionName.trim(), 
             user_id: session.user.id, 
-            is_private: isPrivate 
+            is_private: isPrivate ,
+            cover_img: uploadedImageUrl
           }
         ])
         .select(); // Select to get the newly inserted/updated row
@@ -169,10 +182,11 @@ export default function Profile() {
         setFollowingCount(count);
       };
 
-    const fetchCollections = async () => {
-      const { data, error } = await supabase
+    const fetchCollections = async () => {    
+
+     const { data, error } = await supabase
         .from("saved_collections") 
-        .select("id, name") 
+        .select("id, name, cover_img") 
         .eq("user_id", session.user.id); 
 
       if (error) {
@@ -267,39 +281,67 @@ export default function Profile() {
       </div>
        {/* Default Collections */}
        <div className="collections-grid">
-          {[
-            { id: "your-recipes", name: "Your Recipes", recipeCount: recipeCount },
-            { id: "likes", name: "Likes", recipeCount: likedRecipes.length },
-            { id: "cooked", name: "Recipes You've Cooked", recipeCount: cookedRecipes.length }
-          ].map((folder) => (
-            <div key={folder.id} className="collection-card">
-              <h3 className="collection-title">{folder.name}</h3>
-              <p className="collection-recipe-count">
-                {folder.recipeCount} {folder.recipeCount === 1 ? "recipe" : "recipes"}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* User-Created Collections */}
-        {folders.length > 0 && (
-          <div className="collections-grid">
-            {folders.map((folder) => (
+            {[
+              {
+                id: "your-recipes",
+                name: "Your Recipes",
+                recipeCount: recipeCount,
+                cover_img: null, // No image support for default collections (yet)
+              },
+              {
+                id: "likes",
+                name: "Likes",
+                recipeCount: likedRecipes.length,
+                cover_img: null,
+              },
+              {
+                id: "cooked",
+                name: "Recipes You've Cooked",
+                recipeCount: cookedRecipes.length,
+                cover_img: null,
+              },
+            ].map((folder) => (
               <div key={folder.id} className="collection-card">
+                {/* Default gray box for now */}
+                <div className="w-full h-32 bg-gray-200 rounded mb-2" />
                 <h3 className="collection-title">{folder.name}</h3>
                 <p className="collection-recipe-count">
-                  {folder.recipeCount} {folder.recipeCount === 1 ? "recipe" : "recipes"}
+                  {folder.recipeCount}{" "}
+                  {folder.recipeCount === 1 ? "recipe" : "recipes"}
                 </p>
               </div>
             ))}
           </div>
-        )}
+
+        {/* User-Created Collections */}
+        {folders.length > 0 && (
+        <div className="collections-grid">
+          {folders.map((folder) => (
+            <div key={folder.id} className="collection-card">
+              {folder.cover_img ? (
+                <img
+                  src={folder.cover_img}
+                  alt={folder.name}
+                  className="w-full h-32 object-cover rounded mb-2"
+                />
+              ) : (
+                <div className="w-full h-32 bg-gray-200 rounded mb-2" />
+              )}
+              <h3 className="collection-title">{folder.name}</h3>
+              <p className="collection-recipe-count">
+                {folder.recipeCount}{" "}
+                {folder.recipeCount === 1 ? "recipe" : "recipes"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
       </div>
 
       {/* Create Collection Dialog */}
       <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
         <div className="dialog-container">
-          <Dialog.Panel className="dialog-box">
+          <Dialog.Panel className="dialog-box">              
             <button className="close-btn" onClick={closeCollectionDialog}>×</button>
             <Dialog.Title className="dialog-title">Create Collection</Dialog.Title>
 
@@ -324,6 +366,50 @@ export default function Profile() {
               <span>I want this collection to be private</span>
             </label>
           </div>
+          {/* Upload Image Section */}
+              <label htmlFor="collectionImageInput" className="upload-placeholder cursor-pointer">
+                {collectionImage ? (
+                  <img
+                    src={collectionImage}
+                    alt="Collection Preview"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center w-full h-full text-gray-600">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-8 w-8 mb-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12"
+                      />
+                    </svg>
+                    <span className="text-center text-sm font-semibold">
+                      Upload a cover image (optional)
+                    </span>
+                  </div>
+                )}
+                <input
+                  id="collectionImageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setImageFile(file);
+                      setCollectionImage(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="hidden"
+                />
+              </label>
+
 
             <button className="dialog-create-btn" onClick={handleCreateCollection}>Create</button>
           </Dialog.Panel>
