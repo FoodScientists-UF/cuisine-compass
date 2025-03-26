@@ -66,19 +66,8 @@ const ExplorePage = () => {
     setRecipes(updatedRecipes);
   };
 
-  const createCollection = async (collectionName) => {
-    if (!session || !session.user) return;
-  
-    const { data, error } = await supabase
-      .from("saved_collections")
-      .insert([{ name: collectionName, user_id: session.user.id }]);
-  
-    if (error) {
-      console.error("Error creating collection:", error.message);
-      return;
-    }
-  
-    fetchCollections();
+  const createCollection = async (newCollection) => {
+    setAllCollections((prev) => [...prev, newCollection]);
   };
 
   const fetchCollections = async () => {

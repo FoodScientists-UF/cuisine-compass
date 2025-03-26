@@ -1,24 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Dialog } from "@headlessui/react";
-import { supabase } from "../AuthProvider";
+import { AuthContext, supabase } from "../AuthProvider";
 
 const CreateCollectionDialog = ({ isOpen, onClose, onCreate }) => {
-  const [session, setSession] = useState(null);
+  const { session } = useContext(AuthContext);
   const [collectionName, setCollectionName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
-
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error fetching session:", error.message);
-      } else {
-        setSession(data.session);
-      }
-    };
-  
-    fetchSession();
-  }, []);
 
   const handleCreateCollection = async (e) => {
     e.preventDefault();
@@ -43,8 +30,7 @@ const CreateCollectionDialog = ({ isOpen, onClose, onCreate }) => {
         throw new Error(error.message);
       }
 
-      const newCollection = { ...data[0], recipeCount: 0 };
-      onCreate(newCollection);
+      onCreate(data[0]);
 
       alert("Collection created successfully!");
       onClose();
