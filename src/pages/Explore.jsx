@@ -146,15 +146,18 @@ const ExplorePage = () => {
     <Container>
       <div className="pinterest-grid">
         {recipes.map((recipe) => {
-          // Instead of creating a new ref for each recipe, use the refs map
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image_url} className="pinterest-image" onClick={() => navigate(`/recipe/${recipe.id}`)}/>
-              <div className="bookmark-icon" ref={el => bookmarkRefs.current[recipe.id] = el}>
+              <div 
+                className="bookmark-icon" 
+                ref={el => bookmarkRefs.current[recipe.id] = el} 
+                onClick={(e) => toggleBookmark(recipe.id, e)}
+              >
                 {savedCollections.some(c => c.recipe_id === recipe.id) ? (
-                  <FaBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)} />
+                  <FaBookmark size={20} color="white" />
                 ) : (
-                  <FaRegBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)} />
+                  <FaRegBookmark size={20} color="white" />
                 )}
                 {bookmarkPopup === recipe.id && ReactDOM.createPortal(
                   <SavePopup
@@ -172,6 +175,7 @@ const ExplorePage = () => {
                   document.body
                 )}
               </div>
+
 
               <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                 <div className="recipe-info">
