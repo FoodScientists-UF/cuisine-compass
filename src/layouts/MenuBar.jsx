@@ -60,7 +60,7 @@ class MenuBarComponent extends Component {
       >
         {/* First Row: Logo, Title, Search Bar, Profile Button */}
         <Menu secondary>
-          <Menu.Item>
+          <Menu.Item as={Link} to="/explore">
             <Image src={logo} size="tiny" />
           </Menu.Item>
           <Menu.Item>
