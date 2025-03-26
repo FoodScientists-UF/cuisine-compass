@@ -8,7 +8,6 @@ import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
-import SavePopup from "../components/SavePopup";
 
 const ExplorePage = () => {
   const { session } = useContext(AuthContext);
