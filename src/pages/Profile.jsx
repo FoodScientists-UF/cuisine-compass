@@ -1,14 +1,17 @@
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
 import { Dialog } from "@headlessui/react"; 
 import { FaUser } from "react-icons/fa";
 import { PiForkKnife } from "react-icons/pi";
 import { BsCardChecklist } from "react-icons/bs";
-
+import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { session } = useContext(AuthContext);
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [pic, setPic] = useState("");
@@ -20,6 +23,15 @@ export default function Profile() {
   const [followingCount, setFollowingCount] = useState(0);
   const [cookedRecipes, setCookedRecipes] = useState([]);
   const [likedRecipes, setLikedRecipes] = useState([]);
+
+  // Handle profile picture selection
+  const handleProfilePicChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setProfilePic(URL.createObjectURL(selectedFile));
+    }
+  };
 
   // Dropdown & Dialog States
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
@@ -84,8 +96,18 @@ export default function Profile() {
   };
   
   useEffect(() => {
-    if (!session) return;
+    if (!session?.user?.id) return;
     const userId = session.user.id;
+
+    const fetchUserPicture = async () => {
+      const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(userId);
+      if (error) {
+        console.error("Error downloading profile picture:", error.message);
+        return;
+      }
+      setPic(data.publicUrl);
+    }
+
 
     const fetchUserProfile = async () => {
       const { data, error } = await supabase
@@ -100,7 +122,7 @@ export default function Profile() {
         }
         setFirstName(data.first_name);
       setLastName(data.last_name);
-      setPic(data.avatar_url);
+      //setPic(data.avatar_url);
       setUsername(data.username);
       setBio(data.biography);
     };
@@ -178,7 +200,7 @@ export default function Profile() {
 
     const fetchLikedRecipes = async () => {
       const {data, error} = await supabase  
-        .from("Likes Recipes")
+        .from("Likes")
         .select("recipe_id")
         .eq("user_id", session.user.id);
 
@@ -190,31 +212,30 @@ export default function Profile() {
       setLikedRecipes(data);
     };
 
-     fetchLikedRecipes();
-     fetchCookedRecipes();
-     fetchCollections();
-     fetchRecipeCount();
-     fetchUserProfile();
-     fetchFollowersCount();
-     fetchFollowingCount();
-     fetchUserProfile();
+    Promise.all([
+      fetchUserPicture(),
+      fetchLikedRecipes(),
+      fetchCookedRecipes(),
+      fetchCollections(),
+      fetchRecipeCount(),
+      fetchUserProfile(),
+      fetchFollowersCount(),
+      fetchFollowingCount()
+    ]);
 
   }, [session?.user?.id, recipeCount, cookedRecipes.length, likedRecipes.length]);
 
+
+  
   return (
     <div className="profile-container">
       {/* Sidebar */}
-      <div className="profile-sidebar">
-        <div className="sidebar-icon"><FaUser /><span className="sidebar-text">Profile</span></div>
-        <div className="sidebar-icon"><PiForkKnife /><span className="sidebar-text">Nutrient Tracker</span></div>
-        <div className="sidebar-icon"><BsCardChecklist /><span className="sidebar-text">Grocery List</span></div>
-      </div>
-
+      <ProfileNavBar />
       <div className="vl"></div>
 
       {/* Main Content */}
       <div className="profile-content">
-        <img src={pic} alt="profile pic" className="profile-pic" />
+        <img src={pic} className="profile-pic" />
         <h1 className="name">{firstName} {lastName}</h1>
         <h1 className="username">@{userName}</h1>
 
@@ -237,7 +258,7 @@ export default function Profile() {
 
             {showCreateDropdown && (
               <div className="create-dropdown">
-                <p className="create-option">Recipe</p>
+                <p className="create-option" onClick={() => navigate("/createrecipe")}>Recipe</p>
                 <p className="create-option" onClick={openCollectionDialog}>Collection</p>
               </div>
             )}

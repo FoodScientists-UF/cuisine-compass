@@ -7,7 +7,7 @@
 
 .pinterest-card {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
@@ -15,6 +15,7 @@
   width: 100%;
   margin-bottom: 16px;
   break-inside: avoid;
+  cursor: pointer;
 }
 
 .pinterest-card:hover {
@@ -34,16 +35,17 @@
 
 .overlay {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: auto;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-start;
   opacity: 0;
+  padding: 15px;
   transition: opacity 0.3s ease-in-out;
 }
 
@@ -53,7 +55,8 @@
 
 .recipe-info {
   color: #fff;
-  text-align: center;
+  text-align: left;
+  width: 100%;
 }
 
 .recipe-info h3 {
@@ -65,3 +68,30 @@
   margin: 4px 0;
   font-size: 0.9rem;
 }
+
+.tags {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+.tag {
+  background: #228F2D;
+  color: white;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.bookmark-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 50%;
+}
+
+
