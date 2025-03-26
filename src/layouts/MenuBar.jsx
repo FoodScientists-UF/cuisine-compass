@@ -1,5 +1,5 @@
-import React, { Component, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { Component, useContext } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, Input, Button, Image, Container } from "semantic-ui-react";
 import logo from "../layouts/images/CuisineCompassLogo.png";
 import title from "../layouts/images/CuisineCompass.png";
@@ -7,13 +7,15 @@ import { supabase, AuthContext } from "../AuthProvider";
 
 const MenuBar = (props) => {
   const auth = useContext(AuthContext);
+  const location = useLocation();
   
   const session = auth?.session || null;
-  
-  return <MenuBarComponent {...props} session={session} />;
+
+  return <MenuBarComponent {...props} session={session} location={location} />;
 };
+
 class MenuBarComponent extends Component {
-  state = { activeItem: "Explore", pic: "" };
+  state = { activeItem: "", pic: "" };
 
   componentDidMount() {
     this.fetchUserPicture();
@@ -46,6 +48,10 @@ class MenuBarComponent extends Component {
   render() {
     const { color } = this.props;
     const { activeItem } = this.state;
+    const { location } = this.props;
+    const pathname = location.pathname;
+
+    const iconImg = this.state.pic ? this.state.pic : 'user';
 
     return (
       <Container
@@ -70,16 +76,16 @@ class MenuBarComponent extends Component {
           <Menu.Item position="right">
             <Button
               circular
-              icon={this.state.pic ? "none" : "user"}
               onClick={() => (window.location.href = (this.props.session ? "/profile" : "/login"))}
               style={{
-                backgroundImage: `url(${
-                  this.state.pic ? this.state.pic : "/profile_placeholder.png"
-                })`,
+                width: "40px",
+                height: "40px",
+                backgroundImage: `url(${this.state.pic ? this.state.pic : "/default-avatar.png"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                border: "none"
               }}
-            ></Button>
+            />
           </Menu.Item>
         </Menu>
 
@@ -89,28 +95,28 @@ class MenuBarComponent extends Component {
             as={Link}
             to="/explore"
             name="Explore"
-            active={activeItem === "Explore"}
+            active={pathname === "/explore"}
             onClick={this.handleItemClick}
             style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px" }}
-            color={activeItem === "Explore" ? "orange" : "black"}
+            color={pathname === "/explore" ? "orange" : "black"}
           />
           <Menu.Item
             as={Link}
             to="/following"
             name="Following"
-            active={activeItem === "Following"}
+            active={pathname === "/following"}
             onClick={this.handleItemClick}
             style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px" }}
-            color={activeItem === "Following" ? "orange" : "black"}
+            color={pathname === "/following" ? "orange" : "black"}
           />
           <Menu.Item
             as={Link}
             to="/about"
             name="About"
-            active={activeItem === "About"}
+            active={pathname === "/about"}
             onClick={this.handleItemClick}
             style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px"}}
-            color={activeItem === "About" ? "orange" : "black"}
+            color={pathname === "/about" ? "orange" : "black"}
           />
         </Menu>
       </Container>
