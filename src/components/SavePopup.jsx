@@ -1,8 +1,23 @@
 import { useState } from "react";
 import { Checkbox } from "semantic-ui-react";
+import CreateCollectionDialog from './CreateCollectionDialog';
 import { FiPlus } from "react-icons/fi";
 
-export default function SavePopup({ collections, savedCollections, callback }) {
+export default function SavePopup({ collections, savedCollections, callback, onCollectionCreated }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleOpenCollectionDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseCollectionDialog = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleCreateCollection = (name) => {
+    onCollectionCreated(name);
+  };
+  
   const isCollectionSaved = (collection) => {
     return savedCollections.map((c) => c.folder_id).includes(collection.id);
   };
@@ -42,11 +57,15 @@ export default function SavePopup({ collections, savedCollections, callback }) {
             <img className="w-12 h-12 rounded-md bg-gray-300" />
             <FiPlus className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black w-5 h-5"/>
           </div>
-          <button className="abhaya-libre-regular text-xl">
-            Create a collection
-          </button>
+          <button onClick={handleOpenCollectionDialog}>Create a collection</button>
+           </div>
         </div>
-      </div>
+
+        <CreateCollectionDialog 
+        isOpen={isDialogOpen} 
+        onClose={handleCloseCollectionDialog} 
+        onCreate={handleCreateCollection}
+      />
     </div>
   );
-}
+};
