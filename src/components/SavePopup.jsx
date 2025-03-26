@@ -3,7 +3,7 @@ import { Checkbox } from "semantic-ui-react";
 import CreateCollectionDialog from './CreateCollectionDialog';
 import { FiPlus } from "react-icons/fi";
 
-export default function SavePopup({ collections, savedCollections, callback, onCollectionCreated, style={} }) {
+export default function SavePopup({ collections, savedCollections, callback, recipeId, onCollectionCreated, style={} }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleOpenCollectionDialog = () => {

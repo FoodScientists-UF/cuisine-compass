@@ -20,16 +20,6 @@ const ExplorePage = () => {
   const bookmarkRefs = useRef({});
 
   useEffect(() => {
-    const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error fetching session:", error.message);
-      } else {
-        setSession(data.session);
-      }
-    };
-  
-    fetchSession();
     fetchRecipes();
     fetchCollections();
   }, [session?.user?.id]);
