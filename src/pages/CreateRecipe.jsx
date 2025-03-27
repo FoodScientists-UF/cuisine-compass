@@ -3,7 +3,8 @@ import { FaTrash } from "react-icons/fa";
 import { supabase, AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {useContext, useState} from "react";
-
+import ProfileNavBar from "../components/ProfileNavBar";
+import "./Profile.css";
 
 
 export default function CreateRecipe() {
@@ -104,7 +105,9 @@ const handleRecipePicChange = (e) => {
     return (
     
         <div className="mt-6 w-[600px] ml-auto">
-
+            {/* Profile Nav Bar */}
+            <ProfileNavBar />
+            <div className="vl"></div>
             {/* Page heading. Might need to adjust position later */}
             <h1 className="abhaya-libre-medium text-2xl text-left mb-15"  style={{ color: '#D75600', marginLeft: '-405px' }}>Create a New Recipe</h1>
 

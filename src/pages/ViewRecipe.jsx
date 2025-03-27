@@ -107,8 +107,8 @@ export default function ViewRecipe() {
           .from("Profiles")
           .select("username")
           .eq("id", recipeData.user_id)
-          .single(),
-        session && session.user && session.user.id
+          .maybeSingle(),
+        session?.user?.id
           ? supabase
               .from("Cooked Recipes")
               .select("*")
@@ -117,15 +117,15 @@ export default function ViewRecipe() {
               .limit(1)
               .maybeSingle()
           : null,
-        session && session.user && session.user.id
+        session?.user?.id
           ? supabase
               .from("saved_recipes")
               .select(
-                "folder_id, collection:saved_collections!saved_recipes_folder_id_fkey (name)"
+                "recipe_id, folder_id, collection:saved_collections!saved_recipes_folder_id_fkey (name)"
               )
               .eq("user_id", session.user.id)
           : null,
-        session && session.user && session.user.id
+        session?.user?.id
           ? supabase
               .from("saved_collections")
               .select("*")
@@ -169,6 +169,7 @@ export default function ViewRecipe() {
       if (reviews.error) throw reviews.error;
       else {
         console.log("Fetched reviews data:", reviews.data);
+        reviews.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         reviews.data.forEach((review) => {
           review.created_at = new Date(review.created_at).toLocaleDateString(
             "en-US",
@@ -250,43 +251,44 @@ export default function ViewRecipe() {
     } else setHaveCooked(data[0].have_cooked);
   }
 
-  async function handleSave(collection, checked) {
-    if (!session || !session.user || !session.user.id) return;
-    console.log("Saving to collection:", collection);
-    console.log("Checked:", checked);
-    setSavedCollections(
-      checked
-        ? savedCollections.filter((c) => c.folder_id != collection.id)
-        : [
-            ...savedCollections,
-            {
-              folder_id: collection.id,
-              collection: {
-                name: collection.name,
+  async function handleSave(collection, checked, recipeId) {
+      if (!session?.user?.id) return;
+      console.log("Saving to collection:", collection);
+      console.log("Checked:", checked);
+      setSavedCollections(
+        checked
+          ? savedCollections.filter((c) => c.folder_id !== collection.id)
+          : [
+              ...savedCollections,
+              {
+                folder_id: collection.id,
+                recipe_id: recipeId,
+                collection: {
+                  name: collection.name,
+                },
               },
-            },
-          ]
-    );
+            ]
+      );
 
-    const { data, error } = checked
-      ? await supabase
-          .from("saved_recipes")
-          .delete()
-          .eq("recipe_id", id)
-          .eq("folder_id", collection.id)
-          .eq("user_id", session.user.id)
-      : await supabase.from("saved_recipes").upsert({
-          user_id: session.user.id,
-          recipe_id: id,
-          folder_id: collection.id,
-        });
+      const { data, error } = checked
+        ? await supabase
+            .from("saved_recipes")
+            .delete()
+            .eq("recipe_id", recipeId)
+            .eq("folder_id", collection.id)
+            .eq("user_id", session.user.id)
+        : await supabase.from("saved_recipes").upsert({
+            user_id: session.user.id,
+            recipe_id: recipeId,
+            folder_id: collection.id,
+          });
 
-    if (error) {
-      console.error("Error updating saved recipes:" + error.message);
-    } else {
-      console.log("Saved recipes updated:", data);
+      if (error) {
+        console.error("Error updating saved recipes:" + error.message);
+      } else {
+        console.log("Saved recipes updated:", data);
+      }
     }
-  }
 
   return (
     <div className="min-h-screen flex flex-col p-10 space-y-8 py-20">
@@ -316,7 +318,8 @@ export default function ViewRecipe() {
               {showSavePopup && (
                 <SavePopup
                   collections={allCollections}
-                  savedCollections={savedCollections}
+                  savedCollections={savedCollections.filter(c => c.recipe_id === id)}
+                  recipeId={id}
                   callback={handleSave}
                 />
               )}
