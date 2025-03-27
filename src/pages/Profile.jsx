@@ -268,7 +268,7 @@ export default function Profile() {
           <div className="collections-grid">
    
           <div className="create-container">
-            <button onClick={toggleCreateDropdown} className="create-btn">+Create</button>
+            <button onClick={toggleCreateDropdown} className="create-btn">+ Create</button>
 
             {showCreateDropdown && (
               <div className="create-dropdown">
@@ -345,7 +345,8 @@ export default function Profile() {
             <button className="close-btn" onClick={closeCollectionDialog}>×</button>
             <Dialog.Title className="dialog-title">Create Collection</Dialog.Title>
 
-            <label className="dialog-label">Title</label>
+            <label className="dialog-title">Title</label>
+           
             <input 
               type="text" 
               placeholder="Name your collection"
@@ -363,7 +364,7 @@ export default function Profile() {
                 onChange={() => setIsPrivate(!isPrivate)}
                 className="w-4 h-4 border-gray-300 rounded focus:ring-orange-500"
               />
-              <span>I want this collection to be private</span>
+              <span className="dialog-label">I want this collection to be private</span>
             </label>
           </div>
           {/* Upload Image Section */}

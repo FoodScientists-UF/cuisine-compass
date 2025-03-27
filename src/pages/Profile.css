@@ -151,19 +151,19 @@
 }
 
 .create-btn {
-
+  display: inline-flex;         
+  align-items: center;
+  gap: 4px;              
   color: #D75600;
   font-size: 16px;
   font-weight: bold;
+  font-family: "Abhaya Libre", serif;
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-  font-family: "Abhaya Libre", serif;
-
-
-  font-weight: bold;
-  text-align:justify;
-  flex-grow: 1;
+  text-align: left;
+  white-space: nowrap; 
 }
+
 
 .create-btn:hover {
   color: #b54500;
@@ -280,6 +280,17 @@
   line-height: 30px; 
 }
 
+.title-input-txt{
+  font-weight: normal;
+}
+
+.dialog-label{
+  font-family: "Abhaya Libre", serif;
+  text-align: center;
+  font-weight: normal;
+  line-height: 30px; 
+}
+
 .dialog-label-two{
   font-size: 10px;
   font-weight: 800;
@@ -300,7 +311,8 @@
   border-radius: 6px;
   margin-bottom: 15px;
   font-family: "Abhaya Libre", serif;
-  font-weight: 800;
+  font-weight: normal;
+
 }
 
 .dialog-private {
