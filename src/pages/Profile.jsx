@@ -2,9 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
 import { Dialog } from "@headlessui/react"; 
-import { FaUser } from "react-icons/fa";
-import { PiForkKnife } from "react-icons/pi";
-import { BsCardChecklist } from "react-icons/bs";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
@@ -25,12 +23,16 @@ export default function Profile() {
   const [likedRecipes, setLikedRecipes] = useState([]);
   const [collectionImage, setCollectionImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [showDropdownForId, setShowDropdownForId] = useState(null);
+  
 
   // Dropdown & Dialog States
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [collectionName, setCollectionName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+
 
   // Toggle Dropdown
   const toggleCreateDropdown = () => {
@@ -303,7 +305,7 @@ export default function Profile() {
             ].map((folder) => (
               <div key={folder.id} className="collection-card">
                 {/* Default gray box for now */}
-                <div className="w-full h-32 bg-gray-200 rounded mb-2" />
+                <div className="default-image" />
                 <h3 className="collection-title">{folder.name}</h3>
                 <p className="collection-recipe-count">
                   {folder.recipeCount}{" "}
@@ -318,6 +320,47 @@ export default function Profile() {
         <div className="collections-grid">
           {folders.map((folder) => (
             <div key={folder.id} className="collection-card">
+             <div className="collection-options">
+             <button onClick={() => setShowDropdownForId((prevId) => (prevId === folder.id ? null : folder.id))}>
+              <BsThreeDotsVertical />
+            </button>
+
+            {showDropdownForId === folder.id && (
+              <div className="collection-actions-dropdown">
+                <div
+                  className="dropdown-option"
+                  onClick={() => {
+                  
+                    setSelectedCollection(folder); 
+                    setCollectionName(folder.name);
+                    setCollectionImage(folder.cover_img || null);
+                    setIsPrivate(folder.is_private);
+                    setShowDropdownForId(null); 
+                    setIsDialogOpen(true); 
+                  }}
+                >
+                  Edit
+                </div>
+                <div
+                  className="dropdown-option"
+                  onClick={async () => {
+                    const { error } = await supabase
+                      .from("saved_collections")
+                      .delete()
+                      .eq("id", folder.id);
+                    if (!error) {
+                      setFolders((prev) => prev.filter((f) => f.id !== folder.id));
+                    }
+                    setShowDropdownForId(null);
+                  }}
+                >
+                  Delete
+                </div>
+              </div>
+            )}
+          </div>
+
+
               {folder.cover_img ? (
                 <img
                   src={folder.cover_img}
@@ -325,7 +368,7 @@ export default function Profile() {
                   className="w-full h-32 object-cover rounded mb-2"
                 />
               ) : (
-                <div className="w-full h-32 bg-gray-200 rounded mb-2" />
+                <div className="default-image" />
               )}
               <h3 className="collection-title">{folder.name}</h3>
               <p className="collection-recipe-count">
@@ -337,6 +380,27 @@ export default function Profile() {
         </div>
       )}
       </div>
+
+      <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
+        <div className="dialog-container">
+          <Dialog.Panel className="dialog-box">              
+            <button className="close-btn" onClick={closeCollectionDialog}>×</button>
+            <Dialog.Title className="dialog-title">Create Collection</Dialog.Title>
+
+            <label className="dialog-title">Title</label>
+          
+            <input 
+              type="text" 
+              placeholder="Name your collection"
+              className="dialog-input"
+              value={collectionName}
+              onChange={(e) => setCollectionName(e.target.value)}
+            />
+            ...
+            <button className="dialog-create-btn" onClick={handleCreateCollection}>Create</button>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
 
       {/* Create Collection Dialog */}
       <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
@@ -367,6 +431,7 @@ export default function Profile() {
               <span className="dialog-label">I want this collection to be private</span>
             </label>
           </div>
+
           {/* Upload Image Section */}
               <label htmlFor="collectionImageInput" className="upload-placeholder cursor-pointer">
                 {collectionImage ? (
@@ -410,7 +475,6 @@ export default function Profile() {
                   className="hidden"
                 />
               </label>
-
 
             <button className="dialog-create-btn" onClick={handleCreateCollection}>Create</button>
           </Dialog.Panel>
