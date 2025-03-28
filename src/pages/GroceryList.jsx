@@ -5,6 +5,7 @@ import { BsPlusCircle } from "react-icons/bs";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { MdOutlineModeEditOutline } from "react-icons/md";
 import { FaCircleMinus } from "react-icons/fa6";
+import { PiDotsThreeCircleVertical } from "react-icons/pi";
 import { supabase, AuthContext } from "../AuthProvider";
 import CreateNote from "../components/CreateNote";
 import "../pages/Profile.css";
@@ -17,11 +18,16 @@ export default function GroceryList() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [order, setOrder] = useState("oldest");
     const [showNotePopup, setShowNotePopup] = useState(false);
-    const [edit, setEdit] = useState(false);
+    // const [selectedNoteId, setSelectedNoteId] = useState(false);
+    const [showMenu, setShowMenu] = useState(null);
 
     // Toggle Dropdown
     const toggleDropdown = () => {
         setShowDropdown(!showDropdown);
+    };
+
+    const toggleMenu = (listId) => {
+        setShowMenu(showMenu === listId ? null : listId);
     };
 
     const deleteGroceryList = async (id) => {
@@ -84,16 +90,11 @@ export default function GroceryList() {
                 <div className="grocery-list-header">
                     Grocery Lists
 
-                    {/* Icons (Add, Edit, Filter) */}
+                    {/* Icons (Add, Filter) */}
                     <div className="grocery-icons-container">
 
                         <button className="filter-icon" onClick={() => setShowNotePopup(!showNotePopup)}> 
                             <BsPlusCircle  />
-                        </button>
-
-                        {/* Edit button */}
-                        <button className="filter-icon" onClick={() => setEdit(!edit)}> 
-                            <MdOutlineModeEditOutline />
                         </button>
 
                         {/* Filter */}
@@ -111,13 +112,7 @@ export default function GroceryList() {
                         </button>
                     </div>
                 </div>
-                {/*<button className="add-new-list">
-                    <BsPlusCircle className="add-icon"  /> 
-                    <div className="create-list-text"
-                        onClick={() => setShowNotePopup(!showNotePopup)}
-                        >Create New Note or List
-                    </div>
-                </button> */}
+
                 {showNotePopup && (
                     <CreateNote
                     onClose={() => setShowNotePopup(false)} />
@@ -129,7 +124,20 @@ export default function GroceryList() {
                             <div key={list.id} className="list-card">
                                 <div className="list-card-header">
                                     {list.title || `Grocery List - ${list.created_at}`}
-                                    {edit && <FaCircleMinus className="delete-icon" onClick={() => deleteGroceryList(list.id)}/>}
+                                    <div className="relative">
+                                        <PiDotsThreeCircleVertical 
+                                            className="edit-icon" 
+                                            onClick={() => toggleMenu(list.id)}
+                                        />
+                                        {showMenu === list.id && (
+                                            <div className="filter-dropdown">
+                                                <ul>
+                                                    <li>Edit</li>
+                                                    <li onClick={() => deleteGroceryList(list.id)}>Delete</li>
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <hr className="w-full border-t-1 border-black" />
                                 <ul className="list-card-text">
