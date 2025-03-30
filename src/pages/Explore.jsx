@@ -4,10 +4,10 @@ import { AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Image } from "semantic-ui-react";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
+import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
-import SavePopup from "../components/SavePopup";
 
 const ExplorePage = () => {
   const { session } = useContext(AuthContext);
@@ -25,16 +25,49 @@ const ExplorePage = () => {
   }, [session?.user?.id]);
 
   const fetchRecipes = async () => {
-    const { data, error } = await supabase
+    const { data: recipesData, error: recipesError } = await supabase
       .from("Recipes")
-      .select("id, title, image_url, cost, prep_time, cook_time");
+      .select("id, title, image_url, cost, prep_time, cook_time, user_id");
 
-    if (error) {
-      console.error("Error fetching recipes:", error.message);
-    } else {
-      setRecipes(data);
+    if (recipesError) {
+      console.error("Error fetching recipes:", recipesError.message);
+      return;
     }
-    return data;
+
+    const updatedRecipes = await Promise.all(
+      recipesData.map(async (recipe) => {
+        const { count: likesCount, error: likesError } = await supabase
+          .from("Likes")
+          .select("*", { count: "exact" })
+          .eq("recipe_id", recipe.id);
+
+        if (likesError) {
+          console.error(`Error fetching likes for recipe ${recipe.id}:`, likesError.message);
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("Profiles")
+          .select("username")
+          .eq("id", recipe.user_id)
+          .single();
+
+        if (profileError) {
+          console.error(`Error fetching username for user ${recipe.user_id}:`, profileError.message);
+        }
+
+        return {
+          ...recipe,
+          likes: likesCount || 0,
+          username: profileData?.username || "Unknown",
+        };
+      })
+    );
+
+    setRecipes(updatedRecipes);
+  };
+
+  const createCollection = async (newCollection) => {
+    setAllCollections((prev) => [...prev, newCollection]);
   };
 
   const fetchCollections = async () => {
@@ -113,43 +146,44 @@ const ExplorePage = () => {
     <Container>
       <div className="pinterest-grid">
         {recipes.map((recipe) => {
-          // Instead of creating a new ref for each recipe, use the refs map
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image_url} className="pinterest-image" onClick={() => navigate(`/recipe/${recipe.id}`)}/>
               <div 
                 className="bookmark-icon" 
-                ref={el => bookmarkRefs.current[recipe.id] = el}
+                ref={el => bookmarkRefs.current[recipe.id] = el} 
+                onClick={(e) => toggleBookmark(recipe.id, e)}
               >
-                <FaRegBookmark size={20} color="white" onClick={(e) => toggleBookmark(recipe.id, e)}/>
-                {bookmarkPopup === recipe.id && ReactDOM.createPortal(<SavePopup
-                                  collections={allCollections}
-                                  savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
-                                  recipeId={recipe.id}
-                                  callback={handleSave}
-                                  style={{ 
-                                    position: "absolute", 
-                                    top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
-                                    left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
-                                  }}
-                                />, document.body)}
+                {savedCollections.some(c => c.recipe_id === recipe.id) ? (
+                  <FaBookmark size={20} color="white" />
+                ) : (
+                  <FaRegBookmark size={20} color="white" />
+                )}
+                {bookmarkPopup === recipe.id && ReactDOM.createPortal(
+                  <SavePopup
+                    collections={allCollections}
+                    savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
+                    recipeId={recipe.id}
+                    callback={handleSave}
+                    style={{ 
+                      position: "absolute", 
+                      top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
+                      left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
+                    }}
+                    onCollectionCreated={createCollection}
+                  />, 
+                  document.body
+                )}
               </div>
+
+
               <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                 <div className="recipe-info">
                   <h3>{recipe.title}</h3>
-                  <p>{recipe.id}</p>
-                  {recipe.tags && recipe.tags.length > 0 && (
-                    <div className="tags">
-                      {recipe.tags.map((tag, index) => (
-                        <span key={index} className="tag">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <p>{recipe.username}</p>
                   <p>${recipe.cost}</p>
-                  {/* <p>❤ {recipe.likes}</p> */}
-                  <p>🕒 {recipe.prep_time+recipe.cook_time}</p>
+                  <p>❤ {recipe.likes}</p>
+                  <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
                 </div>
               </div>
             </div>
