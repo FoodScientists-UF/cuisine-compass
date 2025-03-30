@@ -49,7 +49,8 @@ export default function GroceryList() {
         async function fetchGroceryLists() {
             const { data, error } = await supabase
                 .from("Grocery List")
-                .select("id, items, title, created_at");
+                .select("id, items, title, created_at")
+                .eq("user_id", session.user.id);
 
             if (error) {
                 console.error("Error fetching grocery lists:", error);
