@@ -18,7 +18,7 @@ export default function GroceryList() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [order, setOrder] = useState("oldest");
     const [showNotePopup, setShowNotePopup] = useState(false);
-    // const [selectedNoteId, setSelectedNoteId] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null);
     const [showMenu, setShowMenu] = useState(null);
 
     // Toggle Dropdown
@@ -47,6 +47,7 @@ export default function GroceryList() {
 
     useEffect(() => {
         async function fetchGroceryLists() {
+            if (!session || !session.user?.id) return;
             const { data, error } = await supabase
                 .from("Grocery List")
                 .select("id, items, title, created_at")
@@ -79,6 +80,11 @@ export default function GroceryList() {
 
         fetchGroceryLists();
     }, [order, showNotePopup]);
+
+    const handleEditClick = (listId) => {
+        setSelectedNoteId(listId);
+        setShowNotePopup(true);
+    };
 
     return (
         <div className="profile-container">
@@ -116,7 +122,8 @@ export default function GroceryList() {
 
                 {showNotePopup && (
                     <CreateNote
-                    onClose={() => setShowNotePopup(false)} />
+                    onClose={() => setShowNotePopup(false)}
+                    listId={selectedNoteId} />
                 )}
                 
                 <div className="list-container">
@@ -133,7 +140,7 @@ export default function GroceryList() {
                                         {showMenu === list.id && (
                                             <div className="filter-dropdown">
                                                 <ul>
-                                                    <li>Edit</li>
+                                                    <li onClick={() => handleEditClick(list.id)}>Edit</li>
                                                     <li onClick={() => deleteGroceryList(list.id)}>Delete</li>
                                                 </ul>
                                             </div>
