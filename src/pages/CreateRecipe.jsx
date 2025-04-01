@@ -16,6 +16,7 @@ export default function CreateRecipe() {
     const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([{ id: 1, description: ""}]);
     const [tags, setTags] = useState([]);
+    const { session } = useContext(AuthContext);
 
     const [recipePic, setRecipePic] = useState(null);
 
@@ -58,13 +59,17 @@ export default function CreateRecipe() {
             return;
         }
 
+
+        const recipeUUID = crypto.randomUUID();
+
         try {
             const { data, error } = await supabase
             //this is what needs to match with supabase
             .from("Recipes")
             .upsert([
             { 
-            id: crypto.randomUUID(), // Generate a unique ID
+            id: recipeUUID, // Generate a unique ID
+            image_url: recipePic ? 'https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/recipe_pictures/' + recipeUUID : null, // Placeholder URL, replace with actual image URL after upload
             title: recipeTitle.trim(), 
             description: recipeDescription.trim(), 
             prep_time: parsedPrepTime,
@@ -84,19 +89,34 @@ export default function CreateRecipe() {
             
             alert("Recipe created successfully!");
             
-            } catch (error) {
+        } catch (error) {
             alert("Error creating collection: " + error.message);
+        }
+
+        if (recipePic) {
+            console.log("Uploading recipe picture:", recipePic);
+            const { data, error } = await supabase.storage
+            .from("recipe_pictures")
+            .upload(`${recipeUUID}`, recipePic, {
+                cacheControl: "3600",
+                upsert: false,
+            });
+            if (error) {
+                alert("Error uploading recipe picture: " + error.message);
+                return;
             }
+        }
+
+            
             //how do I send the recipe to the Created collection?
-            navigate("/profile"); 
+        navigate("/profile"); 
     };
 
     // Handle recipe picture selection
     const handleRecipePicChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-        setFile(selectedFile);
-        setRecipePic(URL.createObjectURL(selectedFile));
+            setRecipePic(selectedFile);
         }
     };
 
@@ -133,7 +153,7 @@ export default function CreateRecipe() {
 
     return (
     
-        <div className="mt-6 w-[600px] ml-auto">
+        <div className="mt-6 mx-auto">
 
             {/* Recipe Picture*/}
             <div className="flex absolute transform -translate-y-1/2 justify-center items-center -mt-[-200px] -ml-[405px]">
@@ -141,7 +161,7 @@ export default function CreateRecipe() {
                 <div
                 className="w-[280px] h-[280px] rounded-3xl bg-[#D9D9D9] flex justify-center items-center overflow-hidden"
                 style={{
-                    backgroundImage: `url(${recipePic})`,
+                    backgroundImage: recipePic ? `url(${URL.createObjectURL(recipePic)})` : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     }}
