@@ -3,7 +3,7 @@ import { FaTrash } from "react-icons/fa";
 import { AiOutlineClose } from 'react-icons/ai';
 import { supabase, AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
-import {useContext, useState} from "react";
+import {useContext, useState, useEffect } from "react";
 import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
@@ -19,8 +19,14 @@ export default function CreateRecipe() {
     const { session } = useContext(AuthContext);
 
     const [recipePic, setRecipePic] = useState(null);
+    const [recipePicUrl, setRecipePicUrl] = useState(null);
 
     const navigate = useNavigate(); 
+
+    useEffect(() => {
+        if (!recipePic) return;
+        setRecipePicUrl(URL.createObjectURL(recipePic));
+    }, [recipePic]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -150,7 +156,6 @@ export default function CreateRecipe() {
         );
     };
 
-
     return (
     
         <div className="mt-6 mx-auto">
@@ -161,7 +166,7 @@ export default function CreateRecipe() {
                 <div
                 className="w-[280px] h-[280px] rounded-3xl bg-[#D9D9D9] flex justify-center items-center overflow-hidden"
                 style={{
-                    backgroundImage: recipePic ? `url(${URL.createObjectURL(recipePic)})` : "none",
+                    backgroundImage: recipePicUrl ? `url(${recipePicUrl})` : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     }}
