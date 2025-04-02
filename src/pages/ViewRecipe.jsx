@@ -135,7 +135,7 @@ export default function ViewRecipe() {
           .from("Reviews")
           .select("review_text, created_at, Profiles(username, avatar_url)")
           .eq("recipe_id", id),
-        supabase.from("Recipes").select("nutrition").eq("id", id),
+        supabase.functions.invoke("fetch-nutrition", { body: JSON.stringify({ ingredient: recipeData.title, id: id }) }),
       ]);
 
       if (likes.error) throw likes.error;
@@ -186,48 +186,7 @@ export default function ViewRecipe() {
       }
 
       if (nutritional.error) throw nutritional.error;
-      else if (nutritional.data.nutrition) {
-        console.log("Fetched nutrition data:", nutritional.data.nutrition);
-        setNutritionalInformation(nutritional.data.nutrition);
-      } else {
-        const { data: dataFunc, error: errorFunc } =
-          await supabase.functions.invoke("fetch-nutrition", {
-            body: JSON.stringify({ ingredient: recipeData.title }),
-          });
-
-        if (errorFunc) throw errorFunc;
-        // Format nutrition data for display
-        const nutritionFields = [
-          "calories",
-          "serving_size_g",
-          "fat_total_g",
-          "fat_saturated_g",
-          "protein_g",
-          "sodium_mg",
-          "potassium_mg",
-          "cholesterol_mg",
-          "carbohydrates_total_g",
-          "fiber_g",
-          "sugar_g",
-        ];
-
-        const formattedNutrition = nutritionFields
-          .filter((field) => dataFunc[field] !== undefined)
-          .map((field) => {
-            const displayName = field
-              .replace(/_/g, " ")
-              .replace(/^./, (str) => str.toUpperCase())
-              .split(" ")[0];
-
-            return {
-              nutrient: displayName,
-              amount: `${dataFunc[field]}${
-                field.includes("_g") ? "g" : field.includes("_mg") ? "mg" : ""
-              }`,
-            };
-          });
-        setNutritionalInformation(formattedNutrition);
-      }
+      else setNutritionalInformation(nutritional.data);
     }
 
     if (id) {

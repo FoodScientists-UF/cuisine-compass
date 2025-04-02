@@ -11,6 +11,7 @@ import {
 } from "semantic-ui-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import ProfileNavBar from "../components/ProfileNavBar";
+import { supabase } from "../AuthProvider";
 
 const foodOptions = [
   { key: "chicken", text: "Chicken", value: "Chicken", macros: { protein: 30, carbs: 0, fats: 5, calories: 140 } },
@@ -45,6 +46,7 @@ const NutrientTracker = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [micronutrients, setMicronutrients] = useState(defaultMicronutrients);
+  const [foodOptions, setFoodOptions] = useState([]);
 
   const formatDate = (dateString) => {
     if (!dateString) {
@@ -61,6 +63,20 @@ const NutrientTracker = () => {
   }, []);
 
   useEffect(() => {
+    const fetchFoodOptions = async () => {
+      const { data, error } = await supabase
+        .from("Recipes")
+        .select("id, title")
+        .order("title", { ascending: true });
+
+      setFoodOptions(data.map((item) => ({ key: item.id, text: item.title, value: item.title })));
+    };
+    fetchFoodOptions();
+  }, [searchQuery]);
+
+
+/*
+  useEffect(() => {
     if (searchQuery.length > 2) {
       const results = foodOptions.filter(food => 
         food.value.toLowerCase().includes(searchQuery.toLowerCase())
@@ -70,7 +86,7 @@ const NutrientTracker = () => {
       setSearchResults([]);
     }
   }, [searchQuery]);
-
+*/
   const handleLogFood = () => {
     if (selectedFood && selectedDate) {
       const foodItem = foodOptions.find((food) => food.value === selectedFood);
@@ -298,26 +314,16 @@ const NutrientTracker = () => {
           
           <div style={{ marginBottom: "1rem" }}>
             <label>Search Food</label>
-            <Input
+            <Dropdown
+              search
+              selection
               fluid
               placeholder="Type to search foods..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              options={foodOptions}
+              value={selectedFood}
+              onChange={(e, { value }) => setSelectedFood(value)}
             />
           </div>
-          
-          {searchResults.length > 0 && (
-            <div style={{ marginBottom: "1rem" }}>
-              <Dropdown
-                placeholder="Select Food"
-                fluid
-                selection
-                options={searchResults}
-                onChange={(e, { value }) => setSelectedFood(value)}
-                value={selectedFood}
-              />
-            </div>
-          )}
           
           {selectedFood && (
             <div style={{ marginBottom: "1rem" }}>

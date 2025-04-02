@@ -4,16 +4,33 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { corsHeaders } from "../_shared/cors.ts"
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders, status: 200 })
   }
 
-  const { ingredient } = await req.json();
+  const { ingredient, id } = await req.json();
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+  )
+
+  const { data, error } = await supabase
+    .from("Recipes")
+    .select("id, nutrition")
+    .eq("id", id)
+    .single();
+  
+  if (data?.nutrition) {
+    return new Response(JSON.stringify(data.nutrition), { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 });
+  }
 
   const nutritionUrl = new URL("https://api.calorieninjas.com/v1/nutrition");
   
@@ -27,15 +44,38 @@ Deno.serve(async (req) => {
     return new Response('Error fetching nutrition data', { status: response.status, headers: corsHeaders });
   }
 
-  const data = await response.json();
+  const responseData = await response.json();
 
-  if (!data.items || data.items.length === 0) {
+  if (!responseData.items || responseData.items.length === 0) {
     return new Response('No nutrition data found', { status: 404, headers: corsHeaders });
   }
 
+  const item = responseData.items[0];
+  
+  const formattedNutrition = Object.keys(item)
+    .filter(field => field !== 'name')
+    .map(field => {
+      const displayName = field
+        .replace(/_/g, " ")
+        .replace(/^./, (str) => str.toUpperCase())
+        .split(" ")[0];
+
+      return {
+        nutrient: displayName,
+        amount: `${item[field]}${
+          field.includes("_g") ? "g" : field.includes("_mg") ? "mg" : ""
+        }`,
+      };
+    });
+
+  const { data: updatedData, error: updatedError } = await supabase
+    .from("Recipes")
+    .update({ nutrition: formattedNutrition })
+    .eq("id", id);
+
   return new Response(
-    JSON.stringify(data.items[0]),
-    { headers: { "Content-Type": "application/json", ...corsHeaders } },
+    JSON.stringify(formattedNutrition),
+    { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 },
   );
 })
 
