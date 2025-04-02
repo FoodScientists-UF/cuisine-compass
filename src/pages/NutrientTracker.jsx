@@ -47,8 +47,7 @@ const NutrientTracker = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [micronutrients, setMicronutrients] = useState(defaultMicronutrients);
   const [foodOptions, setFoodOptions] = useState([]);
-
-  const [recipeMap, setRecipeMap] = useState({});
+  const [foodMap, setFoodMap] = useState({});
 
   const formatDate = (dateString) => {
     if (!dateString) {
@@ -66,62 +65,91 @@ const NutrientTracker = () => {
 
   useEffect(() => {
     const fetchFoodOptions = async () => {
-      const { data, error } = await supabase
-        .from("Recipes")
-        .select("id, title")
-        .order("title", { ascending: true });
+      if (!searchQuery || searchQuery.length < 2) return;
+      
+      try {
+        const { data, error } = await supabase
+          .functions
+          .invoke("fetch-nutrition", {
+            body: { ingredient: searchQuery }
+          });
+          
+        if (error) throw error;
 
-      setFoodOptions(data.map((item) => ({ key: item.id, text: item.title, value: item.id })));
-      setRecipeMap(data.reduce((acc, item) => ({ ...acc, [item.id]: item }), {}));
+        const newFoodMap = data.items.reduce((map, item) => {
+          map[item.name] = item;
+          return map;
+        }, {});
+        setFoodMap(newFoodMap);
+        
+        setFoodOptions(data.items.map(item => ({
+          key: item.name,
+          text: item.name[0].toUpperCase() + item.name.slice(1),
+          value: item.name
+        })));
+
+      } catch (error) {
+        console.error("Error fetching food options:", error);
+      }
     };
-    fetchFoodOptions();
-  }, []);
-
-
-/*
-  useEffect(() => {
-    if (searchQuery.length > 2) {
-      const results = foodOptions.filter(food => 
-        food.value.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    
+    const timeoutId = setTimeout(() => {
+      fetchFoodOptions();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
   }, [searchQuery]);
-*/
+
   const handleLogFood = async () => {
     if (selectedFood && selectedDate) {
-      const recipe = recipeMap[selectedFood];
+      const food = foodMap[selectedFood];
 
-      console.log("Recipe ID:", recipe);
+      if (!food) {
+        console.error("Selected food not found in map:", selectedFood);
+        return;
+      }
 
-      const { data, error } = await supabase
-        .functions
-        .invoke("fetch-nutrition", {
-          body: { ingredient: recipe.title, id: recipe.id }
-        });
-
-        
+      console.log("Found food item:", food);
       
-      if (error) throw error;
-
-      const nutrition = data.reduce((acc, item) => ({ ...acc, [item.nutrient]: item.amount }), {});
-
+      const nutrition = food.formattedNutrition;
       console.log("Nutrition Data:", nutrition);
 
-      const scaledMacros = { ...nutrition };
-      Object.keys(scaledMacros).forEach(key => {
-        scaledMacros[key] = Math.round(scaledMacros[key] * foodAmount);
+      const nutritionObject = {};
+      const macros = { protein: 0, carbs: 0, fats: 0, calories: 0 };
+      
+      nutrition.forEach(item => {
+        const amount = parseFloat(item.amount.replace(/[^\d.-]/g, ''));
+        
+        if (isNaN(amount)) return;
+        
+        nutritionObject[item.nutrient] = amount;
+        
+        const nutrientLower = item.nutrient.toLowerCase();
+        if (nutrientLower === 'calories') {
+          macros.calories = parseFloat((amount * foodAmount));
+        } else if (nutrientLower === 'protein') {
+          macros.protein = parseFloat((amount * foodAmount));
+        } else if (nutrientLower === 'carbohydrates') {
+          macros.carbs = parseFloat((amount * foodAmount));
+        } else if (nutrientLower === 'fat') {
+          macros.fats = parseFloat((amount * foodAmount));
+        }
+      });
+
+      Object.keys(nutritionObject).forEach(key => {
+        const keyLower = key.toLowerCase();
+        if (keyLower === 'protein' || keyLower === 'carbohydrates' || keyLower === 'fat' || keyLower === 'calories') {
+          nutritionObject[key] = parseFloat((nutritionObject[key] * foodAmount).toFixed(2));
+        } 
       });
 
       setLoggedFood([
         ...loggedFood, 
         { 
-          recipe,
-          nutrition,
+          recipe: { title: selectedFood },
+          nutrition: nutritionObject,
+          macros: macros,
           amount: foodAmount,
-          macros: scaledMacros,
           date: selectedDate
         }
       ]);
@@ -139,25 +167,33 @@ const NutrientTracker = () => {
 
   const totalMacros = logsToDisplay.reduce(
     (acc, food) => {
-      acc.protein += food.macros.protein;
-      acc.carbs += food.macros.carbs;
-      acc.fats += food.macros.fats;
-      acc.calories += food.macros.calories;
+      const macros = food.macros || {};
+      acc.protein += macros.protein || 0;
+      acc.carbs += macros.carbs || 0;
+      acc.fats += macros.fats || 0;
+      acc.calories += macros.calories || 0;
       return acc;
     },
     { protein: 0, carbs: 0, fats: 0, calories: 0 }
   );
 
+  const roundedMacros = {
+    protein: parseFloat(totalMacros.protein.toFixed(2)),
+    carbs: parseFloat(totalMacros.carbs.toFixed(2)),
+    fats: parseFloat(totalMacros.fats.toFixed(2)),
+    calories: parseFloat(totalMacros.calories.toFixed(2))
+  };
+
   const pieData = [
-    { name: "Protein", value: totalMacros.protein, color: "#D2691E" },
-    { name: "Carbohydrates", value: totalMacros.carbs, color: "#8B0000" },
-    { name: "Fats", value: totalMacros.fats, color: "#FFA500" }
+    { name: "Protein", value: roundedMacros.protein, color: "#D2691E" },
+    { name: "Carbohydrates", value: roundedMacros.carbs, color: "#8B0000" },
+    { name: "Fats", value: roundedMacros.fats, color: "#FFA500" }
   ].filter(item => item.value > 0);
 
-  const totalGrams = totalMacros.protein + totalMacros.carbs + totalMacros.fats;
-  const proteinPercentage = totalGrams > 0 ? Math.round((totalMacros.protein / totalGrams) * 100) : 0;
-  const carbsPercentage = totalGrams > 0 ? Math.round((totalMacros.carbs / totalGrams) * 100) : 0;
-  const fatsPercentage = totalGrams > 0 ? Math.round((totalMacros.fats / totalGrams) * 100) : 0;
+  const totalGrams = roundedMacros.protein + roundedMacros.carbs + roundedMacros.fats;
+  const proteinPercentage = totalGrams > 0 ? Math.round((roundedMacros.protein / totalGrams) * 100) : 0;
+  const carbsPercentage = totalGrams > 0 ? Math.round((roundedMacros.carbs / totalGrams) * 100) : 0;
+  const fatsPercentage = totalGrams > 0 ? Math.round((roundedMacros.fats / totalGrams) * 100) : 0;
 
   return (
     <Container>
@@ -165,7 +201,7 @@ const NutrientTracker = () => {
       
       <Header as="h2" style={{ color: "#8B0000", marginTop: "2rem" }}>Summary</Header>
       <Header as="h1" style={{ color: "#D75600", margin: "1rem 0 2rem" }}>
-        {totalMacros.calories || 0} Total Calories
+        {roundedMacros.calories} Total Calories
       </Header>
 
       <Grid columns={2} stackable>
@@ -207,15 +243,15 @@ const NutrientTracker = () => {
           <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-around" }}>
             <div style={{ textAlign: "center" }}>
               <div style={{ color: "#D2691E", fontWeight: "bold" }}>Protein</div>
-              <div>{totalMacros.protein}g ({proteinPercentage}%)</div>
+              <div>{roundedMacros.protein}g ({proteinPercentage}%)</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ color: "#8B0000", fontWeight: "bold" }}>Carbohydrates</div>
-              <div>{totalMacros.carbs}g ({carbsPercentage}%)</div>
+              <div>{roundedMacros.carbs}g ({carbsPercentage}%)</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ color: "#FFA500", fontWeight: "bold" }}>Fats</div>
-              <div>{totalMacros.fats}g ({fatsPercentage}%)</div>
+              <div>{roundedMacros.fats}g ({fatsPercentage}%)</div>
             </div>
           </div>
         </Grid.Column>
@@ -299,8 +335,8 @@ const NutrientTracker = () => {
           {logsToDisplay.length > 0 ? (
             logsToDisplay.map((food, index) => (
               <Table.Row key={index}>
-                <Table.Cell>{food.recipe.title}</Table.Cell>
-                <Table.Cell>{food.nutrition.Calories} calories</Table.Cell>
+                <Table.Cell>{food.recipe?.title || food.food?.name || "Unknown"}</Table.Cell>
+                <Table.Cell>{food.nutrition?.Calories || food.macros?.calories || 0} calories</Table.Cell>
                 <Table.Cell>{food.amount || 1} serving</Table.Cell>
               </Table.Row>
             ))
@@ -342,7 +378,9 @@ const NutrientTracker = () => {
               placeholder="Type to search foods..."
               options={foodOptions}
               value={selectedFood}
+              onSearchChange={(e, { searchQuery }) => setSearchQuery(searchQuery)}
               onChange={(e, { value }) => setSelectedFood(value)}
+              noResultsMessage={searchQuery.length < 2 ? "Type at least 2 characters to search" : "No results found"}
             />
           </div>
           

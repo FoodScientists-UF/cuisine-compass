@@ -15,21 +15,21 @@ Deno.serve(async (req) => {
   }
 
   const { ingredient, id } = await req.json();
-
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
   )
-
-  const { data, error } = await supabase
-    .from("Recipes")
-    .select("id, nutrition")
-    .eq("id", id)
-    .single();
-  
-  if (data?.nutrition) {
-    return new Response(JSON.stringify(data.nutrition), { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 });
+  if (id) {
+    const { data, error } = await supabase
+      .from("Recipes")
+      .select("id, nutrition")
+      .eq("id", id)
+      .single();
+    
+    if (data?.nutrition) {
+      return new Response(JSON.stringify(data.nutrition), { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 });
+    }
   }
 
   const nutritionUrl = new URL("https://api.calorieninjas.com/v1/nutrition");
@@ -50,6 +50,36 @@ Deno.serve(async (req) => {
     return new Response('No nutrition data found', { status: 404, headers: corsHeaders });
   }
 
+  if (!id) {
+    const enrichedItems = responseData.items.map(item => {
+      const formattedNutrition = Object.keys(item)
+        .filter(field => field !== 'name')
+        .map(field => {
+          const displayName = field
+            .replace(/_/g, " ")
+            .replace(/^./, (str) => str.toUpperCase())
+            .split(" ")[0];
+
+          return {
+            nutrient: displayName,
+            amount: `${item[field]}${
+              field.includes("_g") ? "g" : field.includes("_mg") ? "mg" : ""
+            }`,
+          };
+        });
+      
+      return {
+        ...item,
+        formattedNutrition
+      };
+    });
+
+    return new Response(
+      JSON.stringify({ items: enrichedItems }), 
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
+    );
+  }
+
   const item = responseData.items[0];
   
   const formattedNutrition = Object.keys(item)
@@ -68,10 +98,12 @@ Deno.serve(async (req) => {
       };
     });
 
-  const { data: updatedData, error: updatedError } = await supabase
-    .from("Recipes")
-    .update({ nutrition: formattedNutrition })
-    .eq("id", id);
+  if (id) {
+    const { data: updatedData, error: updatedError } = await supabase
+      .from("Recipes")
+      .update({ nutrition: formattedNutrition })
+      .eq("id", id);
+  }
 
   return new Response(
     JSON.stringify(formattedNutrition),
