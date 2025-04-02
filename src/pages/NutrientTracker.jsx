@@ -48,6 +48,8 @@ const NutrientTracker = () => {
   const [micronutrients, setMicronutrients] = useState(defaultMicronutrients);
   const [foodOptions, setFoodOptions] = useState([]);
 
+  const [recipeMap, setRecipeMap] = useState({});
+
   const formatDate = (dateString) => {
     if (!dateString) {
       const today = new Date();
@@ -69,10 +71,11 @@ const NutrientTracker = () => {
         .select("id, title")
         .order("title", { ascending: true });
 
-      setFoodOptions(data.map((item) => ({ key: item.id, text: item.title, value: item.title })));
+      setFoodOptions(data.map((item) => ({ key: item.id, text: item.title, value: item.id })));
+      setRecipeMap(data.reduce((acc, item) => ({ ...acc, [item.id]: item }), {}));
     };
     fetchFoodOptions();
-  }, [searchQuery]);
+  }, []);
 
 
 /*
@@ -87,21 +90,39 @@ const NutrientTracker = () => {
     }
   }, [searchQuery]);
 */
-  const handleLogFood = () => {
+  const handleLogFood = async () => {
     if (selectedFood && selectedDate) {
-      const foodItem = foodOptions.find((food) => food.value === selectedFood);
-      const scaledMacros = { ...foodItem.macros };
+      const recipe = recipeMap[selectedFood];
+
+      console.log("Recipe ID:", recipe);
+
+      const { data, error } = await supabase
+        .functions
+        .invoke("fetch-nutrition", {
+          body: { ingredient: recipe.title, id: recipe.id }
+        });
+
+        
+      
+      if (error) throw error;
+
+      const nutrition = data.reduce((acc, item) => ({ ...acc, [item.nutrient]: item.amount }), {});
+
+      console.log("Nutrition Data:", nutrition);
+
+      const scaledMacros = { ...nutrition };
       Object.keys(scaledMacros).forEach(key => {
         scaledMacros[key] = Math.round(scaledMacros[key] * foodAmount);
       });
-      
+
       setLoggedFood([
         ...loggedFood, 
         { 
-          ...foodItem, 
+          recipe,
+          nutrition,
           amount: foodAmount,
           macros: scaledMacros,
-          date: selectedDate 
+          date: selectedDate
         }
       ]);
       
@@ -278,8 +299,8 @@ const NutrientTracker = () => {
           {logsToDisplay.length > 0 ? (
             logsToDisplay.map((food, index) => (
               <Table.Row key={index}>
-                <Table.Cell>{food.value}</Table.Cell>
-                <Table.Cell>{food.macros.calories} calories</Table.Cell>
+                <Table.Cell>{food.recipe.title}</Table.Cell>
+                <Table.Cell>{food.nutrition.Calories} calories</Table.Cell>
                 <Table.Cell>{food.amount || 1} serving</Table.Cell>
               </Table.Row>
             ))
