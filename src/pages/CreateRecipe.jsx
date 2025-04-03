@@ -13,8 +13,8 @@ export default function CreateRecipe() {
     const [recipeDescription, setRecipeDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
-    const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
-    const [steps, setSteps] = useState([{ id: 1, description: ""}]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
+    const [steps, setSteps] = useState([]);
     const [tags, setTags] = useState([]);
     const { session } = useContext(AuthContext);
 
@@ -130,7 +130,7 @@ export default function CreateRecipe() {
     const addIngredient = () => {
         setIngredients((prevIngredients) => [
             ...prevIngredients,
-            { id: prevIngredients.length + 1, amount: "", unit: "", name: "" }
+            { name: "", amount: "", unit: "" }
         ]);
     };
 
@@ -145,7 +145,7 @@ export default function CreateRecipe() {
     const addSteps = () => {
         setSteps((prevSteps) => [
             ...prevSteps,
-            { id: prevSteps.length + 1, description: ""}
+            ''
         ]);
     };
 
@@ -407,9 +407,12 @@ export default function CreateRecipe() {
                         <input
                             type="text"
                             value={step.amount}
+                            key={index}
                             onChange={(e) => {
                             const updatedSteps = [...steps];
-                            updatedSteps[index].amount = e.target.value;
+                            const value = e.target.value;
+                            updatedSteps[index] = value;
+                            console.log(updatedSteps);
                             setSteps(updatedSteps);
                             }}
                         className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-left"
