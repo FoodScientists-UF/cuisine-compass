@@ -37,7 +37,7 @@ createRoot(document.getElementById("root")).render(
           >
             <Route index element={<Explore />} />
             <Route path="explore" element={<Explore />} />
-            <Route path="following" element={<Following />} />
+            <Route path="following" element={<Explore following={true} />} />
             <Route path="about" element={<About />} />
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />

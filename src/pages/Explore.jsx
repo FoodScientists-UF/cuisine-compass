@@ -9,7 +9,7 @@ import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
 
-const ExplorePage = () => {
+const ExplorePage = ({ following = false }) => {
   const { session } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -22,12 +22,40 @@ const ExplorePage = () => {
   useEffect(() => {
     fetchRecipes();
     fetchCollections();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, following]);
 
   const fetchRecipes = async () => {
-    const { data: recipesData, error: recipesError } = await supabase
+    if (!session?.user?.id) {
+      setRecipes([]);
+      return;
+    }
+
+    let recipesQuery = supabase
       .from("Recipes")
       .select("id, title, image_url, cost, prep_time, cook_time, user_id");
+    
+    if (following) {
+      const { data: followingData, error: followingError } = await supabase
+        .from("Following")
+        .select("following_id")
+        .eq("follower_id", session.user.id);
+
+      if (followingError) {
+        console.error("Error fetching following users:", followingError.message);
+        return;
+      }
+      
+      const followingIds = followingData.map(item => item.following_id);
+      
+      if (followingIds.length === 0) {
+        setRecipes([]);
+        return;
+      }
+      
+      recipesQuery = recipesQuery.in("user_id", followingIds);
+    }
+    
+    const { data: recipesData, error: recipesError } = await recipesQuery;
 
     if (recipesError) {
       console.error("Error fetching recipes:", recipesError.message);
