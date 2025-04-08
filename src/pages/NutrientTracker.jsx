@@ -13,30 +13,6 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import ProfileNavBar from "../components/ProfileNavBar";
 import { supabase } from "../AuthProvider";
 
-const foodOptions = [
-  { key: "chicken", text: "Chicken", value: "Chicken", macros: { protein: 30, carbs: 0, fats: 5, calories: 140 } },
-  { key: "rice", text: "Rice", value: "Rice", macros: { protein: 5, carbs: 45, fats: 1, calories: 200 } },
-  { key: "avocado", text: "Avocado", value: "Avocado", macros: { protein: 2, carbs: 12, fats: 15, calories: 160 } },
-  { key: "salmon", text: "Salmon", value: "Salmon", macros: { protein: 25, carbs: 0, fats: 15, calories: 240 } },
-  { key: "broccoli", text: "Broccoli", value: "Broccoli", macros: { protein: 3, carbs: 6, fats: 0, calories: 55 } },
-  { key: "egg", text: "Egg", value: "Egg", macros: { protein: 6, carbs: 1, fats: 5, calories: 70 } },
-  { key: "banana", text: "Banana", value: "Banana", macros: { protein: 1, carbs: 27, fats: 0, calories: 105 } },
-];
-
-const defaultMicronutrients = {
-  fiber: { value: 25, unit: "g" },
-  sugar: { value: 89, unit: "g" },
-  saturatedFat: { value: 27, unit: "g" },
-  transFat: { value: 0, unit: "g" },
-  cholesterol: { value: 300, unit: "mg" },
-  sodium: { value: 2300, unit: "mg" },
-  potassium: { value: 3500, unit: "mg" },
-  iron: { value: 100, unit: "%" },
-  vitaminA: { value: "", unit: "" },
-  vitaminB: { value: "", unit: "" },
-  vitaminC: { value: "", unit: "" },
-};
-
 const NutrientTracker = () => {
   const [open, setOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
@@ -45,7 +21,6 @@ const NutrientTracker = () => {
   const [loggedFood, setLoggedFood] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [micronutrients, setMicronutrients] = useState(defaultMicronutrients);
   const [foodOptions, setFoodOptions] = useState([]);
   const [foodMap, setFoodMap] = useState({});
 
@@ -117,30 +92,71 @@ const NutrientTracker = () => {
       const nutritionObject = {};
       const macros = { protein: 0, carbs: 0, fats: 0, calories: 0 };
       
+      const foodMicronutrients = {
+        Calories: { value: 0, unit: "" },
+        Fat: { value: 0, unit: "g" },
+        SaturatedFat: { value: 0, unit: "g" },
+        Protein: { value: 0, unit: "g" },
+        Sodium: { value: 0, unit: "mg" },
+        Potassium: { value: 0, unit: "mg" },
+        Cholesterol: { value: 0, unit: "mg" },
+        Carbohydrates: { value: 0, unit: "g" },
+        Fiber: { value: 0, unit: "g" },
+        Sugar: { value: 0, unit: "g" }
+      };
+      
+      let processedFat = false;
+      
       nutrition.forEach(item => {
+        if (item.nutrient === 'Serving') return;
+        
         const amount = parseFloat(item.amount.replace(/[^\d.-]/g, ''));
+        const unit = item.amount.replace(/[\d.-]/g, '').trim();
         
         if (isNaN(amount)) return;
         
         nutritionObject[item.nutrient] = amount;
         
-        const nutrientLower = item.nutrient.toLowerCase();
-        if (nutrientLower === 'calories') {
-          macros.calories = parseFloat((amount * foodAmount));
-        } else if (nutrientLower === 'protein') {
-          macros.protein = parseFloat((amount * foodAmount));
-        } else if (nutrientLower === 'carbohydrates') {
-          macros.carbs = parseFloat((amount * foodAmount));
-        } else if (nutrientLower === 'fat') {
-          macros.fats = parseFloat((amount * foodAmount));
+        const nutrientName = item.nutrient;
+        
+        if (nutrientName === 'Calories') {
+          macros.calories = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Calories.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Calories.unit = unit || "";
+        } else if (nutrientName === 'Protein') {
+          macros.protein = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Protein.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Protein.unit = unit || "g";
+        } else if (nutrientName === 'Carbohydrates') {
+          macros.carbs = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Carbohydrates.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Carbohydrates.unit = unit || "g";
+        } else if (nutrientName === 'Fat') {
+          if (!processedFat) {
+            macros.fats = parseFloat((amount * foodAmount).toFixed(2));
+            foodMicronutrients.Fat.value = parseFloat((amount * foodAmount).toFixed(2));
+            foodMicronutrients.Fat.unit = unit || "g";
+            processedFat = true;
+          } else {
+            foodMicronutrients.SaturatedFat.value = parseFloat((amount * foodAmount).toFixed(2));
+            foodMicronutrients.SaturatedFat.unit = unit || "g";
+          }
+        } else if (nutrientName === 'Sodium') {
+          foodMicronutrients.Sodium.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Sodium.unit = unit || "mg";
+        } else if (nutrientName === 'Potassium') {
+          foodMicronutrients.Potassium.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Potassium.unit = unit || "mg";
+        } else if (nutrientName === 'Cholesterol') {
+          foodMicronutrients.Cholesterol.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Cholesterol.unit = unit || "mg";
+        } else if (nutrientName === 'Fiber') {
+          foodMicronutrients.Fiber.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Fiber.unit = unit || "g";
+        } else if (nutrientName === 'Sugar') {
+          foodMicronutrients.Sugar.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Sugar.unit = unit || "g";
         }
-      });
-
-      Object.keys(nutritionObject).forEach(key => {
-        const keyLower = key.toLowerCase();
-        if (keyLower === 'protein' || keyLower === 'carbohydrates' || keyLower === 'fat' || keyLower === 'calories') {
-          nutritionObject[key] = parseFloat((nutritionObject[key] * foodAmount).toFixed(2));
-        } 
       });
 
       setLoggedFood([
@@ -149,6 +165,7 @@ const NutrientTracker = () => {
           recipe: { title: selectedFood },
           nutrition: nutritionObject,
           macros: macros,
+          micronutrients: foodMicronutrients,
           amount: foodAmount,
           date: selectedDate
         }
@@ -176,6 +193,63 @@ const NutrientTracker = () => {
     },
     { protein: 0, carbs: 0, fats: 0, calories: 0 }
   );
+
+  const totalMicronutrients = logsToDisplay.reduce(
+    (acc, food) => {
+      const micros = food.micronutrients || {};
+      
+      return {
+        Calories: {
+          value: (acc.Calories?.value || 0) + (micros.Calories?.value || 0),
+          unit: micros.Calories?.unit || acc.Calories?.unit || ""
+        },
+        Fat: {
+          value: (acc.Fat?.value || 0) + (micros.Fat?.value || 0),
+          unit: micros.Fat?.unit || acc.Fat?.unit || "g"
+        },
+        SaturatedFat: {
+          value: (acc.SaturatedFat?.value || 0) + (micros.SaturatedFat?.value || 0),
+          unit: micros.SaturatedFat?.unit || acc.SaturatedFat?.unit || "g"
+        },
+        Protein: {
+          value: (acc.Protein?.value || 0) + (micros.Protein?.value || 0),
+          unit: micros.Protein?.unit || acc.Protein?.unit || "g"
+        },
+        Sodium: {
+          value: (acc.Sodium?.value || 0) + (micros.Sodium?.value || 0),
+          unit: micros.Sodium?.unit || acc.Sodium?.unit || "mg"
+        },
+        Potassium: {
+          value: (acc.Potassium?.value || 0) + (micros.Potassium?.value || 0),
+          unit: micros.Potassium?.unit || acc.Potassium?.unit || "mg"
+        },
+        Cholesterol: {
+          value: (acc.Cholesterol?.value || 0) + (micros.Cholesterol?.value || 0),
+          unit: micros.Cholesterol?.unit || acc.Cholesterol?.unit || "mg"
+        },
+        Carbohydrates: {
+          value: (acc.Carbohydrates?.value || 0) + (micros.Carbohydrates?.value || 0),
+          unit: micros.Carbohydrates?.unit || acc.Carbohydrates?.unit || "g"
+        },
+        Fiber: {
+          value: (acc.Fiber?.value || 0) + (micros.Fiber?.value || 0),
+          unit: micros.Fiber?.unit || acc.Fiber?.unit || "g"
+        },
+        Sugar: {
+          value: (acc.Sugar?.value || 0) + (micros.Sugar?.value || 0),
+          unit: micros.Sugar?.unit || acc.Sugar?.unit || "g"
+        }
+      };
+    },
+    {}
+  );
+
+  // Round all micronutrient values in one step
+  Object.keys(totalMicronutrients).forEach(key => {
+    if (totalMicronutrients[key]?.value) {
+      totalMicronutrients[key].value = parseFloat(totalMicronutrients[key].value.toFixed(2));
+    }
+  });
 
   const roundedMacros = {
     protein: parseFloat(totalMacros.protein.toFixed(2)),
@@ -257,62 +331,48 @@ const NutrientTracker = () => {
         </Grid.Column>
         
         <Grid.Column width={8}>
-          <Header as="h3">Micros</Header>
+          <Header as="h3">Nutrients</Header>
           <Grid columns={3} divided>
             <Grid.Row>
               <Grid.Column>
                 <div className="micro-nutrient">Fiber</div>
-                <div className="micro-value">{micronutrients.fiber.value} {micronutrients.fiber.unit}</div>
+                <div className="micro-value">{totalMicronutrients.Fiber?.value || 0} {totalMicronutrients.Fiber?.unit || 'g'}</div>
               </Grid.Column>
               <Grid.Column>
                 <div className="micro-nutrient">Cholesterol</div>
-                <div className="micro-value">{micronutrients.cholesterol.value} {micronutrients.cholesterol.unit}</div>
+                <div className="micro-value">{totalMicronutrients.Cholesterol?.value || 0} {totalMicronutrients.Cholesterol?.unit || 'mg'}</div>
               </Grid.Column>
               <Grid.Column>
-                <div className="micro-nutrient">Vitamin A</div>
-                <div className="micro-value">{micronutrients.vitaminA.value} {micronutrients.vitaminA.unit}</div>
+                <div className="micro-nutrient">Total Fat</div>
+                <div className="micro-value">{totalMicronutrients.Fat?.value || 0} {totalMicronutrients.Fat?.unit || 'g'}</div>
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
               <Grid.Column>
                 <div className="micro-nutrient">Sugar</div>
-                <div className="micro-value">{micronutrients.sugar.value} {micronutrients.sugar.unit}</div>
+                <div className="micro-value">{totalMicronutrients.Sugar?.value || 0} {totalMicronutrients.Sugar?.unit || 'g'}</div>
               </Grid.Column>
               <Grid.Column>
                 <div className="micro-nutrient">Sodium</div>
-                <div className="micro-value">{micronutrients.sodium.value} {micronutrients.sodium.unit}</div>
+                <div className="micro-value">{totalMicronutrients.Sodium?.value || 0} {totalMicronutrients.Sodium?.unit || 'mg'}</div>
               </Grid.Column>
               <Grid.Column>
-                <div className="micro-nutrient">Vitamin B</div>
-                <div className="micro-value">{micronutrients.vitaminB.value} {micronutrients.vitaminB.unit}</div>
+                <div className="micro-nutrient">Saturated Fat</div>
+                <div className="micro-value">{totalMicronutrients.SaturatedFat?.value || 0} {totalMicronutrients.SaturatedFat?.unit || 'g'}</div>
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
               <Grid.Column>
-                <div className="micro-nutrient">Saturated Fat</div>
-                <div className="micro-value">{micronutrients.saturatedFat.value} {micronutrients.saturatedFat.unit}</div>
+                <div className="micro-nutrient">Carbohydrates</div>
+                <div className="micro-value">{totalMicronutrients.Carbohydrates?.value || 0} {totalMicronutrients.Carbohydrates?.unit || 'g'}</div>
               </Grid.Column>
               <Grid.Column>
                 <div className="micro-nutrient">Potassium</div>
-                <div className="micro-value">{micronutrients.potassium.value} {micronutrients.potassium.unit}</div>
+                <div className="micro-value">{totalMicronutrients.Potassium?.value || 0} {totalMicronutrients.Potassium?.unit || 'mg'}</div>
               </Grid.Column>
               <Grid.Column>
-                <div className="micro-nutrient">Vitamin C</div>
-                <div className="micro-value">{micronutrients.vitaminC.value} {micronutrients.vitaminC.unit}</div>
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <div className="micro-nutrient">Trans Fat</div>
-                <div className="micro-value">{micronutrients.transFat.value} {micronutrients.transFat.unit}</div>
-              </Grid.Column>
-              <Grid.Column>
-                <div className="micro-nutrient">Iron</div>
-                <div className="micro-value">{micronutrients.iron.value}%</div>
-              </Grid.Column>
-              <Grid.Column>
-                <div className="micro-nutrient"></div>
-                <div className="micro-value"></div>
+                <div className="micro-nutrient">Protein</div>
+                <div className="micro-value">{totalMicronutrients.Protein?.value || 0} {totalMicronutrients.Protein?.unit || 'g'}</div>
               </Grid.Column>
             </Grid.Row>
           </Grid>
