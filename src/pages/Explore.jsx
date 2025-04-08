@@ -8,6 +8,7 @@ import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
+import { BsBookmarkFill } from "react-icons/bs";
 
 const ExplorePage = ({ following = false }) => {
   const { session } = useContext(AuthContext);
@@ -23,6 +24,17 @@ const ExplorePage = ({ following = false }) => {
     fetchRecipes();
     fetchCollections();
   }, [session?.user?.id, following]);
+
+  const fetchLikes = async (recipeId) => {
+    const { data: count, error } = await supabase
+      .from("recipe_unique_savers")
+      .select("count")
+      .eq("recipe_id", recipeId);
+
+    if (error) throw error;
+
+    return { count: count[0]?.count || 0, error };
+  };
 
   const fetchRecipes = async () => {
     if (!session?.user?.id) {
@@ -64,14 +76,7 @@ const ExplorePage = ({ following = false }) => {
 
     const updatedRecipes = await Promise.all(
       recipesData.map(async (recipe) => {
-        const { count: likesCount, error: likesError } = await supabase
-          .from("Likes")
-          .select("*", { count: "exact" })
-          .eq("recipe_id", recipe.id);
-
-        if (likesError) {
-          console.error(`Error fetching likes for recipe ${recipe.id}:`, likesError.message);
-        }
+        const { count: likesCount, error: likesError } = await fetchLikes(recipe.id);
 
         const { data: profileData, error: profileError } = await supabase
           .from("Profiles")
@@ -137,8 +142,8 @@ const ExplorePage = ({ following = false }) => {
     console.log("Checked:", checked);
     setSavedCollections(
       checked
-        ? savedCollections.filter((c) => c.folder_id !== collection.id)
-        : [
+      ? savedCollections.filter((c) => !(c.folder_id === collection.id && c.recipe_id === recipeId))
+      : [
             ...savedCollections,
             {
               folder_id: collection.id,
@@ -165,9 +170,19 @@ const ExplorePage = ({ following = false }) => {
 
     if (error) {
       console.error("Error updating saved recipes:" + error.message);
-    } else {
-      console.log("Saved recipes updated:", data);
     }
+
+    const { count, error: likesError } = await fetchLikes(recipeId);
+    if (likesError) {
+      console.error("Error fetching likes:", likesError.message);
+    } else {
+      const recipe = recipes.find((recipe) => recipe.id === recipeId);
+      if (recipe) {
+        recipe.likes = count;
+        setRecipes([...recipes]);
+      }
+    }
+
   }
 
   return (
@@ -210,7 +225,7 @@ const ExplorePage = ({ following = false }) => {
                   <h3>{recipe.title}</h3>
                   <p>{recipe.username}</p>
                   <p>${recipe.cost}</p>
-                  <p>❤ {recipe.likes}</p>
+                  <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
                   <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
                 </div>
               </div>
