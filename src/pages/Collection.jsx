@@ -7,7 +7,6 @@ import { FaRegBookmark } from "react-icons/fa";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Collection.css";
-import "./Profile.css";
 import ProfileNavBar from "../components/ProfileNavBar";
 import SavePopup from "../components/SavePopup";
 
@@ -181,11 +180,22 @@ const Collections = () => {
     }
   
     return (
-      <Container>
+      <Container className="collection-pg-container">
         <ProfileNavBar />
         <div className="vl"></div>
-        <div className="pinterest-grid">
-        <h3 className="collection-name">{collectionName}</h3>
+
+        <div className="collection-header">
+          <h3 className="collection-name">{collectionName}</h3>
+          <p className="collection-recipe-count-collection">
+            {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}
+          </p>     
+        </div>
+        {recipes.length === 0 ? (
+        <div className="no-recipes-message">
+          <p>You have no recipes in this collection. Go save some from your Explore or Following pages!</p>
+        </div>
+      ) : (
+        <div className="pinterest-grid-coll"> 
         {recipes.map((recipe) => {
             // Instead of creating a new ref for each recipe, use the refs map
             return (<div key={recipe.id} className="pinterest-card">
@@ -230,6 +240,7 @@ const Collections = () => {
             </div>)
           })}
         </div>
+        )}
       </Container>
     );
   };
