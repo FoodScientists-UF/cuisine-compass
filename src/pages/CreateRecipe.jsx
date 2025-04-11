@@ -1,41 +1,104 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
+import { AiOutlineClose } from 'react-icons/ai';
 import { supabase, AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {useContext, useState} from "react";
 import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
-//Send everything to the backend
-// Save the created recipe to the "Created" collection on Profile page. Redirect there? 
-//Also will need to check if one has not been created already then create one. 
- const handleSubmit = async (e) => {
-    //     e.preventDefault();
-
-    //     const title = e.target.title.value;
-
-    //     const {data: upsertData} = await supabase
-    //       .from("Recipes")
-    //       .upsert({ id: data.user.id, title})
-    //       .select(); 
-    // Redirect to the profile page when clicked
-    navigate("/about"); 
-};
-
-// Handle recipe picture selection
-const handleRecipePicChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setRecipePic(URL.createObjectURL(selectedFile));
-    }
-  };
 
 export default function CreateRecipe() {
-
+    const [recipeTitle, setRecipeTitle] = useState("");
+    const [recipeDescription, setRecipeDescription] = useState("");
+    const [prepTime, setPrepTime] = useState("");
+    const [cookTime, setCookTime] = useState("");
     const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([{ id: 1, description: ""}]);
+    const [tags, setTags] = useState([]);
+
     const [recipePic, setRecipePic] = useState(null);
+
+    const navigate = useNavigate(); 
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if(!recipeTitle.trim()){
+            alert("Please enter a title for your recipe");
+            return;
+        }
+
+        if(!recipeDescription.trim()){
+            alert("Please enter a description for your recipe");
+            return;
+        }
+
+        //Convert text time to an integer 
+        const parsedPrepTime = parseInt(prepTime, 10);
+        const parsedCookTime = parseInt(cookTime, 10);
+
+        if (isNaN(parsedPrepTime) || parsedPrepTime <= 0) {
+         alert("Please enter a valid prep time for your recipe");
+         return;
+        }
+
+        if (isNaN(parsedCookTime) || parsedCookTime <= 0) {
+            alert("Please enter a valid cook time for your recipe");
+            return;
+        }
+
+        if(!ingredients.length){
+            alert("Please enter at least 1 ingredient for your recipe");
+            return;
+        }
+
+        if(!steps.length){
+            alert("Please enter at least 1 step for your recipe");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+            //this is what needs to match with supabase
+            .from("Recipes")
+            .upsert([
+            { 
+            id: crypto.randomUUID(), // Generate a unique ID
+            title: recipeTitle.trim(), 
+            description: recipeDescription.trim(), 
+            prep_time: parsedPrepTime,
+            cook_time: parsedCookTime,
+            //not sure if this is right with an array
+            ingredients: ingredients,    
+            instructions: steps,
+            tags: tags,
+            user_id: session.user.id, 
+        }
+            ])
+            .select(); // Select to get the newly inserted/updated row
+        
+            if (error) {
+                throw new Error(error.message);
+            }
+            
+            alert("Recipe created successfully!");
+            
+            } catch (error) {
+            alert("Error creating collection: " + error.message);
+            }
+            //how do I send the recipe to the Created collection?
+            navigate("/profile"); 
+    };
+
+    // Handle recipe picture selection
+    const handleRecipePicChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+        setFile(selectedFile);
+        setRecipePic(URL.createObjectURL(selectedFile));
+        }
+    };
 
     // Add a new ingredient
     const addIngredient = () => {
@@ -67,14 +130,84 @@ export default function CreateRecipe() {
         );
     };
 
+
     return (
     
         <div className="mt-6 w-[600px] ml-auto">
+
+            {/* Recipe Picture*/}
+            <div className="flex absolute transform -translate-y-1/2 justify-center items-center -mt-[-200px] -ml-[405px]">
+                <label htmlFor="recipePicInput" className="relative">
+                <div
+                className="w-[280px] h-[280px] rounded-3xl bg-[#D9D9D9] flex justify-center items-center overflow-hidden"
+                style={{
+                    backgroundImage: `url(${recipePic})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    }}
+                >
+                {!recipePic && (
+                    <img src="/camera.png" alt="Camera Icon" className="w-20 h-20" />
+                )}
+                <hr className="absolute bottom-[-40px] w-full border-t border-[#D9D9D9] " />
+                </div>
+                <input
+                    type="file"
+                    id="recipePicInput"
+                    onChange={handleRecipePicChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                </label>
+
+            {/* Tags Section */}
+            <div className="ml-[-280px] mt-[500px] w-[300px] flex flex-col relative">
+                <div className="flex items-center">
+                    <span className="abhaya-libre-extrabold text-lg text-left">Tags</span>
+                    <span className="ml-2 tooltip mt-[-2px]" data-tooltip="Example: Vegan, Gluten Free, etc.">
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm">i</span>
+                    </span>
+                </div>
+
+                {/* Input Field for Tags */}
+                <input
+                    type="text"
+                    placeholder="Type and press Enter..."
+                    className="abhaya-libre-regular p-3.5 rounded-lg w-[280px] h-12 mt-2 text-left"
+                    style={{ borderColor: '#999999', borderWidth: '1.5px' }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && e.target.value.trim()) {
+                            setTags([...tags, e.target.value.trim()]);
+                            e.target.value = "";
+                        }
+                    }}
+                />
+            
+                {/* Tags */}
+                <div className="absolute top-full left-0 w-full mt-2 flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                        <div key={index} className="flex items-center bg-[#D75600] text-white px-3 py-1 rounded-full">
+                            <span>{tag}</span>
+                            <AiOutlineClose
+                                onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                                className="ml-2 cursor-pointer"
+                                size={14}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+
+        </div>
+
+
             {/* Profile Nav Bar */}
             <ProfileNavBar />
             <div className="vl"></div>
-            {/* Page heading. Might need to adjust position later */}
+
+            {/* Page heading */}
             <h1 className="abhaya-libre-medium text-2xl text-left mb-15"  style={{ color: '#D75600', marginLeft: '-405px' }}>Create a New Recipe</h1>
+
 
             {/* Inputting recipe title */}
            <span className="abhaya-libre-extrabold text-lg text-left block">
@@ -83,55 +216,59 @@ export default function CreateRecipe() {
                  type="text"
                  placeholder="e.g. Butter Chicken"
                  name="recipeTitle"
+                 value={recipeTitle}
+                 onChange={(e) => setRecipeTitle(e.target.value)}
                  className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-left"
                  style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                 />
             </span>
-            
-            <div className="mt-6 flex space-x-4">
-                {/* Inputting prep time in hours */}
-                <span className="flex flex-col w-1/6 abhaya-libre-extrabold text-lg text-left block">
+
+
+            {/* Inputting times */}
+            <div className="mt-6 flex space-x-12">
+                {/* Inputting prep time in minutes */}
+                <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
+                <div className="flex items-center"> 
                     Prep Time
-                    <input
-                        type="text"
-                        placeholder="hrs"
-                        name="prepTimeHours"
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-right"
-                        style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
-                    />
-                </span>
-                {/* Inputting prep time in minutes */}        
-                <span className="flex flex-col w-1/6 mt-7">
-                    <input
-                        type="text"
-                        placeholder="min"
-                        name="prepTimeMinutes"
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-right"
-                        style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
-                    />
-                </span>
+                    {/* Tooltip Icon (next to Prep Time title) */}
+                        <span className="ml-2 tooltip" data-tooltip="Time required for preparing the recipe in minutes. Ex. 2 hours = 120 minutes">
+                            <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
+                        </span>
+                    </div>
 
-                {/* Inputting cook time in hours */}
-                <span className="flex flex-col w-1/10 abhaya-libre-extrabold text-lg text-left block" style={{ paddingLeft: '10%'}}>
+                    <div className="flex items-end gap-2 mt-2">
+                    <input
+                        type="text"
+                        name="prepTime"
+                        value={prepTime}
+                        onChange={(e) => setPrepTime(e.target.value)}
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
+                    />
+                    <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
+                    </div>
+                </span>
+       
+               {/* Inputting cook time in minutes */}
+               <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
+                    <div className="flex items-center"> 
                     Cook Time
+                    {/* Tooltip Icon (next to Prep Time title) */}
+                        <span className="ml-2 tooltip" data-tooltip="Time required for cooking the recipe in minutes. Ex. 2 hours = 120 minutes">
+                            <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
+                        </span>
+                    </div>
+                    <div className="flex items-end gap-2 mt-2">
                     <input
                         type="text"
-                        placeholder="hrs"
-                        name="cookTimeHours"
-                        className="abhaya-libre-regular p-3.5 rounded-lg h-12 mt-2 text-right"
-                        style={{ borderColor: '#999999' , borderWidth: '1.5px', width: '100px'}}
+                        name="cookTime"
+                        value={cookTime}
+                        onChange={(e) => setCookTime(e.target.value)}
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                     />
-                </span>
-
-                {/* Inputting cook time in minutes */}    
-                <span className="flex flex-col w-1/6 mt-7 ml-4">
-                    <input
-                        type="text"
-                        placeholder="min"
-                        name="cookTimeMinutes"
-                        className="abhaya-libre-regular p-3.5 rounded-lg h-12 mt-2 text-right"
-                        style={{ borderColor: '#999999' , borderWidth: '1.5px', width: '100px'}}
-                    />
+                    <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
+                    </div>
                 </span>
             </div>
 
@@ -142,6 +279,7 @@ export default function CreateRecipe() {
                         type="text"
                         placeholder="Tell us about your recipe!"
                         name="cookTimeHours"
+                        onChange={(e) => setRecipeDescription(e.target.value)}
                         className="abhaya-libre-regular p-3.5 rounded-lg mt-2 text-left h-32"
                         style={{ borderColor: '#999999' , borderWidth: '1.5px', paddingBottom: '70px'}}
                     />
@@ -294,35 +432,7 @@ export default function CreateRecipe() {
             </div>
 
 
-        {/* Recipe Picture*/}
-        <label htmlFor="recipePicInput" className="relative">
-            <div
-                className="w-[300px] h-[300px] rounded-3xl bg-[#D9D9D9] flex justify-center items-center absolute"
-                style={{
-                backgroundImage: `url(${recipePic})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                top: '-794px', // Move it up
-                left: '-405px', // Move it to the left
-                 }}
-             >
-            {!recipePic && (
-                <img src="/camera.png" alt="Camera Icon" className="w-20 h-20" />
-            )}
-            </div>
-            <input
-                type="file"
-                id="recipePicInput"
-                onChange={handleRecipePicChange}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-      </label>
-
-        {/*gray dividing line*/}
-        <div className="w-[300px] border-t-2 border-gray-300 absolute top-[650px] left-[288px]"></div>
-
     </div>
 
     );
 };
-   
