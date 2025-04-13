@@ -20,6 +20,7 @@ import MenuBar from "./layouts/MenuBar";
 import Profile from "./pages/Profile.jsx";
 import ViewRecipe from "./pages/ViewRecipe.jsx";
 import GroceryList from "./pages/GroceryList.jsx";
+import NutrientTracker from "./pages/NutrientTracker.jsx";
 import { AuthProvider } from "./AuthProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
@@ -42,6 +43,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/grocery-list" element={<GroceryList />} />
+            <Route path="/tracker" element={<NutrientTracker />} />
             <Route path="recipe/:id" element={<ViewRecipe />} />
           </Route>
           <Route path="/login" element={<Login />} />
