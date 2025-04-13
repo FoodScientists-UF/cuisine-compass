@@ -327,12 +327,12 @@ export default function ViewRecipe() {
           </div>
 
           {/* Likes Button */}
-          <div className="flex items-center space-x-2">
+          {/* <div className="flex items-center space-x-2">
             <FaRegHeart className="text-3xl text-black" />
             <span className="text-3xl abhaya-libre-regular text-black-600">
               {likes}
             </span>
-          </div>
+          </div> */}
 
           {/* Username */}
           <p className="text-2xl abhaya-libre-semibold text-black-600 mt-4">
@@ -407,7 +407,7 @@ export default function ViewRecipe() {
         </div>
 
         {/* Serving Size */}
-        <div className="flex border-2 border-[#D75600] rounded-full overflow-hidden w-64">
+        <div className="flex border-2 border-[#D75600] rounded-full overflow-hidden w-64 mt-4">
           {sizes.map((size, index) => (
             <button
               key={size}
@@ -425,7 +425,7 @@ export default function ViewRecipe() {
           ))}
         </div>
 
-        <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none">
+        <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none mt-4">
           This will yield {servingSize * parseInt(selectedSize.substring(0, 1))}{" "}
           {servingSize > 1 ? "servings" : "serving"}
         </h1>
@@ -474,7 +474,7 @@ export default function ViewRecipe() {
         </ul>
 
         {/* Directions */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-8">
           Directions
         </h1>
 
@@ -595,7 +595,7 @@ export default function ViewRecipe() {
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
         {/* Nutritional Info */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-4 mb-4">
           Nutritional Information
         </h1>
 

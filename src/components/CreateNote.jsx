@@ -84,35 +84,51 @@ export default function CreateNote({ onClose, listId }) {
   }, [listId]);
 
   const handleSubmit = async (e) => {
-    if (!session?.user?.id) return;
     e.preventDefault();
-
+  
+    if (!session?.user?.id) return;
+  
     const formData = new FormData(e.target);
     const updatedTitle = formData.get("title");
     const itemsText = formData.get("items");
-    const itemsArray = itemsText ? itemsText.split("\n").flatMap((item) => splitText(item.trim())) : [];
-
+  
+    const itemsArray = itemsText
+      ? itemsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+          .flatMap(splitText)
+      : [];
+  
+    console.log("Submitting listId:", listId);
+    console.log("itemsArray to save:", itemsArray);
+    console.log("updatedTitle to save:", updatedTitle);
+    
     let response;
     if (listId) {
-      // Update existing list
       response = await supabase
         .from("Grocery List")
-        .update({ title: updatedTitle, items: itemsArray })
+        .update({ user_id: session.user.id, title: updatedTitle, items: itemsArray })
         .eq("id", listId);
+  
+      console.log("UPDATE response:", response);
     } else {
-      // Insert new list
       response = await supabase
         .from("Grocery List")
         .insert({ user_id: session.user.id, title: updatedTitle, items: itemsArray })
         .single();
+  
+      console.log("INSERT response:", response);
     }
-
+  
     if (response.error) {
       console.error("Error saving grocery list:", response.error);
     } else {
       onClose();
     }
   };
+  
+  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">

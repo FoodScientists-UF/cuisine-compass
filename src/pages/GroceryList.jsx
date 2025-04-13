@@ -43,6 +43,7 @@ export default function GroceryList() {
     
         // Remove the deleted item from state
         setLists((prevLists) => prevLists.filter((list) => list.id !== id));
+        setShowMenu(null);
     };
 
     useEffect(() => {
@@ -79,11 +80,23 @@ export default function GroceryList() {
         }
 
         fetchGroceryLists();
+
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".menu-container")) {
+                setShowMenu(null);
+            }
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+
     }, [order, showNotePopup]);
 
     const handleEditClick = (listId) => {
         setSelectedNoteId(listId);
         setShowNotePopup(true);
+        setShowMenu(null);
     };
 
     return (
@@ -121,9 +134,8 @@ export default function GroceryList() {
                 </div>
 
                 {showNotePopup && (
-                    <CreateNote
-                    onClose={() => setShowNotePopup(false)}
-                    listId={selectedNoteId} />
+                    <CreateNote onClose={() => setShowNotePopup(false)} listId={selectedNoteId} />
+
                 )}
                 
                 <div className="list-container">
@@ -132,7 +144,7 @@ export default function GroceryList() {
                             <div key={list.id} className="list-card">
                                 <div className="list-card-header">
                                     {list.title || `Grocery List - ${list.created_at}`}
-                                    <div className="relative">
+                                    <div className="relative menu-container">
                                         <PiDotsThreeCircleVertical 
                                             className="edit-icon" 
                                             onClick={() => toggleMenu(list.id)}
