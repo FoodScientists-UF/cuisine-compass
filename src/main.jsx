@@ -22,6 +22,7 @@ import ViewRecipe from "./pages/ViewRecipe.jsx";
 import GroceryList from "./pages/GroceryList.jsx";
 import NutrientTracker from "./pages/NutrientTracker.jsx";
 import { AuthProvider } from "./AuthProvider.jsx";
+import Collection from "./pages/Collection.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -45,6 +46,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="/grocery-list" element={<GroceryList />} />
             <Route path="/tracker" element={<NutrientTracker />} />
             <Route path="recipe/:id" element={<ViewRecipe />} />
+            <Route path="collection/:collectionId" element={<Collection />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
