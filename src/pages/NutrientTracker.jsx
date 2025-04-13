@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Container,
   Header,
@@ -11,32 +11,38 @@ import {
 } from "semantic-ui-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import ProfileNavBar from "../components/ProfileNavBar";
-import { supabase } from "../AuthProvider";
+import { supabase, AuthContext } from "../AuthProvider";
 
 const NutrientTracker = () => {
+  const { session } = useContext(AuthContext);
+
   const [open, setOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodAmount, setFoodAmount] = useState(1);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loggedFood, setLoggedFood] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [foodOptions, setFoodOptions] = useState([]);
   const [foodMap, setFoodMap] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const formatDate = (dateString) => {
-    if (!dateString) {
-      const today = new Date();
-      return today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    }
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '.');
+  const formatDate = () => {
+    if (!selectedDate) return "";
+    
+    const [year, month, day] = selectedDate.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    }).replace(',', '.');
   };
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    setSelectedDate(today);
-  }, []);
+    if (session?.user?.id && selectedDate) fetchFoodLogsForDate(selectedDate);
+  }, [session?.user?.id, selectedDate]);
 
   useEffect(() => {
     const fetchFoodOptions = async () => {
@@ -75,8 +81,32 @@ const NutrientTracker = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  const fetchFoodLogsForDate = async (date) => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('nutrition_tracker')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('date', date)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setLoggedFood(data?.foods || []);
+    } catch (error) {
+      console.error("Error fetching food logs:", error);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
+    setSelectedDate(newDate);
+  };
+
   const handleLogFood = async () => {
-    if (selectedFood && selectedDate) {
+    if (selectedFood && selectedDate && session?.user?.id) {
       const food = foodMap[selectedFood];
 
       if (!food) {
@@ -159,17 +189,46 @@ const NutrientTracker = () => {
         }
       });
 
-      setLoggedFood([
-        ...loggedFood, 
-        { 
-          recipe: { title: selectedFood },
-          nutrition: nutritionObject,
-          macros: macros,
-          micronutrients: foodMicronutrients,
-          amount: foodAmount,
-          date: selectedDate
-        }
-      ]);
+      const newFoodEntry = { 
+        recipe: { title: selectedFood },
+        nutrition: nutritionObject,
+        macros: macros,
+        micronutrients: foodMicronutrients,
+        amount: foodAmount,
+        date: selectedDate
+      };
+
+      const updatedFoodLogs = [...loggedFood, newFoodEntry];
+      
+      try {
+        const { data, error: checkError } = await supabase
+          .from('nutrition_tracker')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('date', selectedDate)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+
+        
+        const { error: upsertError } = await supabase
+          .from('nutrition_tracker')
+          .upsert({
+            user_id: session.user.id,
+            date: selectedDate,
+            foods: updatedFoodLogs
+          });
+        
+        if (upsertError) throw upsertError;
+
+          
+        setLoggedFood(updatedFoodLogs);
+        
+      } catch (error) {
+        console.error("Error saving food log:", error);
+        alert("Failed to save food log. Please try again.");
+      }
       
       setSelectedFood(null);
       setFoodAmount(1);
@@ -233,11 +292,11 @@ const NutrientTracker = () => {
         },
         Fiber: {
           value: (acc.Fiber?.value || 0) + (micros.Fiber?.value || 0),
-          unit: micros.Fiber?.unit || acc.Fiber?.unit || "g"
+          unit: micros.Fiber?.unit || "g"
         },
         Sugar: {
           value: (acc.Sugar?.value || 0) + (micros.Sugar?.value || 0),
-          unit: micros.Sugar?.unit || acc.Sugar?.unit || "g"
+          unit: micros.Sugar?.unit || "g"
         }
       };
     },
@@ -273,7 +332,19 @@ const NutrientTracker = () => {
     <Container>
       <ProfileNavBar />
       
-      <Header as="h2" style={{ color: "#8B0000", marginTop: "2rem" }}>Summary</Header>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2rem" }}>
+        <Header as="h2" style={{ color: "#8B0000", margin: 0 }}>Summary</Header>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <label style={{ marginRight: "10px" }}>Date:</label>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={handleDateChange}
+            style={{ width: "180px" }}
+          />
+        </div>
+      </div>
+      
       <Header as="h1" style={{ color: "#D75600", margin: "1rem 0 2rem" }}>
         {roundedMacros.calories} Total Calories
       </Header>
@@ -380,7 +451,7 @@ const NutrientTracker = () => {
       </Grid>
 
       <Header as="h3" style={{ marginTop: "2rem" }}>
-        Food Log - {formatDate(dateToDisplay)}:
+        Food Log - {formatDate()}:
       </Header>
       
       <Table celled>
@@ -419,16 +490,6 @@ const NutrientTracker = () => {
       <Modal open={open} onClose={() => setOpen(false)}>
         <Modal.Header>Log Food</Modal.Header>
         <Modal.Content>
-          <div style={{ marginBottom: "1rem" }}>
-            <label>Date</label>
-            <Input
-              type="date"
-              value={selectedDate}
-              fluid
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
-          </div>
-          
           <div style={{ marginBottom: "1rem" }}>
             <label>Search Food</label>
             <Dropdown
