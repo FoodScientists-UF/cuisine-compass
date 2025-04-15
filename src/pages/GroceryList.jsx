@@ -48,7 +48,7 @@ export default function GroceryList() {
 
     useEffect(() => {
         async function fetchGroceryLists() {
-            if (!session || !session.user?.id) return;
+            if (!session?.user?.id) return;
             const { data, error } = await supabase
                 .from("Grocery List")
                 .select("id, items, title, created_at")
@@ -91,7 +91,7 @@ export default function GroceryList() {
             document.removeEventListener("click", handleClickOutside);
         };
 
-    }, [order, showNotePopup]);
+    }, [session?.user?.id]);
 
     const handleEditClick = (listId) => {
         setSelectedNoteId(listId);
@@ -134,7 +134,9 @@ export default function GroceryList() {
                 </div>
 
                 {showNotePopup && (
-                    <CreateNote onClose={() => setShowNotePopup(false)} listId={selectedNoteId} />
+                    <CreateNote setLists={setLists} onClose={() => {
+                        setShowNotePopup(false);
+                    }} listId={selectedNoteId} />
 
                 )}
                 

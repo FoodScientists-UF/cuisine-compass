@@ -1,7 +1,7 @@
 import { supabase, AuthContext } from "../AuthProvider";
 import { useContext, useState, useEffect } from "react";
 
-export default function CreateNote({ onClose, listId }) {
+export default function CreateNote({ setLists, onClose, listId }) {
   const today = new Date().toLocaleDateString(
     "en-US",
     {
@@ -35,31 +35,6 @@ export default function CreateNote({ onClose, listId }) {
     if (currentLine) lines.push(currentLine);
     return lines;
 }
-
-  const handlePublishNote = async (e) => {
-    if (!session?.user?.id) return;
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const title = formData.get("title");
-    const itemsText = formData.get("items");
-
-    const itemsArray = itemsText
-      ? itemsText.split("\n").flatMap((item) => splitText(item.trim()))
-      : [];
-
-    const { data, error } = await supabase
-      .from("Grocery List")
-      .upsert({
-        user_id: session.user.id,
-        title: title,
-        items: itemsArray,
-      })
-      .single();
-
-    if (error) throw error;
-    else onClose();
-  };
 
   useEffect(() => {
     if (!listId) return;
@@ -100,32 +75,31 @@ export default function CreateNote({ onClose, listId }) {
           .flatMap(splitText)
       : [];
   
+    console.log("User ID:", session.user.id);
     console.log("Submitting listId:", listId);
     console.log("itemsArray to save:", itemsArray);
     console.log("updatedTitle to save:", updatedTitle);
     
-    let response;
-    if (listId) {
-      response = await supabase
-        .from("Grocery List")
-        .update({ user_id: session.user.id, title: updatedTitle, items: itemsArray })
-        .eq("id", listId);
+    const { data, error } = await supabase
+      .from("Grocery List")
+      .upsert({
+        user_id: session.user.id,
+        title: updatedTitle,
+        items: itemsArray,
+        id: listId ? listId : undefined,
+        created_at: new Date().toISOString(),
+      })
+      .select();
+
+    if (error) throw error;
+    console.log("UPSERT response:", data);
+
+    setLists(prevLists => {
+      const updatedLists = prevLists.filter(list => list.id !== data[0].id);
+      return [data[0], ...updatedLists];
+    });
+    onClose();
   
-      console.log("UPDATE response:", response);
-    } else {
-      response = await supabase
-        .from("Grocery List")
-        .insert({ user_id: session.user.id, title: updatedTitle, items: itemsArray })
-        .single();
-  
-      console.log("INSERT response:", response);
-    }
-  
-    if (response.error) {
-      console.error("Error saving grocery list:", response.error);
-    } else {
-      onClose();
-    }
   };
   
   
