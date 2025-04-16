@@ -130,9 +130,10 @@ const NutrientTracker = () => {
         .select('*')
         .eq('user_id', session.user.id)
         .eq('date', date)
-        .select('*');
+        .maybeSingle();
 
       if (error) throw error;
+      console.log("Data fetched for date:", date, data);
 
       setLoggedFood(data?.foods || []);
     } catch (error) {
@@ -175,6 +176,9 @@ const NutrientTracker = () => {
         Sugar: { value: 0, unit: "g" }
       };
       
+      const amountInGrams = convertToGrams(foodAmount, selectedUnit);
+      const multiplier = amountInGrams / 100;
+      
       let processedFat = false;
       
       nutrition.forEach(item => {
@@ -190,41 +194,41 @@ const NutrientTracker = () => {
         const nutrientName = item.nutrient;
         
         if (nutrientName === 'Calories') {
-          macros.calories = parseFloat((amount * foodAmount).toFixed(2));
-          foodMicronutrients.Calories.value = parseFloat((amount * foodAmount).toFixed(2));
+          macros.calories = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Calories.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Calories.unit = unit || "";
         } else if (nutrientName === 'Protein') {
-          macros.protein = parseFloat((amount * foodAmount).toFixed(2));
-          foodMicronutrients.Protein.value = parseFloat((amount * foodAmount).toFixed(2));
+          macros.protein = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Protein.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Protein.unit = unit || "g";
         } else if (nutrientName === 'Carbohydrates') {
-          macros.carbs = parseFloat((amount * foodAmount).toFixed(2));
-          foodMicronutrients.Carbohydrates.value = parseFloat((amount * foodAmount).toFixed(2));
+          macros.carbs = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Carbohydrates.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Carbohydrates.unit = unit || "g";
         } else if (nutrientName === 'Fat') {
           if (!processedFat) {
-            macros.fats = parseFloat((amount * foodAmount).toFixed(2));
-            foodMicronutrients.Fat.value = parseFloat((amount * foodAmount).toFixed(2));
+            macros.fats = parseFloat((amount * multiplier).toFixed(2));
+            foodMicronutrients.Fat.value = parseFloat((amount * multiplier).toFixed(2));
             foodMicronutrients.Fat.unit = unit || "g";
             processedFat = true;
           } else {
-            foodMicronutrients.SaturatedFat.value = parseFloat((amount * foodAmount).toFixed(2));
+            foodMicronutrients.SaturatedFat.value = parseFloat((amount * multiplier).toFixed(2));
             foodMicronutrients.SaturatedFat.unit = unit || "g";
           }
         } else if (nutrientName === 'Sodium') {
-          foodMicronutrients.Sodium.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Sodium.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Sodium.unit = unit || "mg";
         } else if (nutrientName === 'Potassium') {
-          foodMicronutrients.Potassium.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Potassium.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Potassium.unit = unit || "mg";
         } else if (nutrientName === 'Cholesterol') {
-          foodMicronutrients.Cholesterol.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Cholesterol.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Cholesterol.unit = unit || "mg";
         } else if (nutrientName === 'Fiber') {
-          foodMicronutrients.Fiber.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Fiber.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Fiber.unit = unit || "g";
         } else if (nutrientName === 'Sugar') {
-          foodMicronutrients.Sugar.value = parseFloat((amount * foodAmount).toFixed(2));
+          foodMicronutrients.Sugar.value = parseFloat((amount * multiplier).toFixed(2));
           foodMicronutrients.Sugar.unit = unit || "g";
         }
       });
@@ -242,16 +246,6 @@ const NutrientTracker = () => {
       const updatedFoodLogs = [...loggedFood, newFoodEntry];
       
       try {
-        const { data, error: checkError } = await supabase
-          .from('nutrition_tracker')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .eq('date', selectedDate)
-          .select('*');
-
-        if (checkError) throw checkError;
-
-
         
         const { error: upsertError } = await supabase
           .from('nutrition_tracker')
@@ -508,8 +502,8 @@ const NutrientTracker = () => {
             logsToDisplay.map((food, index) => (
               <Table.Row key={index}>
                 <Table.Cell>{food.recipe?.title || food.food?.name || "Unknown"}</Table.Cell>
-                <Table.Cell>{food.nutrition?.Calories || food.macros?.calories || 0} calories</Table.Cell>
-                <Table.Cell>{food.amount || 1} serving</Table.Cell>
+                <Table.Cell>{food.macros?.calories || food.micronutrients?.Calories?.value || 0} calories</Table.Cell>
+                <Table.Cell>{food.amount || 1} {food.unit || 'serving'}</Table.Cell>
               </Table.Row>
             ))
           ) : (
