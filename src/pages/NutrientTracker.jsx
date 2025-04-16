@@ -26,6 +26,9 @@ const NutrientTracker = () => {
   const [foodOptions, setFoodOptions] = useState([]);
   const [foodMap, setFoodMap] = useState({});
   const [loading, setLoading] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState('g');
+  const [previewNutrition, setPreviewNutrition] = useState(null);
+
 
   const formatDate = () => {
     if (!selectedDate) return "";
@@ -39,6 +42,16 @@ const NutrientTracker = () => {
       day: 'numeric' 
     }).replace(',', '.');
   };
+
+  const convertToGrams = (amount, unit) => {
+    switch (unit) {
+      case 'g': return amount;
+      case 'oz': return amount * 28.35;
+      case 'tbsp': return amount * 15;
+      default: return amount;
+    }
+  };
+  
 
   useEffect(() => {
     if (session?.user?.id && selectedDate) fetchFoodLogsForDate(selectedDate);
@@ -81,6 +94,33 @@ const NutrientTracker = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (!selectedFood || !foodMap[selectedFood]) {
+      setPreviewNutrition(null);
+      return;
+    }
+  
+    const nutrition = foodMap[selectedFood].formattedNutrition;
+    const grams = convertToGrams(foodAmount, selectedUnit);
+  
+    const preview = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  
+    nutrition.forEach(item => {
+      const nutrient = item.nutrient.toLowerCase();
+      const amount = parseFloat(item.amount.replace(/[^\d.-]/g, ''));
+  
+      const scaled = amount * (grams / 100); // assuming per 100g
+  
+      if (nutrient.includes('calories')) preview.calories = scaled.toFixed(2);
+      if (nutrient.includes('protein')) preview.protein = scaled.toFixed(2);
+      if (nutrient.includes('carbohydrate')) preview.carbs = scaled.toFixed(2);
+      if (nutrient === 'fat') preview.fat = scaled.toFixed(2);
+    });
+  
+    setPreviewNutrition(preview);
+  }, [selectedFood, foodAmount, selectedUnit]);
+  
+
   const fetchFoodLogsForDate = async (date) => {
     if (!session?.user?.id) return;
     
@@ -90,7 +130,7 @@ const NutrientTracker = () => {
         .select('*')
         .eq('user_id', session.user.id)
         .eq('date', date)
-        .maybeSingle();
+        .select('*');
 
       if (error) throw error;
 
@@ -195,7 +235,8 @@ const NutrientTracker = () => {
         macros: macros,
         micronutrients: foodMicronutrients,
         amount: foodAmount,
-        date: selectedDate
+        date: selectedDate,
+        unit: selectedUnit,
       };
 
       const updatedFoodLogs = [...loggedFood, newFoodEntry];
@@ -206,7 +247,7 @@ const NutrientTracker = () => {
           .select('id')
           .eq('user_id', session.user.id)
           .eq('date', selectedDate)
-          .maybeSingle();
+          .select('*');
 
         if (checkError) throw checkError;
 
@@ -504,27 +545,54 @@ const NutrientTracker = () => {
               noResultsMessage={searchQuery.length < 2 ? "Type at least 2 characters to search" : "No results found"}
             />
           </div>
-          
+
           {selectedFood && (
-            <div style={{ marginBottom: "1rem" }}>
-              <label>Amount (servings)</label>
-              <Input
-                type="number"
-                min="0.25"
-                step="0.25"
-                value={foodAmount}
-                fluid
-                onChange={(e) => setFoodAmount(parseFloat(e.target.value) || 1)}
-              />
-            </div>
+            <>
+              <div style={{ marginBottom: "1rem" }}>
+                <label>Amount</label>
+                <Input
+                  type="number"
+                  min="0.25"
+                  step="0.25"
+                  value={foodAmount}
+                  fluid
+                  onChange={(e) => setFoodAmount(parseFloat(e.target.value) || 1)}
+                />
+              </div>
+
+              <div style={{ marginBottom: "1rem" }}>
+                <label>Unit</label>
+                <Dropdown
+                  selection
+                  fluid
+                  options={[
+                    { key: 'g', text: 'Grams (g)', value: 'g' },
+                    { key: 'oz', text: 'Ounces (oz)', value: 'oz' },
+                    { key: 'tbsp', text: 'Tablespoons (tbsp)', value: 'tbsp' }
+                  ]}
+                  value={selectedUnit}
+                  onChange={(e, { value }) => setSelectedUnit(value)}
+                />
+              </div>
+
+              {previewNutrition && (
+                <div style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "8px" }}>
+                  <Header as="h4">Nutrition Preview</Header>
+                  <p><strong>Calories:</strong> {previewNutrition.calories} kcal</p>
+                  <p><strong>Protein:</strong> {previewNutrition.protein} g</p>
+                  <p><strong>Carbs:</strong> {previewNutrition.carbs} g</p>
+                  <p><strong>Fat:</strong> {previewNutrition.fat} g</p>
+                </div>
+              )}
+            </>
           )}
-          
         </Modal.Content>
         <Modal.Actions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button primary onClick={handleLogFood} disabled={!selectedFood}>Log</Button>
         </Modal.Actions>
       </Modal>
+
 
       <style jsx global>{`
         .micro-nutrient {
