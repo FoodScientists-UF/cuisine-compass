@@ -27,6 +27,7 @@ const wrapperStyle = {
 const containerStyle = {
   width: "100%",
   maxWidth: "1728px", // Maximum width for large screens
+  minHeight: '95vh',
   backgroundColor: "#fff",
   borderRadius: "10px",
   padding: "20px",

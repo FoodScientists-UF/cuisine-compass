@@ -1,7 +1,7 @@
 import { supabase, AuthContext } from "../AuthProvider";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 
-export default function CreateNote({ onClose }) {
+export default function CreateNote({ setLists, onClose, listId }) {
   const today = new Date().toLocaleDateString(
     "en-US",
     {
@@ -12,7 +12,7 @@ export default function CreateNote({ onClose }) {
     );
 
   const [title, setTitle] = useState(`Grocery List - ${today}`);
-
+  const [items, setItems] = useState("");
   const { session } = useContext(AuthContext);
 
   // Split text if the item length is > 40 (help with wrapping text)
@@ -36,36 +36,79 @@ export default function CreateNote({ onClose }) {
     return lines;
 }
 
-  const handlePublishNote = async (e) => {
-    if (!session?.user?.id) return;
+  useEffect(() => {
+    if (!listId) return;
+
+    const fetchList = async () => {
+      const { data, error } = await supabase
+        .from("Grocery List")
+        .select("title, items")
+        .eq("id", listId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching grocery list:", error);
+        return;
+      }
+
+      setTitle(data.title);
+      setItems(data.items ? data.items.join("\n") : "");
+    };
+
+    fetchList();
+  }, [listId]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
+    if (!session?.user?.id) return;
+  
     const formData = new FormData(e.target);
-    const title = formData.get("title");
+    const updatedTitle = formData.get("title");
     const itemsText = formData.get("items");
-
+  
     const itemsArray = itemsText
-      ? itemsText.split("\n").flatMap((item) => splitText(item.trim()))
+      ? itemsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+          .flatMap(splitText)
       : [];
-
+  
+    console.log("User ID:", session.user.id);
+    console.log("Submitting listId:", listId);
+    console.log("itemsArray to save:", itemsArray);
+    console.log("updatedTitle to save:", updatedTitle);
+    
     const { data, error } = await supabase
       .from("Grocery List")
-      .insert({
+      .upsert({
         user_id: session.user.id,
-        title: title,
+        title: updatedTitle,
         items: itemsArray,
+        id: listId ? listId : undefined,
+        created_at: new Date().toISOString(),
       })
-      .single();
+      .select();
 
     if (error) throw error;
-    else onClose();
+    console.log("UPSERT response:", data);
+
+    setLists(prevLists => {
+      const updatedLists = prevLists.filter(list => list.id !== data[0].id);
+      return [data[0], ...updatedLists];
+    });
+    onClose();
+  
   };
+  
+  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <form
         className="bg-[#F2F2F2] p-6 rounded-2xl shadow-lg w-[500px] h-[500px] text-center relative border-2 border-black"
-        onSubmit={handlePublishNote}
+        onSubmit={handleSubmit}
       >
         <button
           className="absolute top-2 right-4 text-2xl text-gray-500 hover:text-[#D75600]"
@@ -84,6 +127,8 @@ export default function CreateNote({ onClose }) {
           className="text-20px w-full p-2 abhaya-libre-medium h-[350px] bg-[#F2F2F2]"
           placeholder="Start your note..."
           name="items"
+          value={items}
+          onChange={(e) => setItems(e.target.value)}
           style={{
             backgroundImage:
               "linear-gradient(to bottom, #000 1px, transparent 2px)",
@@ -99,7 +144,7 @@ export default function CreateNote({ onClose }) {
           type="submit"
           className="mt-4 bg-[#535353] abhaya-libre-regular text-white px-4 py-2 rounded-lg hover:opacity-80 transition"
         >
-          Publish list
+          {listId ? "Update List" : "Publish List"}
         </button>
       </form>
     </div>
