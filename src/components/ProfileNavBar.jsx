@@ -14,7 +14,7 @@ export default function ProfileNavBar() {
     useEffect(() => {
         if (location.pathname.includes("profile")) setActive("profile");
         else if (location.pathname.includes("grocery-list")) setActive("grocery");
-        // else if (location.pathname.includes("tracker")) setActive("tracker");
+        else if (location.pathname.includes("tracker")) setActive("tracker");
     }, [location.pathname]);
 
     return (
@@ -31,7 +31,7 @@ export default function ProfileNavBar() {
 
             <div
                 className="sidebar-icon"
-                onClick={() => setActive("tracker")}
+                onClick={() => {navigate("/tracker");}}
             >
                 {active === "tracker" ? <PiForkKnifeFill /> : <PiForkKnife />}
                 <span className="sidebar-text">Nutrient Tracker</span>
