@@ -528,7 +528,9 @@ const NutrientTracker = () => {
             <Table.HeaderCell>Food</Table.HeaderCell>
             <Table.HeaderCell>Calories</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Actions</Table.HeaderCell>
+            <Table.HeaderCell style={{ width: '120px', textAlign: 'center' }}>
+              Actions
+            </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -538,11 +540,10 @@ const NutrientTracker = () => {
                 <Table.Cell>{food.recipe?.title || food.food?.name || "Unknown"}</Table.Cell>
                 <Table.Cell>{Math.round(food.macros?.calories || food.micronutrients?.Calories?.value || 0)} calories</Table.Cell>
                 <Table.Cell>{food.amount || 1} {food.unit || 'serving'}</Table.Cell>
-                <Table.Cell>
+                <Table.Cell style={{ textAlign: 'center' }}>
                   <Button icon="pencil" onClick={() => handleEditFood(food, index)} size="tiny" />
                   <Button icon="trash" onClick={() => handleDeleteFood(index)} size="tiny" color="red" />
                 </Table.Cell>
-
               </Table.Row>
             ))
           ) : (
