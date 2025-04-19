@@ -111,10 +111,10 @@ const NutrientTracker = () => {
   
       const scaled = amount * (grams / 100); // assuming per 100g
   
-      if (nutrient.includes('calories')) preview.calories = scaled.toFixed(2);
-      if (nutrient.includes('protein')) preview.protein = scaled.toFixed(2);
-      if (nutrient.includes('carbohydrate')) preview.carbs = scaled.toFixed(2);
-      if (nutrient === 'fat') preview.fat = scaled.toFixed(2);
+      if (nutrient.includes('calories')) preview.calories = Math.round(scaled);
+      if (nutrient.includes('protein')) preview.protein = Math.round(scaled);
+      if (nutrient.includes('carbohydrate')) preview.carbs = Math.round(scaled);
+      if (nutrient === 'fat') preview.fat = Math.round(scaled);
     });
   
     setPreviewNutrition(preview);
@@ -194,41 +194,41 @@ const NutrientTracker = () => {
         const nutrientName = item.nutrient;
         
         if (nutrientName === 'Calories') {
-          macros.calories = parseFloat((amount * multiplier).toFixed(2));
-          foodMicronutrients.Calories.value = parseFloat((amount * multiplier).toFixed(2));
+          macros.calories = Math.round(amount * multiplier);
+          foodMicronutrients.Calories.value = Math.round(amount * multiplier);
           foodMicronutrients.Calories.unit = unit || "";
         } else if (nutrientName === 'Protein') {
-          macros.protein = parseFloat((amount * multiplier).toFixed(2));
-          foodMicronutrients.Protein.value = parseFloat((amount * multiplier).toFixed(2));
+          macros.protein = Math.round(amount * multiplier);
+          foodMicronutrients.Protein.value = Math.round(amount * multiplier);
           foodMicronutrients.Protein.unit = unit || "g";
         } else if (nutrientName === 'Carbohydrates') {
-          macros.carbs = parseFloat((amount * multiplier).toFixed(2));
-          foodMicronutrients.Carbohydrates.value = parseFloat((amount * multiplier).toFixed(2));
+          macros.carbs = Math.round(amount * multiplier);
+          foodMicronutrients.Carbohydrates.value = Math.round(amount * multiplier);
           foodMicronutrients.Carbohydrates.unit = unit || "g";
         } else if (nutrientName === 'Fat') {
           if (!processedFat) {
-            macros.fats = parseFloat((amount * multiplier).toFixed(2));
-            foodMicronutrients.Fat.value = parseFloat((amount * multiplier).toFixed(2));
+            macros.fats = Math.round(amount * multiplier);
+            foodMicronutrients.Fat.value = Math.round(amount * multiplier);
             foodMicronutrients.Fat.unit = unit || "g";
             processedFat = true;
           } else {
-            foodMicronutrients.SaturatedFat.value = parseFloat((amount * multiplier).toFixed(2));
+            foodMicronutrients.SaturatedFat.value = Math.round(amount * multiplier);
             foodMicronutrients.SaturatedFat.unit = unit || "g";
           }
         } else if (nutrientName === 'Sodium') {
-          foodMicronutrients.Sodium.value = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Sodium.value = Math.round(amount * multiplier);
           foodMicronutrients.Sodium.unit = unit || "mg";
         } else if (nutrientName === 'Potassium') {
-          foodMicronutrients.Potassium.value = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Potassium.value = Math.round(amount * multiplier);
           foodMicronutrients.Potassium.unit = unit || "mg";
         } else if (nutrientName === 'Cholesterol') {
-          foodMicronutrients.Cholesterol.value = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Cholesterol.value = Math.round(amount * multiplier);
           foodMicronutrients.Cholesterol.unit = unit || "mg";
         } else if (nutrientName === 'Fiber') {
-          foodMicronutrients.Fiber.value = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Fiber.value = Math.round(amount * multiplier);
           foodMicronutrients.Fiber.unit = unit || "g";
         } else if (nutrientName === 'Sugar') {
-          foodMicronutrients.Sugar.value = parseFloat((amount * multiplier).toFixed(2));
+          foodMicronutrients.Sugar.value = Math.round(amount * multiplier);
           foodMicronutrients.Sugar.unit = unit || "g";
         }
       });
@@ -341,16 +341,16 @@ const NutrientTracker = () => {
   // Round all micronutrient values in one step
   Object.keys(totalMicronutrients).forEach(key => {
     if (totalMicronutrients[key]?.value) {
-      totalMicronutrients[key].value = parseFloat(totalMicronutrients[key].value.toFixed(2));
+      totalMicronutrients[key].value = Math.round(totalMicronutrients[key].value);
     }
   });
-
+  
   const roundedMacros = {
-    protein: parseFloat(totalMacros.protein.toFixed(2)),
-    carbs: parseFloat(totalMacros.carbs.toFixed(2)),
-    fats: parseFloat(totalMacros.fats.toFixed(2)),
-    calories: parseFloat(totalMacros.calories.toFixed(2))
-  };
+    protein: Math.round(totalMacros.protein),
+    carbs: Math.round(totalMacros.carbs),
+    fats: Math.round(totalMacros.fats),
+    calories: Math.round(totalMacros.calories)
+  };  
 
   const pieData = [
     { name: "Protein", value: roundedMacros.protein, color: "#D2691E" },
@@ -502,7 +502,7 @@ const NutrientTracker = () => {
             logsToDisplay.map((food, index) => (
               <Table.Row key={index}>
                 <Table.Cell>{food.recipe?.title || food.food?.name || "Unknown"}</Table.Cell>
-                <Table.Cell>{food.macros?.calories || food.micronutrients?.Calories?.value || 0} calories</Table.Cell>
+                <Table.Cell>{Math.round(food.macros?.calories || food.micronutrients?.Calories?.value || 0)} calories</Table.Cell>
                 <Table.Cell>{food.amount || 1} {food.unit || 'serving'}</Table.Cell>
               </Table.Row>
             ))
@@ -522,11 +522,15 @@ const NutrientTracker = () => {
         Log Food
       </Button>
       
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Modal.Header>Log Food</Modal.Header>
-        <Modal.Content>
-          <div style={{ marginBottom: "1rem" }}>
-            <label>Search Food</label>
+      <Modal open={open} onClose={() => setOpen(false)} size="tiny" style={{ borderRadius: "16px" }}>
+        <Modal.Header style={{ fontFamily: "Abhaya Libre, serif", fontWeight: "bold", fontSize: "24px", textAlign: "center", paddingBottom: "0" }}>
+          Log Food
+        </Modal.Header>
+
+        <Modal.Content style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "2rem" }}>
+          {/* Search Food */}
+          <div>
+            <label className="abhaya-libre-regular text-md">Search Food</label>
             <Dropdown
               search
               selection
@@ -537,25 +541,32 @@ const NutrientTracker = () => {
               onSearchChange={(e, { searchQuery }) => setSearchQuery(searchQuery)}
               onChange={(e, { value }) => setSelectedFood(value)}
               noResultsMessage={searchQuery.length < 2 ? "Type at least 2 characters to search" : "No results found"}
+              style={{ borderRadius: "12px", marginTop: "6px" }}
             />
           </div>
 
+          {/* Amount */}
           {selectedFood && (
             <>
-              <div style={{ marginBottom: "1rem" }}>
-                <label>Amount</label>
+              <div>
+                <label className="abhaya-libre-regular text-md">Amount</label>
                 <Input
                   type="number"
                   min="0.25"
                   step="0.25"
                   value={foodAmount}
                   fluid
-                  onChange={(e) => setFoodAmount(parseFloat(e.target.value) || 1)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFoodAmount(value === "" ? "" : Math.round(value));
+                  }}
+                  style={{ borderRadius: "12px", marginTop: "6px" }}
                 />
               </div>
 
-              <div style={{ marginBottom: "1rem" }}>
-                <label>Unit</label>
+              {/* Unit */}
+              <div>
+                <label className="abhaya-libre-regular text-md">Unit</label>
                 <Dropdown
                   selection
                   fluid
@@ -566,24 +577,67 @@ const NutrientTracker = () => {
                   ]}
                   value={selectedUnit}
                   onChange={(e, { value }) => setSelectedUnit(value)}
+                  style={{ borderRadius: "12px", marginTop: "6px" }}
                 />
               </div>
 
+              {/* Nutrition Preview */}
               {previewNutrition && (
-                <div style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "8px" }}>
-                  <Header as="h4">Nutrition Preview</Header>
-                  <p><strong>Calories:</strong> {previewNutrition.calories} kcal</p>
-                  <p><strong>Protein:</strong> {previewNutrition.protein} g</p>
-                  <p><strong>Carbs:</strong> {previewNutrition.carbs} g</p>
-                  <p><strong>Fat:</strong> {previewNutrition.fat} g</p>
+                <div style={{ 
+                  marginTop: "1rem", 
+                  padding: "1rem", 
+                  backgroundColor: "#f8f8f8", 
+                  borderRadius: "12px",
+                  fontFamily: "Abhaya Libre, serif",
+                  fontSize: "16px",
+                  color: "#444",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px"
+                }}>
+                  <span><strong>Calories:</strong> {previewNutrition.calories} kcal</span>
+                  <span><strong>Protein:</strong> {previewNutrition.protein} g</span>
+                  <span><strong>Carbs:</strong> {previewNutrition.carbs} g</span>
+                  <span><strong>Fat:</strong> {previewNutrition.fat} g</span>
                 </div>
               )}
             </>
           )}
         </Modal.Content>
-        <Modal.Actions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button primary onClick={handleLogFood} disabled={!selectedFood}>Log</Button>
+
+        <Modal.Actions style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "2rem" }}>
+          <Button
+            onClick={handleLogFood}
+            disabled={!selectedFood}
+            style={{
+              backgroundColor: selectedFood ? "#D75600" : "#ccc",
+              color: "white",
+              width: "100%",
+              fontSize: "18px",
+              fontFamily: "Abhaya Libre, serif",
+              fontWeight: "bold",
+              borderRadius: "12px",
+              padding: "12px",
+            }}
+          >
+            Log
+          </Button>
+
+          <Button
+            onClick={() => setOpen(false)}
+            style={{
+              backgroundColor: "white",
+              color: "#333",
+              border: "1px solid #ccc",
+              width: "100%",
+              fontSize: "16px",
+              fontFamily: "Abhaya Libre, serif",
+              borderRadius: "12px",
+              padding: "10px",
+            }}
+          >
+            Cancel
+          </Button>
         </Modal.Actions>
       </Modal>
 
