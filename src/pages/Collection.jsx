@@ -40,8 +40,7 @@ const Collections = () => {
         if (isDefaultCollection(collectionId)) {
           const nameMap = {
             "your-recipes": "Your Recipes",
-            "likes": "Likes",
-            "cooked": "Cooked"
+            "cooked": "Cooked",
           };
           setCollectionName(nameMap[collectionId]);
           return;
@@ -71,14 +70,7 @@ const Collections = () => {
             .select("id, title, image_url, cost, prep_time, cook_time, tags")
             .eq("user_id", session.user.id));
         } 
-        else if (collectionId === "likes") {
-          ({ data, error } = await supabase
-            .from("Likes")
-            .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags)")
-            .eq("user_id", session.user.id));
-          
-          data = data.map((entry) => entry.Recipes);
-        } 
+
         else if (collectionId === "cooked") {
           ({ data, error } = await supabase
             .from("Cooked Recipes")
@@ -183,6 +175,16 @@ const Collections = () => {
       <Container className="collection-pg-container">
         <ProfileNavBar />
         <div className="vl"></div>
+        {/* Back button */}
+          <button
+            onClick={() => navigate("/profile")}
+            className="back">
+            <img 
+              src="/back_arrow.png" 
+              alt="Back" 
+              className="w-10 h-10 hover:opacity-60 transition"
+            />
+          </button>
 
         <div className="collection-header">
           <h3 className="collection-name">{collectionName}</h3>
