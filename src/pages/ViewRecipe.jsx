@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase, AuthContext } from "../AuthProvider";
 import { FaRegHeart, FaChevronDown, FaBookmark } from "react-icons/fa";
@@ -8,6 +8,7 @@ import WriteReviewPopup from "../components/WriteReviewPopup";
 import defaultAvatar from "../layouts/images/default-avatar.png";
 
 export default function ViewRecipe() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { session } = useContext(AuthContext);
   const [selectedSize, setSelectedSize] = useState("1X");
@@ -23,6 +24,7 @@ export default function ViewRecipe() {
 
   const [recipeTitle, setRecipeTitle] = useState("");
   const [likes, setLikes] = useState(0);
+  const [userId, setUserId] = useState("");
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState("");
@@ -90,6 +92,7 @@ export default function ViewRecipe() {
         setIngredients(recipeData.ingredients);
         setInstructions(recipeData.instructions);
         setTags(recipeData.tags);
+        setUserId(recipeData.user_id);
       }
 
       const [
@@ -296,7 +299,9 @@ export default function ViewRecipe() {
           </div>
 
           {/* Username */}
-          <p className="text-2xl abhaya-libre-semibold text-black-600 mt-4">
+          <p href="#" 
+          className="text-2xl abhaya-libre-semibold text-black-600 hover:underline hover:opacity-80 mt-4"
+          onClick={() => navigate(`/profile/${userId}`)}>
             @{username}
           </p>
 
