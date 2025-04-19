@@ -13,6 +13,7 @@ export default function CreateRecipe() {
     const [recipeDescription, setRecipeDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
+    const [servingSize, setServingSize] = useState("");
     const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([{ id: 1, description: ""}]);
     const [tags, setTags] = useState([]);
@@ -44,6 +45,7 @@ export default function CreateRecipe() {
         //Convert text time to an integer 
         const parsedPrepTime = parseInt(prepTime, 10);
         const parsedCookTime = parseInt(cookTime, 10);
+        const parsedServingSize = parseInt(servingSize, 10);
 
         if (isNaN(parsedPrepTime) || parsedPrepTime <= 0) {
          alert("Please enter a valid prep time for your recipe");
@@ -52,6 +54,11 @@ export default function CreateRecipe() {
 
         if (isNaN(parsedCookTime) || parsedCookTime <= 0) {
             alert("Please enter a valid cook time for your recipe");
+            return;
+        }
+
+        if (isNaN(parsedServingSize) || parsedServingSize <= 0) {
+            alert("Please enter a valid serving size for your recipe");
             return;
         }
 
@@ -80,7 +87,7 @@ export default function CreateRecipe() {
             description: recipeDescription.trim(), 
             prep_time: parsedPrepTime,
             cook_time: parsedCookTime,
-            //not sure if this is right with an array
+            serving_size: parsedServingSize,
             ingredients: ingredients,    
             instructions: steps,
             tags: tags,
@@ -114,7 +121,7 @@ export default function CreateRecipe() {
         }
 
             
-            //how do I send the recipe to the Created collection?
+           
         navigate("/profile"); 
     };
 
@@ -250,52 +257,72 @@ export default function CreateRecipe() {
 
 
             {/* Inputting times */}
-            <div className="mt-6 flex space-x-12">
+            <div className="mt-6 flex w-full gap-x-6">
                 {/* Inputting prep time in minutes */}
-                <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
-                <div className="flex items-center"> 
+                <div className="flex flex-col abhaya-libre-extrabold text-lg text-left block">
+                    <div className="flex items-center"> 
                     Prep Time
-                    {/* Tooltip Icon (next to Prep Time title) */}
+                    {/* Tooltip Icon */}
                         <span className="ml-2 tooltip" data-tooltip="Time required for preparing the recipe in minutes. Ex. 2 hours = 120 minutes">
                             <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
                         </span>
                     </div>
 
-                    <div className="flex items-end gap-2 mt-2">
+                    <div className="flex items-end gap-2">
                     <input
                         type="text"
                         name="prepTime"
                         value={prepTime}
                         onChange={(e) => setPrepTime(e.target.value)}
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-[90px] h-12 mt-2 text-center"
                         style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                     />
                     <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
                     </div>
-                </span>
+                </div>
        
                {/* Inputting cook time in minutes */}
-               <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
+               <div className="flex flex-col abhaya-libre-extrabold text-lg text-left block">
                     <div className="flex items-center"> 
                     Cook Time
-                    {/* Tooltip Icon (next to Prep Time title) */}
+                    {/* Tooltip Icon */}
                         <span className="ml-2 tooltip" data-tooltip="Time required for cooking the recipe in minutes. Ex. 2 hours = 120 minutes">
                             <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
                         </span>
                     </div>
-                    <div className="flex items-end gap-2 mt-2">
+                    <div className="flex items-end gap-2">
                     <input
                         type="text"
                         name="cookTime"
                         value={cookTime}
                         onChange={(e) => setCookTime(e.target.value)}
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-[90px] h-12 mt-2 text-center"
                         style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                     />
                     <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
                     </div>
-                </span>
+                </div>
             </div>
+
+
+            {/* Inputting serving size*/}
+            <div className="mt-6 flex flex-col abhaya-libre-extrabold text-lg text-left block">
+                <div className="flex items-center"> 
+                Recipe Serving Size
+                </div>
+                <div className="flex items-end gap-2">
+                <input
+                    type="text"
+                    name="servingSize"
+                    value={servingSize}
+                    onChange={(e) => setServingSize(e.target.value)}
+                    className="abhaya-libre-regular p-3.5 rounded-lg w-[170px] h-12 mt-2 text-center"
+                    style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
+                />
+                <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">servings</span>
+                </div>
+            </div>
+
 
             {/* Inputting recipe description */}
             <span className="flex flex-col w-[600px] mt-6 abhaya-libre-extrabold text-lg text-left">
