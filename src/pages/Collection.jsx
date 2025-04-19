@@ -22,6 +22,9 @@ const Collections = () => {
     const [bookmarkPopup, setBookmarkPopup] = useState(null);
     const [collectionName, setCollectionName] = useState("");
     const bookmarkRefs = useRef({});
+    const [ownerId, setOwnerId] = useState(null); 
+    const isMyCollection = ownerId === session?.user?.id;  
+
   
     useEffect(() => {
         if (!collectionId || !session?.user?.id) return;
@@ -43,12 +46,13 @@ const Collections = () => {
             "cooked": "Cooked",
           };
           setCollectionName(nameMap[collectionId]);
+          setOwnerId(session.user.id); 
           return;
         }
       
         const { data, error } = await supabase
           .from("saved_collections")
-          .select("name")
+          .select("name, user_id")
           .eq("id", collectionId)
           .single();
       
@@ -58,6 +62,7 @@ const Collections = () => {
         }
       
         setCollectionName(data.name);
+        setOwnerId(data.user_id);  
       };
       
   
@@ -68,14 +73,14 @@ const Collections = () => {
           ({ data, error } = await supabase
             .from("Recipes")
             .select("id, title, image_url, cost, prep_time, cook_time, tags")
-            .eq("user_id", session.user.id));
+            .eq("user_id", ownerId ?? session.user.id));
         } 
 
         else if (collectionId === "cooked") {
           ({ data, error } = await supabase
             .from("Cooked Recipes")
             .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags)")
-            .eq("user_id", session.user.id)
+            .eq("user_id", ownerId ?? session.user.id)
             .eq("have_cooked", true));
           
           data = data.map((entry) => entry.Recipes);
@@ -85,7 +90,7 @@ const Collections = () => {
             .from("saved_recipes")
             .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags)")
             .eq("folder_id", collectionId)
-            .eq("user_id", session.user.id));
+            .eq("user_id", ownerId ?? session.user.id));
       
           data = data.map((entry) => entry.Recipes);
         }
@@ -173,8 +178,13 @@ const Collections = () => {
   
     return (
       <Container className="collection-pg-container">
-        <ProfileNavBar />
-        <div className="vl"></div>
+        {isMyCollection && (
+            <>
+              <ProfileNavBar />
+              <div className="vl"></div>
+            </>
+          )}
+
         {/* Back button */}
           <button
             onClick={() => navigate("/profile")}
