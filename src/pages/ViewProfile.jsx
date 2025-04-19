@@ -236,6 +236,24 @@ export default function ViewProfile() {
 
   }, [userId, recipeCount, cookedRecipes.length, likedRecipes.length]);
 
+  const DEFAULT_COLLECTIONS = [
+    {
+      id: "your-recipes",
+      name: "Your Recipes",
+      recipeCount: recipeCount,
+      cover_img: DEFAULT_IMAGE_URL,
+      isDefault: true,
+    },
+    {
+      id: "cooked",
+      name: "Cooked Recipes",
+      recipeCount: cookedRecipes.length,
+      cover_img: DEFAULT_IMAGE_URL,
+      isDefault: true,
+    },
+  ];
+  
+  const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
 
   
   return (
@@ -255,68 +273,39 @@ export default function ViewProfile() {
           {bio}
         </div>
         
-        {/* Collections Header & Create Button */}
-        <div className="collections-header">
-          <h2 className="collection-title">Collections</h2>
-          <div className="collections-grid"/>
-      </div>
-       {/* Default Collections */}
-       <div className="collections-grid">
-            {[
-              {
-                id: "your-recipes",
-                name: "Your Recipes",
-                recipeCount: recipeCount,
-                cover_img: DEFAULT_IMAGE_URL,
-              },
-              {
-                id: "cooked",
-                name: "Cooked Recipes",
-                recipeCount: cookedRecipes.length,
-                cover_img: DEFAULT_IMAGE_URL,
-              },
-            ].map((folder) => (
-              <div key={folder.id} className="collection-card cursor-pointer"
-                  onClick={() => navigate(`/collection/${folder.id}`)}>                
-                <img
-                    src={folder.cover_img}
-                    alt={folder.name}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                <div className="collection-info">
-                <h3 className="collection-title">{folder.name}</h3>
-                <p className="collection-recipe-count">
-                  {folder.recipeCount}{" "}
-                  {folder.recipeCount === 1 ? "recipe" : "recipes"}
-                </p>
+                {/* Collections Header & Create Button */}
+                <div className="collections-header">
+                  <h2 className="collection-title">Collections</h2>
+                  <div className="collections-grid">
+    
                 </div>
               </div>
-            ))}
-          </div>
-
-        {/* User-Created Collections */}
-        {folders.length > 0 && (
-        <div className="collections-grid">
-          {folders.map((folder) => (
-            <div key={folder.id} className="collection-card cursor-pointer" 
-            onClick={() => navigate(`/collection/${folder.id}`)} >
-                <img
-                  src={folder.cover_img}
-                  alt={folder.name}
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
-             
+              <div className="collections-grid">
+          {collectionsToShow.map((col) => (
+            <div
+              key={col.id}
+              className="collection-card cursor-pointer"
+              onClick={() => navigate(`/collection/${col.id}`)}
+            >
+              {/* 3‑dot menu only for user collections */}
+        
+              {/* Cover image */}
+              <img
+                src={col.cover_img}
+                alt={col.name}
+                className="w-full h-32 object-cover rounded mb-2"
+              />
+        
+              {/* Title + count */}
               <div className="collection-info">
-              <h3 className="collection-title">{folder.name}</h3>
-              <p className="collection-recipe-count">
-                {folder.recipeCount}{" "}
-                {folder.recipeCount === 1 ? "recipe" : "recipes"}
-              </p>
-            </div>
+                <h3 className="collection-title">{col.name}</h3>
+                <p className="collection-recipe-count">
+                  {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
+                </p>
+              </div>
             </div>
           ))}
         </div>
-      )}
       </div>
     </div>
   );
