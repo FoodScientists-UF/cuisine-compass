@@ -638,3 +638,8 @@
   background-color: #ea580c;
 }
 
+.dialog-box .w-10 {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}

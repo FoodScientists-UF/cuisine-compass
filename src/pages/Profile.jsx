@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
 import { Dialog } from "@headlessui/react"; 
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -7,6 +7,8 @@ import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
 export default function Profile() {
+  const { id: profileId } = useParams();   
+  const isMe = !profileId || profileId === session.user.id;
   const navigate = useNavigate();
   const { session } = useContext(AuthContext);
 
@@ -34,13 +36,18 @@ export default function Profile() {
   const [collectionName, setCollectionName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
 
-
   //Diaglog for Edit Profile
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editedFirstName, setEditedFirstName] = useState(firstName);
   const [editedLastName, setEditedLastName] = useState(lastName);
   const [editedUserName, setEditedUserName] = useState(userName);
   const [editedBio, setEditedBio] = useState(bio);
+
+  //dialog for follow/following Popup
+  const [showFollowerDialog, setShowFollowerDialog] = useState(false);
+  const [showFollowingDialog, setShowFollowingDialog] = useState(false);
+  const [followerUsers, setFollowerUsers] = useState([]);
+  const [followingUsers, setFollowingUsers] = useState([]);
 
 
   // Toggle Dropdown
@@ -275,6 +282,44 @@ export default function Profile() {
       setCookedRecipes(data);
     };
 
+    const fetchFollowerUsers = async () => {
+      const { data: followers, error } = await supabase
+        .from("Following")
+        .select("follower_id")
+        .eq("following_id", session.user.id);
+    
+      if (error) return console.error(error.message);
+    
+      const ids = followers.map(f => f.follower_id);
+      if (ids.length === 0) return setFollowerUsers([]);
+    
+      const { data: profiles } = await supabase
+        .from("Profiles")
+        .select("id, first_name, last_name, username")
+        .in("id", ids);
+    
+      setFollowerUsers(profiles);
+    };
+    
+    const fetchFollowingUsers = async () => {
+      const { data: following, error } = await supabase
+        .from("Following")
+        .select("following_id")
+        .eq("follower_id", session.user.id);
+    
+      if (error) return console.error(error.message);
+    
+      const ids = following.map(f => f.following_id);
+      if (ids.length === 0) return setFollowingUsers([]);
+    
+      const { data: profiles } = await supabase
+        .from("Profiles")
+        .select("id, first_name, last_name, username")
+        .in("id", ids);
+    
+      setFollowingUsers(profiles);
+    };
+    
     Promise.all([
       fetchUserPicture(),
       fetchCookedRecipes(),
@@ -282,6 +327,8 @@ export default function Profile() {
       fetchRecipeCount(),
       fetchUserProfile(),
       fetchFollowersCount(),
+      fetchFollowerUsers(),
+      fetchFollowingUsers(),
       fetchFollowingCount()
     ]);
     
@@ -313,6 +360,7 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
       {/* Sidebar */}
       <ProfileNavBar />
       <div className="vl"></div>
+
       <div className="edit-profile-wrapper">
       <button
         className="edit-profile-btn"
@@ -328,7 +376,6 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
       </button>
     </div>
 
-        
       {/* Main Content */}
       <div className="profile-content">
         <img src={pic} className="profile-pic" />
@@ -336,10 +383,15 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
         <h1 className="username">@{userName}</h1>
 
         <p className="stats">
-          <span>{recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}  </span>
-        <span> {followersCount} {followersCount === 1 ? "follower" : "followers"}  </span>
-          <span> {followingCount} following</span>
+          <span>{recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}</span>
+          <span onClick={() => setShowFollowerDialog(true)} className="cursor-pointer hover:underline">
+            {followersCount} {followersCount === 1 ? "follower" : "followers"}
+          </span>
+          <span onClick={() => setShowFollowingDialog(true)} className="cursor-pointer hover:underline">
+            {followingCount} following
+          </span>
         </p>
+
         <div className="bio"> 
           {bio}
         </div>
@@ -583,7 +635,50 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
   </div>
 </Dialog>
 
- 
+{/* Follower / Following Dialog Pop-ups */}
+<Dialog open={showFollowerDialog} onClose={() => setShowFollowerDialog(false)} className="dialog-overlay">
+  <div className="dialog-container">
+    <Dialog.Panel className="dialog-box">
+      <button className="close-btn" onClick={() => setShowFollowerDialog(false)}>×</button>
+      <Dialog.Title className="dialog-title">{followerUsers.length} {followerUsers.length === 1 ? "follower" : "followers"}
+      </Dialog.Title>
+      {followerUsers.map((user) => (
+        <div key={user.id} className="flex items-center justify-between mb-4 cursor-pointer">
+          <div onClick={() => navigate(`/profile/${user.id}`)} className="flex items-center gap-3">
+            <img src={`https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures/${user.id}`} className="w-10 h-10 rounded-full" />
+            <div>
+              <p className="font-bold">{user.username}</p>
+              <p className="text-sm text-gray-500">{user.first_name} {user.last_name}</p>
+            </div>
+          </div>
+          <button className="dialog-create-btn">Follow</button>
+        </div>
+      ))}
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
+<Dialog open={showFollowingDialog} onClose={() => setShowFollowingDialog(false)} className="dialog-overlay">
+  <div className="dialog-container">
+    <Dialog.Panel className="dialog-box">
+      <button className="close-btn" onClick={() => setShowFollowingDialog(false)}>×</button>
+      <Dialog.Title className="dialog-title">{followingUsers.length} Following</Dialog.Title>
+      {followingUsers.map((user) => (
+        <div key={user.id} className="flex items-center justify-between mb-4 cursor-pointer">
+          <div onClick={() => navigate(`/profile/${user.id}`)} className="flex items-center gap-3">
+            <img src={`https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures/${user.id}`} className="w-10 h-10 rounded-full" />
+            <div>
+              <p className="font-bold">{user.username}</p>
+              <p className="text-sm text-gray-500">{user.first_name} {user.last_name}</p>
+            </div>
+          </div>
+          <button className="bg-black text-white text-sm px-3 py-1 rounded">Unfollow</button>
+        </div>
+      ))}
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
 
     </div>
   );
