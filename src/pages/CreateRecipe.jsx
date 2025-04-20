@@ -13,14 +13,9 @@ export default function CreateRecipe() {
     const [recipeDescription, setRecipeDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
-<<<<<<< HEAD
     const [servingSize, setServingSize] = useState("");
     const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([{ id: 1, description: ""}]);
-=======
-    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
-    const [steps, setSteps] = useState([]);
->>>>>>> 59da949ff9a63e42bcba352bde7e5a10b6cd53be
     const [tags, setTags] = useState([]);
     const { session } = useContext(AuthContext);
 
