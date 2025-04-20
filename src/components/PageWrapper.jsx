@@ -4,11 +4,13 @@ import { Outlet } from "react-router-dom";
 import MenuBar from "../layouts/MenuBar";
 
 const PageWrapper = () => {
+  const [searchValue, setSearchValue] = React.useState("");
+
   return (
     <div style={wrapperStyle}>
       <Container style={containerStyle}>
-        <MenuBar /> {/* Add MenuBar inside the container */}
-        <Outlet /> {/* Render page content below the MenuBar */}
+        <MenuBar setSearchValue={setSearchValue} /> {/* Add MenuBar inside the container */}
+        <Outlet context={{ searchValue }} /> {/* Render page content below the MenuBar */}
       </Container>
     </div>
   );
