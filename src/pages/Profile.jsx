@@ -1,16 +1,19 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
-import { Dialog } from "@headlessui/react"; 
+import { Dialog } from "@headlessui/react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import ProfileNavBar from "../components/ProfileNavBar";
+import FollowDialog from "../components/FollowDialog";
 import "./Profile.css";
 
 export default function Profile() {
-  const { id: profileId } = useParams();   
-  const isMe = !profileId || profileId === session.user.id;
-  const navigate = useNavigate();
+  const { id: profileIdParam } = useParams();
   const { session } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const profileUserId = profileIdParam || session?.user?.id;
+  const isMe = !profileIdParam || profileIdParam === session?.user?.id;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -26,535 +29,664 @@ export default function Profile() {
   const [imageFile, setImageFile] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [showDropdownForId, setShowDropdownForId] = useState(null);
-  
+  const [isFollowingProfile, setIsFollowingProfile] = useState(false);
 
-  const DEFAULT_IMAGE_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
-  
-  // Dropdown & Dialog States
+  const DEFAULT_IMAGE_URL =
+    "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
+
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
   const [collectionName, setCollectionName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
 
-  //Diaglog for Edit Profile
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editedFirstName, setEditedFirstName] = useState(firstName);
-  const [editedLastName, setEditedLastName] = useState(lastName);
-  const [editedUserName, setEditedUserName] = useState(userName);
-  const [editedBio, setEditedBio] = useState(bio);
+  const [editedFirstName, setEditedFirstName] = useState("");
+  const [editedLastName, setEditedLastName] = useState("");
+  const [editedUserName, setEditedUserName] = useState("");
+  const [editedBio, setEditedBio] = useState("");
 
-  //dialog for follow/following Popup
   const [showFollowerDialog, setShowFollowerDialog] = useState(false);
   const [showFollowingDialog, setShowFollowingDialog] = useState(false);
   const [followerUsers, setFollowerUsers] = useState([]);
   const [followingUsers, setFollowingUsers] = useState([]);
 
-
-  // Toggle Dropdown
   const toggleCreateDropdown = () => {
     setShowCreateDropdown(!showCreateDropdown);
   };
 
-  // Open & Close Dialog
   const openCollectionDialog = () => {
-    setShowCreateDropdown(false); // Close dropdown before opening dialog
-    setIsDialogOpen(true);
-  };
-  const closeCollectionDialog = () => {
-    setIsDialogOpen(false);
-    setCollectionName("");
-    setIsPrivate(false);
+    setShowCreateDropdown(false);
+    setIsCollectionDialogOpen(true);
+    if (!selectedCollection) {
+      setCollectionName("");
+      setIsPrivate(false);
+      setCollectionImage(null);
+      setImageFile(null);
+    } else {
+      setCollectionName(selectedCollection.name);
+      setIsPrivate(selectedCollection.is_private);
+      setCollectionImage(selectedCollection.cover_img || null);
+      setImageFile(null);
+    }
   };
 
-  const handleCreateCollection = async (e) => {
-    e.preventDefault(); // Prevent default form submission (if applicable)
-  
-    let uploadedImageUrl = null;
-    if (imageFile) {
-      const fileName = `${session.user.id}-${crypto.randomUUID()}`;
-      const { data: imageData, error: uploadError } = await supabase.storage
-        .from("collection-picture")
-        .upload(fileName, imageFile, { upsert: true });
-    
-      if (uploadError) {
-        alert("Error uploading collection image: " + uploadError.message);
-        return;
-      }
-    
-      const { data: urlData } = supabase.storage
-        .from("collection-picture")
-        .getPublicUrl(fileName);
-    
-      uploadedImageUrl = urlData.publicUrl;
-    }
-    
+  const closeCollectionDialog = () => {
+    setIsCollectionDialogOpen(false);
+    setSelectedCollection(null);
+    setCollectionName("");
+    setIsPrivate(false);
+    setCollectionImage(null);
+    setImageFile(null);
+  };
+
+  const handleCreateOrUpdateCollection = async (e) => {
+    e.preventDefault();
+
     if (!collectionName.trim()) {
       alert("Please enter a collection name");
       return;
     }
 
+    let uploadedImageUrl = selectedCollection?.cover_img || null;
+
+    if (imageFile) {
+      const fileName = `${session.user.id}-${crypto.randomUUID()}`;
+      const { data: imageData, error: uploadError } = await supabase.storage
+        .from("collection-picture")
+        .upload(fileName, imageFile, { upsert: true });
+
+      if (uploadError) {
+        alert("Error uploading collection image: " + uploadError.message);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("collection-picture")
+        .getPublicUrl(fileName);
+      uploadedImageUrl = urlData.publicUrl;
+    }
+
+    const collectionData = {
+      name: collectionName.trim(),
+      user_id: session.user.id,
+      is_private: isPrivate,
+      cover_img: uploadedImageUrl,
+      ...(selectedCollection && { id: selectedCollection.id }),
+      ...(!selectedCollection && { id: crypto.randomUUID() }),
+    };
+
     try {
       const { data, error } = await supabase
         .from("saved_collections")
-        .upsert([
-          { 
-            id: crypto.randomUUID(),
-            name: collectionName.trim(), 
-            user_id: session.user.id, 
-            is_private: isPrivate ,
-            cover_img: uploadedImageUrl
-          }
-        ])
-        .select(); // Select to get the newly inserted/updated row
-  
-      if (error) {
-        throw new Error(error.message);
-      }
-  
-      alert("Collection created successfully!");
+        .upsert([collectionData])
+        .select()
+        .single();
 
-      
-      const newCollection = { ...data[0], recipeCount: 0 };
+      if (error) throw error;
 
-      // Update UI with the new collection
-      setFolders((prevFolders) => [...prevFolders, newCollection]);
-  
-      // Close the dialog
+      alert(
+        `Collection ${selectedCollection ? "updated" : "created"} successfully!`
+      );
+
+      setFolders((prevFolders) => {
+        if (selectedCollection) {
+          return prevFolders.map((folder) =>
+            folder.id === data.id
+              ? { ...folder, ...data, recipeCount: folder.recipeCount }
+              : folder
+          );
+        } else {
+          return [...prevFolders, { ...data, recipeCount: 0 }];
+        }
+      });
+
       closeCollectionDialog();
     } catch (error) {
-      alert("Error creating collection: " + error.message);
+      alert(
+        `Error ${selectedCollection ? "updating" : "creating"} collection: ${
+          error.message
+        }`
+      );
     }
   };
-  
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    const userId = session.user.id;
 
-    const fetchUserPicture = async () => {
-      const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(userId);
-      if (error) {
-        console.error("Error downloading profile picture:", error.message);
-        return;
-      }
-      setPic(data.publicUrl);
+  const handleFollowStateUpdate = (didFollow) => {
+    if (didFollow) {
+      setFollowersCount((prev) => prev + 1);
+    } else {
+      setFollowersCount((prev) => Math.max(0, prev - 1));
+    }
+    if (isMe) setIsFollowingProfile(didFollow);
+  };
+
+  const handleProfileFollowToggle = async () => {
+    if (!session?.user?.id || isMe) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("Following")
+        .upsert({ follower_id: session.user.id, following_id: profileUserId, is_following: !isFollowingProfile })
+        .select();
+
+      if (error) throw error;
+
+      setIsFollowingProfile(!isFollowingProfile);
+      setFollowersCount((prev) => isFollowingProfile ? Math.max(0, prev - 1) : prev + 1);
+    } catch (error) {
+      console.error("Error toggling profile follow:", error.message);
+      alert("Failed to update follow status.");
+    }
+  };
+
+  useEffect(() => {
+    if (!profileUserId) {
+      console.log("No user ID available to fetch profile.");
+      return;
     }
 
+    const fetchUserPicture = async () => {
+      const { data, error } = await supabase.storage
+        .from("profile_pictures")
+        .getPublicUrl(profileUserId);
+      if (error || !data?.publicUrl) {
+        console.error(
+          "Error fetching profile picture or URL is null:",
+          error?.message
+        );
+        setPic(
+          "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures//default-avatar.png"
+        );
+      } else {
+        setPic(data.publicUrl);
+      }
+    };
 
     const fetchUserProfile = async () => {
       const { data, error } = await supabase
         .from("Profiles")
-        .select("first_name, last_name, avatar_url, username, biography")
-        .eq("id", userId)
+        .select("first_name, last_name, username, biography")
+        .eq("id", profileUserId)
         .single();
 
-        if (error) {
-          console.error("Error fetching profile:", error.message);
-          return;
-        }
-        setFirstName(data.first_name);
-      setLastName(data.last_name);
-      //setPic(data.avatar_url);
-      setUsername(data.username);
-      setBio(data.biography);
-    };
-    const fetchRecipeCount = async () => {
-         const userId = session.user.id;
-         const { count: createdCount, error: createdError } = await supabase
-          .from("Recipes")
-          .select("*", { count: "exact" })
-          .eq("user_id", userId);
-    
-        if (createdError) {
-          console.error("Error fetching recipe count:", createdError.message);
-          return;
-        }
-    
-        setRecipeCount(createdCount); 
-      };
-
-      const fetchFollowersCount = async () => {
-        const { count, error } = await supabase
-          .from("Following") 
-          .select("*", { count: "exact" })
-          .eq("following_id", userId);
-    
-        if (error) {
-          console.error("Error fetching followers count:", error.message);
-          return;
-        }
-    
-        setFollowersCount(count);
-      };
-    
-      const fetchFollowingCount = async () => {
-        const { count, error } = await supabase
-          .from("Following") 
-          .select("*", { count: "exact" })
-          .eq("follower_id", userId); 
-    
-        if (error) {
-          console.error("Error fetching following count:", error.message);
-          return;
-        }
-    
-        setFollowingCount(count);
-      };
-
-      const fetchCollections = async () => {
-        try {
-          const { data: collections, error: collectionsError } = await supabase
-            .from("saved_collections")
-            .select("id, name, cover_img")
-            .eq("user_id", session.user.id);
-      
-          if (collectionsError) throw collectionsError;
-      
-          const { data: savedRecipes, error: savedRecipesError } = await supabase
-            .from("saved_recipes")
-            .select("folder_id, recipe_id")
-            .eq("user_id", session.user.id);
-      
-          if (savedRecipesError) throw savedRecipesError;
-      
-          const recipeCounts = {};
-          const folderToRecipeId = {}; // for most recent recipe
-      
-          savedRecipes.forEach((row) => {
-            const folderId = row.folder_id;
-            recipeCounts[folderId] = (recipeCounts[folderId] || 0) + 1;
-      
-            // Only store the most recent for each folder
-            if (!folderToRecipeId[folderId]) {
-              folderToRecipeId[folderId] = row.recipe_id;
-            }
-          });
-      
-          const foldersWithCountsAndImages = await Promise.all(
-            collections.map(async (folder) => {
-              let finalImage = folder.cover_img;
-      
-              if (!finalImage) {
-                const recentRecipeId = folderToRecipeId[folder.id];
-                if (recentRecipeId) {
-                  const { data: recipeData, error: recipeError } = await supabase
-                    .from("Recipes")
-                    .select("image_url")
-                    .eq("id", recentRecipeId)
-                    .single();
-      
-                  if (!recipeError && recipeData?.image_url) {
-                    finalImage = recipeData.image_url;
-                  }
-                }
-              }
-      
-              if (!finalImage) {
-                finalImage = DEFAULT_IMAGE_URL;
-              }
-      
-              return {
-                ...folder,
-                recipeCount: recipeCounts[folder.id] || 0,
-                cover_img: finalImage,
-              };
-            })
-          );
-      
-          setFolders(foldersWithCountsAndImages);
-        } catch (err) {
-          console.error("Error fetching collections:", err.message);
-        }
-      };
-      
-
-    const fetchCookedRecipes = async () => {
-      const {data, error} = await supabase  
-        .from("Cooked Recipes")
-        .select("recipe_id")
-        .eq("user_id", session.user.id)
-        .eq("have_cooked", true);
-
-       if (error) {
-        console.error("Error fetching cooked recipes:", error.message);
+      if (error) {
+        console.error("Error fetching profile:", error.message);
         return;
       }
-
-      setCookedRecipes(data);
+      setFirstName(data.first_name);
+      setLastName(data.last_name);
+      setUsername(data.username);
+      setBio(data.biography);
+      if (isMe) {
+        setEditedFirstName(data.first_name);
+        setEditedLastName(data.last_name);
+        setEditedUserName(data.username);
+        setEditedBio(data.biography);
+      }
     };
 
-    const fetchFollowerUsers = async () => {
-      const { data: followers, error } = await supabase
-        .from("Following")
-        .select("follower_id")
-        .eq("following_id", session.user.id);
-    
-      if (error) return console.error(error.message);
-    
-      const ids = followers.map(f => f.follower_id);
-      if (ids.length === 0) return setFollowerUsers([]);
-    
-      const { data: profiles } = await supabase
-        .from("Profiles")
-        .select("id, first_name, last_name, username")
-        .in("id", ids);
-    
-      setFollowerUsers(profiles);
+    const fetchRecipeCount = async () => {
+      const { count, error } = await supabase
+        .from("Recipes")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profileUserId);
+
+      if (error) {
+        console.error("Error fetching recipe count:", error.message);
+        return;
+      }
+      setRecipeCount(count || 0);
     };
-    
-    const fetchFollowingUsers = async () => {
-      const { data: following, error } = await supabase
+
+    const fetchFollowersCount = async () => {
+      const { count, error } = await supabase
         .from("Following")
-        .select("following_id")
-        .eq("follower_id", session.user.id);
-    
-      if (error) return console.error(error.message);
-    
-      const ids = following.map(f => f.following_id);
-      if (ids.length === 0) return setFollowingUsers([]);
-    
-      const { data: profiles } = await supabase
-        .from("Profiles")
-        .select("id, first_name, last_name, username")
-        .in("id", ids);
-    
-      setFollowingUsers(profiles);
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", profileUserId)
+        .eq("is_following", true);
+
+      if (error) {
+        console.error("Error fetching followers count:", error.message);
+        return;
+      }
+      setFollowersCount(count || 0);
     };
-    
+
+    const fetchFollowingCount = async () => {
+      const { count, error } = await supabase
+        .from("Following")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", profileUserId)
+        .eq("is_following", true);
+
+      if (error) {
+        console.error("Error fetching following count:", error.message);
+        return;
+      }
+      setFollowingCount(count || 0);
+    };
+
+    const fetchIsFollowing = async () => {
+      if (isMe || !session?.user?.id) {
+        setIsFollowingProfile(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("Following")
+        .select("*", { count: "exact", head: true })
+        .match({ follower_id: session.user.id, following_id: profileUserId, is_following: true });
+
+      if (error) {
+        console.error("Error checking follow status:", error);
+        setIsFollowingProfile(false);
+      } else {
+        setIsFollowingProfile(data.length > 0);
+      }
+    };
+
+    const fetchCollections = async () => {
+      if (!isMe) {
+        setFolders([]);
+        return;
+      }
+      try {
+        const { data: collections, error: collectionsError } = await supabase
+          .from("saved_collections")
+          .select("id, name, cover_img, is_private")
+          .eq("user_id", profileUserId);
+
+        if (collectionsError) throw collectionsError;
+
+        const collectionIds = collections.map((c) => c.id);
+        if (collectionIds.length === 0) {
+          setFolders(
+            collections.map((c) => ({ ...c, recipeCount: 0 }))
+          );
+          return;
+        }
+
+        const { data: recipeCountsData, error: countsError } = await supabase
+          .from("saved_recipes")
+          .select("folder_id", { count: "exact" })
+          .in("folder_id", collectionIds)
+          .eq("user_id", profileUserId);
+
+        if (countsError) throw countsError;
+
+        const recipeCounts = recipeCountsData.reduce((acc, { folder_id }) => {
+          acc[folder_id] = (acc[folder_id] || 0) + 1;
+          return acc;
+        }, {});
+
+        const foldersWithCounts = collections.map((folder) => ({
+          ...folder,
+          recipeCount: recipeCounts[folder.id] || 0,
+          cover_img: folder.cover_img || DEFAULT_IMAGE_URL,
+        }));
+
+        setFolders(foldersWithCounts);
+      } catch (err) {
+        console.error("Error fetching collections:", err.message);
+      }
+    };
+
+    const fetchCookedRecipes = async () => {
+      if (!isMe) {
+        setCookedRecipes([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("Cooked Recipes")
+        .select("recipe_id", { count: "exact", head: true })
+        .eq("user_id", profileUserId)
+        .eq("have_cooked", true);
+
+      if (error) {
+        console.error("Error fetching cooked recipes count:", error.message);
+        setCookedRecipes([]);
+        return;
+      }
+      setCookedRecipes(data || []);
+    };
+
     Promise.all([
       fetchUserPicture(),
-      fetchCookedRecipes(),
-      fetchCollections(),
-      fetchRecipeCount(),
       fetchUserProfile(),
+      fetchRecipeCount(),
       fetchFollowersCount(),
+      fetchFollowingCount(),
+      fetchIsFollowing(),
+      fetchCollections(),
+      fetchCookedRecipes(),
       fetchFollowerUsers(),
       fetchFollowingUsers(),
-      fetchFollowingCount()
     ]);
-    
+  }, [profileUserId, session?.user?.id, isMe]);
 
-  }, [session?.user?.id, recipeCount, cookedRecipes.length]);
+  const fetchFollowerUsers = async () => {
+    const { data: followers, error } = await supabase
+      .from("Following")
+      .select("*")
+      .eq("following_id", profileUserId)
+      .eq("is_following", true);
 
-const DEFAULT_COLLECTIONS = [
-  {
-    id: "your-recipes",
-    name: "Your Recipes",
-    recipeCount: recipeCount,
-    cover_img: DEFAULT_IMAGE_URL,
-    isDefault: true,
-  },
-  {
-    id: "cooked",
-    name: "Cooked Recipes",
-    recipeCount: cookedRecipes.length,
-    cover_img: DEFAULT_IMAGE_URL,
-    isDefault: true,
-  },
-];
 
-const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
+    if (error) return console.error("Error fetching follower IDs:", error.message);
+    console.log("Fetched followers:", followers);
 
-  
+    const ids = followers.map((f) => f.follower_id);
+    if (ids.length === 0) return setFollowerUsers([]);
+
+    const { data: profiles, error: profileError } = await supabase
+      .from("Profiles")
+      .select("id, first_name, last_name, username")
+      .in("id", ids);
+
+    if (profileError)
+      return console.error("Error fetching follower profiles:", profileError.message);
+    setFollowerUsers(profiles || []);
+  };
+
+  const fetchFollowingUsers = async () => {
+    const { data: following, error } = await supabase
+      .from("Following")
+      .select("following_id")
+      .eq("follower_id", profileUserId)
+      .eq("is_following", true);
+
+    if (error) return console.error("Error fetching following IDs:", error.message);
+
+    const ids = following.map((f) => f.following_id);
+    if (ids.length === 0) return setFollowingUsers([]);
+
+    const { data: profiles, error: profileError } = await supabase
+      .from("Profiles")
+      .select("id, first_name, last_name, username")
+      .in("id", ids);
+
+    if (profileError)
+      return console.error("Error fetching following profiles:", profileError.message);
+    setFollowingUsers(profiles || []);
+  };
+
+  const DEFAULT_COLLECTIONS = isMe
+    ? [
+        {
+          id: "your-recipes",
+          name: "Your Recipes",
+          recipeCount: recipeCount,
+          cover_img: DEFAULT_IMAGE_URL,
+          isDefault: true,
+          isOwner: true,
+        },
+        {
+          id: "cooked",
+          name: "Cooked Recipes",
+          recipeCount: cookedRecipes.length,
+          cover_img: DEFAULT_IMAGE_URL,
+          isDefault: true,
+          isOwner: true,
+        },
+      ]
+    : [];
+
+  const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
+
   return (
     <div className="profile-container">
-      {/* Sidebar */}
-      <ProfileNavBar />
-      <div className="vl"></div>
+      {isMe && <ProfileNavBar />}
+      {isMe && <div className="vl"></div>}
 
-      <div className="edit-profile-wrapper">
-      <button
-        className="edit-profile-btn"
-        onClick={() => {
-          setEditedFirstName(firstName);
-          setEditedLastName(lastName);
-          setEditedUserName(userName);
-          setEditedBio(bio);
-          setShowEditDialog(true);
-        }}
+      {isMe && (
+        <div className="edit-profile-wrapper">
+          <button
+            className="edit-profile-btn"
+            onClick={() => {
+              setEditedFirstName(firstName);
+              setEditedLastName(lastName);
+              setEditedUserName(userName);
+              setEditedBio(bio);
+              setShowEditDialog(true);
+            }}
+          >
+            Edit Profile
+          </button>
+        </div>
+      )}
+
+      {!isMe && session?.user?.id && (
+        <div
+          className="follow-button-wrapper"
+          style={{
+            position: "absolute",
+            top: "20rem",
+            right: "12rem",
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={handleProfileFollowToggle}
+            className={`px-4 py-2 rounded-lg font-bold font-["Abhaya_Libre"] transition ${
+              isFollowingProfile
+                ? "bg-gray-300 text-black hover:bg-gray-400"
+                : "bg-[#D75600] text-white hover:opacity-80"
+            }`}
+          >
+            {isFollowingProfile ? "Following" : "Follow"}
+          </button>
+        </div>
+      )}
+
+      <div
+        className={`profile-content ${!isMe ? "pt-10" : ""}`}
+        style={{ marginLeft: isMe ? "0" : "-100px" }}
       >
-        Edit Profile
-      </button>
-    </div>
-
-      {/* Main Content */}
-      <div className="profile-content">
-        <img src={pic} className="profile-pic" />
-        <h1 className="name">{firstName} {lastName}</h1>
+        <img src={pic} alt={`${userName}'s profile`} className="profile-pic" />
+        <h1 className="name">
+          {firstName} {lastName}
+        </h1>
         <h1 className="username">@{userName}</h1>
 
         <p className="stats">
-          <span>{recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}</span>
-          <span onClick={() => setShowFollowerDialog(true)} className="cursor-pointer hover:underline">
+          <span>
+            {recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}
+          </span>
+          <span
+            onClick={() => setShowFollowerDialog(true)}
+            className="cursor-pointer hover:underline"
+          >
             {followersCount} {followersCount === 1 ? "follower" : "followers"}
           </span>
-          <span onClick={() => setShowFollowingDialog(true)} className="cursor-pointer hover:underline">
+          <span
+            onClick={() => setShowFollowingDialog(true)}
+            className="cursor-pointer hover:underline"
+          >
             {followingCount} following
           </span>
         </p>
 
-        <div className="bio"> 
-          {bio}
+        <div className="bio">
+          {bio ||
+            (isMe
+              ? "No bio yet. Click 'Edit Profile' to add one!"
+              : "User hasn't added a bio yet.")}
         </div>
-        
-       
 
-        {/* Collections Header & Create Button */}
-        <div className="collections-header">
-          <h2 className="collection-title">Collections</h2>
-          <div className="collections-grid">
-   
-          <div className="create-container">
-            <button onClick={toggleCreateDropdown} className="create-btn">+ Create</button>
-
-            {showCreateDropdown && (
-              <div className="create-dropdown">
-                <p className="create-option" onClick={() => navigate("/createrecipe")}>Recipe</p>
-                <p className="create-option" onClick={openCollectionDialog}>Collection</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="collections-grid">
-  {collectionsToShow.map((col) => (
-    <div
-      key={col.id}
-      className="collection-card cursor-pointer"
-      onClick={() => navigate(`/collection/${col.id}`)}
-    >
-      {/* 3‑dot menu only for user collections */}
-      {!col.isDefault && (
-        <div className="collection-options">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDropdownForId((prev) => (prev === col.id ? null : col.id));
-            }}
-          >
-            <BsThreeDotsVertical />
-          </button>
-
-          {showDropdownForId === col.id && (
-            <div className="collection-actions-dropdown">
-              <div
-                className="dropdown-option"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedCollection(col);
-                  setCollectionName(col.name);
-                  setCollectionImage(col.cover_img || null);
-                  setIsPrivate(col.is_private);
-                  setShowDropdownForId(null);
-                  setIsDialogOpen(true);
-                }}
-              >
-                Edit
-              </div>
-              <div
-                className="dropdown-option"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const { error } = await supabase
-                    .from("saved_collections")
-                    .delete()
-                    .eq("id", col.id);
-                  if (!error) {
-                    setFolders((prev) => prev.filter((f) => f.id !== col.id));
-                  }
-                  setShowDropdownForId(null);
-                }}
-              >
-                Delete
-              </div>
+        {isMe && (
+          <div className="collections-header">
+            <h2 className="collection-title">Collections</h2>
+            <div className="create-container">
+              <button onClick={toggleCreateDropdown} className="create-btn">
+                + Create
+              </button>
+              {showCreateDropdown && (
+                <div className="create-dropdown">
+                  <p
+                    className="create-option"
+                    onClick={() => navigate("/createrecipe")}
+                  >
+                    Recipe
+                  </p>
+                  <p className="create-option" onClick={openCollectionDialog}>
+                    Collection
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Cover image */}
-      <img
-        src={col.cover_img}
-        alt={col.name}
-        className="w-full h-32 object-cover rounded mb-2"
-      />
-
-      {/* Title + count */}
-      <div className="collection-info">
-        <h3 className="collection-title">{col.name}</h3>
-        <p className="collection-recipe-count">
-          {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
-        </p>
-      </div>
-    </div>
-  ))}
-</div>
-
-      </div>
-
-      <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
-        <div className="dialog-container">
-          <Dialog.Panel className="dialog-box">              
-            <button className="close-btn" onClick={closeCollectionDialog}>×</button>
-            <Dialog.Title className="dialog-title">Create Collection</Dialog.Title>
-
-            <label className="dialog-title">Title</label>
-          
-            <input 
-              type="text" 
-              placeholder="Name your collection"
-              className="dialog-input"
-              value={collectionName}
-              onChange={(e) => setCollectionName(e.target.value)}
-            />
-            ...
-            <button className="dialog-create-btn" onClick={handleCreateCollection}>Create</button>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-
-      {/* Create Collection Dialog */}
-      <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
-        <div className="dialog-container">
-          <Dialog.Panel className="dialog-box">              
-            <button className="close-btn" onClick={closeCollectionDialog}>×</button>
-            <Dialog.Title className="dialog-title">Create Collection</Dialog.Title>
-
-            <label className="dialog-title">Title</label>
-           
-            <input 
-              type="text" 
-              placeholder="Name your collection"
-              className="dialog-input"
-              value={collectionName}
-              onChange={(e) => setCollectionName(e.target.value)}
-            />
-            <label className="dialog-label-two">Keep this collection between us?</label>
-            <div className="dialog-private">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                id="privateCollection"
-                checked={isPrivate}
-                onChange={() => setIsPrivate(!isPrivate)}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-orange-500"
-              />
-              <span className="dialog-label">I want this collection to be private</span>
-            </label>
           </div>
+        )}
+        {!isMe && (
+          <div className="collections-header">
+            <h2 className="collection-title">Public Collections</h2>
+          </div>
+        )}
 
-          {/* Upload Image Section */}
-              <label htmlFor="collectionImageInput" className="upload-placeholder cursor-pointer">
+        <div className="collections-grid">
+          {collectionsToShow
+            .filter(
+              (col) => isMe || (!col.is_private && !col.isDefault)
+            )
+            .map((col) => (
+              <div
+                key={col.id}
+                className="collection-card cursor-pointer"
+                onClick={() => {
+                  if (col.id === "your-recipes")
+                    navigate(`/collection/user/${profileUserId}`);
+                  else if (col.id === "cooked")
+                    navigate(`/collection/cooked/${profileUserId}`);
+                  else navigate(`/collection/${col.id}`);
+                }}
+              >
+                {isMe && !col.isDefault && (
+                  <div className="collection-options">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDropdownForId((prev) =>
+                          prev === col.id ? null : col.id
+                        );
+                      }}
+                      className="text-gray-600 hover:text-black"
+                    >
+                      <BsThreeDotsVertical size={20} />
+                    </button>
+
+                    {showDropdownForId === col.id && (
+                      <div className="collection-actions-dropdown">
+                        <div
+                          className="dropdown-option"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCollection(col);
+                            openCollectionDialog();
+                            setShowDropdownForId(null);
+                          }}
+                        >
+                          Edit
+                        </div>
+                        <div
+                          className="dropdown-option text-red-600"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (
+                              window.confirm(
+                                `Are you sure you want to delete the collection "${col.name}"? This cannot be undone.`
+                              )
+                            ) {
+                              const { error } = await supabase
+                                .from("saved_collections")
+                                .delete()
+                                .eq("id", col.id);
+                              if (!error) {
+                                setFolders((prev) =>
+                                  prev.filter((f) => f.id !== col.id)
+                                );
+                                alert("Collection deleted.");
+                              } else {
+                                alert(
+                                  "Error deleting collection: " +
+                                    error.message
+                                );
+                              }
+                            }
+                            setShowDropdownForId(null);
+                          }}
+                        >
+                          Delete
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <img
+                  src={col.cover_img || DEFAULT_IMAGE_URL}
+                  alt={col.name}
+                  className="w-full h-32 object-cover rounded mb-2"
+                />
+
+                <div className="collection-info">
+                  <h3 className="collection-title-card">{col.name}</h3>
+                  <p className="collection-recipe-count">
+                    {col.recipeCount}{" "}
+                    {col.recipeCount === 1 ? "recipe" : "recipes"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          {!isMe &&
+            collectionsToShow.filter(
+              (col) => !col.is_private && !col.isDefault
+            ).length === 0 && (
+              <p className="text-gray-500 col-span-3 text-center">
+                This user has no public collections.
+              </p>
+            )}
+        </div>
+      </div>
+
+      {isMe && (
+        <Dialog
+          open={isCollectionDialogOpen}
+          onClose={closeCollectionDialog}
+          className="dialog-overlay"
+        >
+          <div className="dialog-container">
+            <Dialog.Panel className="dialog-box w-[500px]">
+              <button className="close-btn" onClick={closeCollectionDialog}>
+                ×
+              </button>
+              <Dialog.Title className="dialog-title">
+                {selectedCollection ? "Edit Collection" : "Create Collection"}
+              </Dialog.Title>
+
+              <label className="dialog-label block mb-1 text-left">Title</label>
+              <input
+                type="text"
+                placeholder="Name your collection"
+                className="dialog-input"
+                value={collectionName}
+                onChange={(e) => setCollectionName(e.target.value)}
+              />
+
+              <label className="dialog-label block mb-1 text-left mt-4">
+                Cover Image (Optional)
+              </label>
+              <label
+                htmlFor="collectionImageInput"
+                className="upload-placeholder cursor-pointer block w-full h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-300 mb-4"
+              >
                 {collectionImage ? (
                   <img
                     src={collectionImage}
                     alt="Collection Preview"
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center w-full h-full text-gray-600">
+                  <div className="text-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 mb-2"
+                      className="h-8 w-8 mx-auto mb-1"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -566,9 +698,7 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
                         d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12"
                       />
                     </svg>
-                    <span className="text-center text-sm font-semibold">
-                      Upload a cover image (optional)
-                    </span>
+                    <span>Click to upload</span>
                   </div>
                 )}
                 <input
@@ -586,100 +716,140 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
                 />
               </label>
 
-            <button className="dialog-create-btn" onClick={handleCreateCollection}>Create</button>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-      <Dialog open={showEditDialog} onClose={() => setShowEditDialog(false)} className="dialog-overlay">
-  <div className="dialog-container">
-    <Dialog.Panel className="dialog-box">
-      <button className="close-btn" onClick={() => setShowEditDialog(false)}>×</button>
-      <Dialog.Title className="dialog-title">Edit Profile</Dialog.Title>
+              <div className="dialog-private flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="privateCollection"
+                  checked={isPrivate}
+                  onChange={() => setIsPrivate(!isPrivate)}
+                  className="w-4 h-4 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="privateCollection"
+                  className="dialog-label cursor-pointer"
+                >
+                  Make this collection private
+                </label>
+              </div>
 
-      <label className="dialog-title">First Name</label>
-      <input className="dialog-input" value={editedFirstName} onChange={(e) => setEditedFirstName(e.target.value)} />
-
-      <label className="dialog-title">Last Name</label>
-      <input className="dialog-input" value={editedLastName} onChange={(e) => setEditedLastName(e.target.value)} />
-
-      <label className="dialog-title">Username</label>
-      <input className="dialog-input" value={editedUserName} onChange={(e) => setEditedUserName(e.target.value)} />
-
-      <label className="dialog-title">Bio</label>
-      <textarea className="dialog-input" value={editedBio} onChange={(e) => setEditedBio(e.target.value)} />
-
-      <button className="dialog-create-btn" onClick={async () => {
-        const { error } = await supabase
-          .from("Profiles")
-          .update({
-            first_name: editedFirstName,
-            last_name: editedLastName,
-            username: editedUserName,
-            biography: editedBio
-          })
-          .eq("id", session.user.id);
-
-        if (error) {
-          alert("Error updating profile: " + error.message);
-        } else {
-          setFirstName(editedFirstName);
-          setLastName(editedLastName);
-          setUsername(editedUserName);
-          setBio(editedBio);
-          setShowEditDialog(false);
-        }
-      }}>
-        Save Changes
-      </button>
-    </Dialog.Panel>
-  </div>
-</Dialog>
-
-{/* Follower / Following Dialog Pop-ups */}
-<Dialog open={showFollowerDialog} onClose={() => setShowFollowerDialog(false)} className="dialog-overlay">
-  <div className="dialog-container">
-    <Dialog.Panel className="dialog-box">
-      <button className="close-btn" onClick={() => setShowFollowerDialog(false)}>×</button>
-      <Dialog.Title className="dialog-title">{followerUsers.length} {followerUsers.length === 1 ? "follower" : "followers"}
-      </Dialog.Title>
-      {followerUsers.map((user) => (
-        <div key={user.id} className="flex items-center justify-between mb-4 cursor-pointer">
-          <div onClick={() => navigate(`/profile/${user.id}`)} className="flex items-center gap-3">
-            <img src={`https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures/${user.id}`} className="w-10 h-10 rounded-full" />
-            <div>
-              <p className="font-bold">{user.username}</p>
-              <p className="text-sm text-gray-500">{user.first_name} {user.last_name}</p>
-            </div>
+              <button
+                className="dialog-create-btn w-full"
+                onClick={handleCreateOrUpdateCollection}
+              >
+                {selectedCollection ? "Save Changes" : "Create Collection"}
+              </button>
+            </Dialog.Panel>
           </div>
-          <button className="dialog-create-btn">Follow</button>
-        </div>
-      ))}
-    </Dialog.Panel>
-  </div>
-</Dialog>
+        </Dialog>
+      )}
 
-<Dialog open={showFollowingDialog} onClose={() => setShowFollowingDialog(false)} className="dialog-overlay">
-  <div className="dialog-container">
-    <Dialog.Panel className="dialog-box">
-      <button className="close-btn" onClick={() => setShowFollowingDialog(false)}>×</button>
-      <Dialog.Title className="dialog-title">{followingUsers.length} Following</Dialog.Title>
-      {followingUsers.map((user) => (
-        <div key={user.id} className="flex items-center justify-between mb-4 cursor-pointer">
-          <div onClick={() => navigate(`/profile/${user.id}`)} className="flex items-center gap-3">
-            <img src={`https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures/${user.id}`} className="w-10 h-10 rounded-full" />
-            <div>
-              <p className="font-bold">{user.username}</p>
-              <p className="text-sm text-gray-500">{user.first_name} {user.last_name}</p>
-            </div>
+      {isMe && (
+        <Dialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          className="dialog-overlay"
+        >
+          <div className="dialog-container">
+            <Dialog.Panel className="dialog-box">
+              <button
+                className="close-btn"
+                onClick={() => setShowEditDialog(false)}
+              >
+                ×
+              </button>
+              <Dialog.Title className="dialog-title">Edit Profile</Dialog.Title>
+
+              <label className="dialog-label block mb-1 text-left">
+                First Name
+              </label>
+              <input
+                className="dialog-input"
+                value={editedFirstName}
+                onChange={(e) => setEditedFirstName(e.target.value)}
+              />
+
+              <label className="dialog-label block mb-1 text-left">
+                Last Name
+              </label>
+              <input
+                className="dialog-input"
+                value={editedLastName}
+                onChange={(e) => setEditedLastName(e.target.value)}
+              />
+
+              <label className="dialog-label block mb-1 text-left">
+                Username
+              </label>
+              <input
+                className="dialog-input"
+                value={editedUserName}
+                onChange={(e) => setEditedUserName(e.target.value)}
+              />
+
+              <label className="dialog-label block mb-1 text-left">Bio</label>
+              <textarea
+                className="dialog-input h-24"
+                value={editedBio}
+                onChange={(e) => setEditedBio(e.target.value)}
+              />
+
+              <button
+                className="dialog-create-btn w-full mt-2"
+                onClick={async () => {
+                  const { error } = await supabase
+                    .from("Profiles")
+                    .update({
+                      first_name: editedFirstName,
+                      last_name: editedLastName,
+                      username: editedUserName,
+                      biography: editedBio,
+                    })
+                    .eq("id", session.user.id);
+
+                  if (error) {
+                    alert("Error updating profile: " + error.message);
+                  } else {
+                    setFirstName(editedFirstName);
+                    setLastName(editedLastName);
+                    setUsername(editedUserName);
+                    setBio(editedBio);
+                    setShowEditDialog(false);
+                    alert("Profile updated successfully!");
+                  }
+                }}
+              >
+                Save Changes
+              </button>
+            </Dialog.Panel>
           </div>
-          <button className="bg-black text-white text-sm px-3 py-1 rounded">Unfollow</button>
-        </div>
-      ))}
-    </Dialog.Panel>
-  </div>
-</Dialog>
+        </Dialog>
+      )}
 
+      <FollowDialog
+        isOpen={showFollowerDialog}
+        onClose={async () => {
+          await Promise.all([fetchFollowerUsers(), fetchFollowingUsers()]);
+          setShowFollowerDialog(false);
+        }}
+        title={"Followers"}
+        users={followerUsers}
+        currentUserId={session?.user?.id}
+        profileUserId={profileUserId}
+        onFollowStateChange={handleFollowStateUpdate}
+      />
 
+      <FollowDialog
+        isOpen={showFollowingDialog}
+        onClose={async () => {
+          await Promise.all([fetchFollowerUsers(), fetchFollowingUsers()]);
+          setShowFollowingDialog(false);
+        }}
+        title={"Following"}
+        users={followingUsers}
+        currentUserId={session?.user?.id}
+        profileUserId={profileUserId}
+        onFollowStateChange={handleFollowStateUpdate}
+      />
     </div>
   );
 }
