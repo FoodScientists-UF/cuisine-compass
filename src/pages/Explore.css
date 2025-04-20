@@ -1,13 +1,13 @@
 .pinterest-grid {
-  column-width: 300px;
-  column-count: repeat(auto-fit, minmax(300px, 1fr));
-  column-gap: 16px;
-  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: 0px;
+  gap: 20px;
+  padding: 20px;
 }
 
 .pinterest-card {
   position: relative;
-  /* overflow: hidden; */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
@@ -16,6 +16,7 @@
   margin-bottom: 16px;
   break-inside: avoid;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .pinterest-card:hover {
@@ -92,6 +93,7 @@
   background: rgba(0, 0, 0, 0.6);
   padding: 10px;
   border-radius: 50%;
+  z-index: 10;
 }
 
 

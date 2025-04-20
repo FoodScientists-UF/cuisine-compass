@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactDOM from "react-dom";
 import { AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,64 @@ const ExplorePage = ({ following = false }) => {
   const [savedCollections, setSavedCollections] = useState([]);
   const [bookmarkPopup, setBookmarkPopup] = useState(null);
   const bookmarkRefs = useRef({});
+  const pinterestGridRef = useRef(null);
+  const imagesLoadedCount = useRef(0);
+  const totalImagesCount = useRef(0);
+
+  const resizeGridItems = () => {
+    const grid = pinterestGridRef.current;
+    if (!grid) return;
+
+    const style = window.getComputedStyle(grid);
+    const rowGap = parseInt(style.getPropertyValue("gap"));
+    const rowHeight = parseInt(style.getPropertyValue("grid-auto-rows"));
+
+    const items = grid.querySelectorAll(".pinterest-card");
+    
+    Array.from(items).forEach((item) => {
+      const image = item.querySelector("img");
+      if (!image || !image.complete) return;
+      
+      const content = item.querySelector(".image-wrapper");
+      if (!content) return;
+      
+      const contentHeight = content.getBoundingClientRect().height;
+      
+      const rowSpan = Math.max(1, Math.floor((contentHeight + rowGap) / (rowHeight + rowGap)));
+      
+      item.style.gridRowEnd = `span ${rowSpan}`;
+    });
+  };
+
+  useLayoutEffect(() => {
+    const grid = pinterestGridRef.current;
+    if (!grid || recipes.length === 0) return;
+
+    const handleImageLoad = () => {
+      imagesLoadedCount.current += 1;
+      
+      if (imagesLoadedCount.current === totalImagesCount.current || 
+          imagesLoadedCount.current % 3 === 0) {
+        requestAnimationFrame(resizeGridItems);
+      }
+    };
+
+    const images = grid.querySelectorAll(".pinterest-image");
+    images.forEach(img => {
+      if (img.complete) {
+        handleImageLoad();
+      } else {
+        img.addEventListener('load', handleImageLoad);
+      }
+    });
+
+    return () => {
+      const images = grid.querySelectorAll(".pinterest-image");
+      images.forEach(img => {
+        img.removeEventListener('load', handleImageLoad);
+      });
+    };
+  }, [recipes]);
 
   useEffect(() => {
     fetchRecipes();
@@ -187,7 +245,7 @@ const ExplorePage = ({ following = false }) => {
 
   return (
     <Container>
-      <div className="pinterest-grid">
+      <div className="pinterest-grid" ref={pinterestGridRef}>
         {recipes.map((recipe) => {
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
