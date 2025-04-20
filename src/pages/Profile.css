@@ -525,8 +525,10 @@
   flex-shrink: 0;
 }
 
-.delete-icon{
-  color: #D75600;
+.edit-icon{
+  color: #535353;
+  width: 30px;
+  height: 30px;
 }
 
 .filter-dropdown {

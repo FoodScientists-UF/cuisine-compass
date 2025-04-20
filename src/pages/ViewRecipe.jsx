@@ -291,12 +291,13 @@ export default function ViewRecipe() {
           </div>
 
           {/* Likes Button */}
+          {/* <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-2">
             <FaBookmark className="text-3xl text-black" />
             <span className="text-3xl abhaya-libre-regular text-black-600">
               {likes}
             </span>
-          </div>
+          </div> */}
 
           {/* Username */}
           <p href="#" 
@@ -581,7 +582,7 @@ export default function ViewRecipe() {
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
         {/* Nutritional Info */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-4">
+        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-4 mb-4">
           Nutritional Information
         </h1>
 
