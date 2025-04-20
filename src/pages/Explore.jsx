@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactDOM from "react-dom";
 import { AuthContext } from "../AuthProvider";
 // Import useOutletContext
@@ -9,8 +9,9 @@ import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
 import { supabase } from "../AuthProvider";
 import "./Explore.css";
+import { BsBookmarkFill } from "react-icons/bs";
 
-const ExplorePage = () => {
+const ExplorePage = ({ following = false }) => {
   const { searchValue } = useOutletContext(); 
   const { session } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -21,6 +22,64 @@ const ExplorePage = () => {
   const [savedCollections, setSavedCollections] = useState([]);
   const [bookmarkPopup, setBookmarkPopup] = useState(null);
   const bookmarkRefs = useRef({});
+  const pinterestGridRef = useRef(null);
+  const imagesLoadedCount = useRef(0);
+  const totalImagesCount = useRef(0);
+
+  const resizeGridItems = () => {
+    const grid = pinterestGridRef.current;
+    if (!grid) return;
+
+    const style = window.getComputedStyle(grid);
+    const rowGap = parseInt(style.getPropertyValue("gap"));
+    const rowHeight = parseInt(style.getPropertyValue("grid-auto-rows"));
+
+    const items = grid.querySelectorAll(".pinterest-card");
+    
+    Array.from(items).forEach((item) => {
+      const image = item.querySelector("img");
+      if (!image || !image.complete) return;
+      
+      const content = item.querySelector(".image-wrapper");
+      if (!content) return;
+      
+      const contentHeight = content.getBoundingClientRect().height;
+      
+      const rowSpan = Math.max(1, Math.floor((contentHeight + rowGap) / (rowHeight + rowGap)));
+      
+      item.style.gridRowEnd = `span ${rowSpan}`;
+    });
+  };
+
+  useLayoutEffect(() => {
+    const grid = pinterestGridRef.current;
+    if (!grid || recipes.length === 0) return;
+
+    const handleImageLoad = () => {
+      imagesLoadedCount.current += 1;
+      
+      if (imagesLoadedCount.current === totalImagesCount.current || 
+          imagesLoadedCount.current % 3 === 0) {
+        requestAnimationFrame(resizeGridItems);
+      }
+    };
+
+    const images = grid.querySelectorAll(".pinterest-image");
+    images.forEach(img => {
+      if (img.complete) {
+        handleImageLoad();
+      } else {
+        img.addEventListener('load', handleImageLoad);
+      }
+    });
+
+    return () => {
+      const images = grid.querySelectorAll(".pinterest-image");
+      images.forEach(img => {
+        img.removeEventListener('load', handleImageLoad);
+      });
+    };
+  }, [recipes]);
 
   useEffect(() => {
     const searchRecipes = async () => {
@@ -81,13 +140,53 @@ const ExplorePage = () => {
   useEffect(() => {
     fetchRecipes();
     fetchCollections();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, following]);
+
+  const fetchLikes = async (recipeId) => {
+    const { data: count, error } = await supabase
+      .from("recipe_unique_savers")
+      .select("count")
+      .eq("recipe_id", recipeId);
+
+    if (error) throw error;
+
+    return { count: count[0]?.count || 0, error };
+  };
 
   const fetchRecipes = async () => {
-    setIsLoading(true);
-    const { data: recipesData, error: recipesError } = await supabase
+    if (!session?.user?.id) {
+      setRecipes([]);
+      return;
+    }
+
+    let recipesQuery = supabase
       .from("Recipes")
       .select("id, title, image_url, cost, prep_time, cook_time, user_id");
+    
+    setIsLoading(true);
+    
+    if (following) {
+      const { data: followingData, error: followingError } = await supabase
+        .from("Following")
+        .select("following_id")
+        .eq("follower_id", session.user.id);
+
+      if (followingError) {
+        console.error("Error fetching following users:", followingError.message);
+        return;
+      }
+      
+      const followingIds = followingData.map(item => item.following_id);
+      
+      if (followingIds.length === 0) {
+        setRecipes([]);
+        return;
+      }
+      
+      recipesQuery = recipesQuery.in("user_id", followingIds);
+    }
+    
+    const { data: recipesData, error: recipesError } = await recipesQuery;
 
     if (recipesError) {
       console.error("Error fetching recipes:", recipesError.message);
@@ -96,14 +195,7 @@ const ExplorePage = () => {
 
     const updatedRecipes = await Promise.all(
       recipesData.map(async (recipe) => {
-        const { count: likesCount, error: likesError } = await supabase
-          .from("Likes")
-          .select("*", { count: "exact" })
-          .eq("recipe_id", recipe.id);
-
-        if (likesError) {
-          console.error(`Error fetching likes for recipe ${recipe.id}:`, likesError.message);
-        }
+        const { count: likesCount, error: likesError } = await fetchLikes(recipe.id);
 
         const { data: profileData, error: profileError } = await supabase
           .from("Profiles")
@@ -172,8 +264,8 @@ const ExplorePage = () => {
     console.log("Checked:", checked);
     setSavedCollections(
       checked
-        ? savedCollections.filter((c) => c.folder_id !== collection.id)
-        : [
+      ? savedCollections.filter((c) => !(c.folder_id === collection.id && c.recipe_id === recipeId))
+      : [
             ...savedCollections,
             {
               folder_id: collection.id,
@@ -200,14 +292,24 @@ const ExplorePage = () => {
 
     if (error) {
       console.error("Error updating saved recipes:" + error.message);
-    } else {
-      console.log("Saved recipes updated:", data);
     }
+
+    const { count, error: likesError } = await fetchLikes(recipeId);
+    if (likesError) {
+      console.error("Error fetching likes:", likesError.message);
+    } else {
+      const recipe = recipes.find((recipe) => recipe.id === recipeId);
+      if (recipe) {
+        recipe.likes = count;
+        setRecipes([...recipes]);
+      }
+    }
+
   }
 
   return (
     <Container>
-      <div className="pinterest-grid">
+      <div className="pinterest-grid" ref={pinterestGridRef}>
         {recipes.length > 0 ? recipes.map((recipe) => {
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
@@ -245,7 +347,7 @@ const ExplorePage = () => {
                   <h3>{recipe.title}</h3>
                   <p>{recipe.username}</p>
                   <p>${recipe.cost}</p>
-                  <p>❤ {recipe.likes}</p>
+                  <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
                   <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
                 </div>
               </div>

@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Explore from "./pages/Explore.jsx";
-import Following from "./pages/Following.jsx";
 import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -37,9 +36,9 @@ createRoot(document.getElementById("root")).render(
               <PageWrapper />
             }
           >
-            <Route index element={<Explore />} /> 
-            <Route path="explore" element={<Explore />} /> 
-            <Route path="following" element={<Following />} />
+            <Route index element={<Explore />} />
+            <Route path="explore" element={<Explore />} />
+            <Route path="following" element={<Explore following={true} />} />
             <Route path="about" element={<About />} />
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />
