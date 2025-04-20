@@ -28,7 +28,7 @@ export default function ViewProfile() {
   const [showDropdownForId, setShowDropdownForId] = useState(null);
   
 
-  const DEFAULT_IMAGE_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
+  const DEFAULT_IMAGE_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures//default-avatar.png";
   
   // Dropdown & Dialog States
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
@@ -61,6 +61,7 @@ export default function ViewProfile() {
       const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(userId);
       if (error) {
         console.error("Error downloading profile picture:", error.message);
+        setPic(DEFAULT_IMAGE_URL);
         return;
       }
       setPic(data.publicUrl);
@@ -80,7 +81,7 @@ export default function ViewProfile() {
         }
         setFirstName(data.first_name);
       setLastName(data.last_name);
-      //setPic(data.avatar_url);
+      setPic(data.avatar_url || DEFAULT_IMAGE_URL); // Use default image if avatar_url is null
       setUsername(data.username);
       setBio(data.biography);
     };
