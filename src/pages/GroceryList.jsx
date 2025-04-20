@@ -5,6 +5,7 @@ import { BsPlusCircle } from "react-icons/bs";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { MdOutlineModeEditOutline } from "react-icons/md";
 import { FaCircleMinus } from "react-icons/fa6";
+import { PiDotsThreeCircleVertical } from "react-icons/pi";
 import { supabase, AuthContext } from "../AuthProvider";
 import CreateNote from "../components/CreateNote";
 import "../pages/Profile.css";
@@ -17,11 +18,16 @@ export default function GroceryList() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [order, setOrder] = useState("oldest");
     const [showNotePopup, setShowNotePopup] = useState(false);
-    const [edit, setEdit] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null);
+    const [showMenu, setShowMenu] = useState(null);
 
     // Toggle Dropdown
     const toggleDropdown = () => {
         setShowDropdown(!showDropdown);
+    };
+
+    const toggleMenu = (listId) => {
+        setShowMenu(showMenu === listId ? null : listId);
     };
 
     const deleteGroceryList = async (id) => {
@@ -37,13 +43,16 @@ export default function GroceryList() {
     
         // Remove the deleted item from state
         setLists((prevLists) => prevLists.filter((list) => list.id !== id));
+        setShowMenu(null);
     };
 
     useEffect(() => {
         async function fetchGroceryLists() {
+            if (!session?.user?.id) return;
             const { data, error } = await supabase
                 .from("Grocery List")
-                .select("id, items, title, created_at");
+                .select("id, items, title, created_at")
+                .eq("user_id", session.user.id);
 
             if (error) {
                 console.error("Error fetching grocery lists:", error);
@@ -71,7 +80,24 @@ export default function GroceryList() {
         }
 
         fetchGroceryLists();
-    }, [order, showNotePopup]);
+
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".menu-container")) {
+                setShowMenu(null);
+            }
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+
+    }, [session?.user?.id]);
+
+    const handleEditClick = (listId) => {
+        setSelectedNoteId(listId);
+        setShowNotePopup(true);
+        setShowMenu(null);
+    };
 
     return (
         <div className="profile-container">
@@ -84,16 +110,11 @@ export default function GroceryList() {
                 <div className="grocery-list-header">
                     Grocery Lists
 
-                    {/* Icons (Add, Edit, Filter) */}
+                    {/* Icons (Add, Filter) */}
                     <div className="grocery-icons-container">
 
                         <button className="filter-icon" onClick={() => setShowNotePopup(!showNotePopup)}> 
                             <BsPlusCircle  />
-                        </button>
-
-                        {/* Edit button */}
-                        <button className="filter-icon" onClick={() => setEdit(!edit)}> 
-                            <MdOutlineModeEditOutline />
                         </button>
 
                         {/* Filter */}
@@ -111,16 +132,12 @@ export default function GroceryList() {
                         </button>
                     </div>
                 </div>
-                {/*<button className="add-new-list">
-                    <BsPlusCircle className="add-icon"  /> 
-                    <div className="create-list-text"
-                        onClick={() => setShowNotePopup(!showNotePopup)}
-                        >Create New Note or List
-                    </div>
-                </button> */}
+
                 {showNotePopup && (
-                    <CreateNote
-                    onClose={() => setShowNotePopup(false)} />
+                    <CreateNote setLists={setLists} onClose={() => {
+                        setShowNotePopup(false);
+                    }} listId={selectedNoteId} />
+
                 )}
                 
                 <div className="list-container">
@@ -129,7 +146,20 @@ export default function GroceryList() {
                             <div key={list.id} className="list-card">
                                 <div className="list-card-header">
                                     {list.title || `Grocery List - ${list.created_at}`}
-                                    {edit && <FaCircleMinus className="delete-icon" onClick={() => deleteGroceryList(list.id)}/>}
+                                    <div className="relative menu-container">
+                                        <PiDotsThreeCircleVertical 
+                                            className="edit-icon" 
+                                            onClick={() => toggleMenu(list.id)}
+                                        />
+                                        {showMenu === list.id && (
+                                            <div className="filter-dropdown">
+                                                <ul>
+                                                    <li onClick={() => handleEditClick(list.id)}>Edit</li>
+                                                    <li onClick={() => deleteGroceryList(list.id)}>Delete</li>
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <hr className="w-full border-t-1 border-black" />
                                 <ul className="list-card-text">

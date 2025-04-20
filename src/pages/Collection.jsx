@@ -187,7 +187,9 @@ const Collections = () => {
 
         {/* Back button */}
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() =>
+              navigate(ownerId === session?.user?.id ? "/profile" : `/profile/${ownerId}`)
+            }
             className="back">
             <img 
               src="/back_arrow.png" 
