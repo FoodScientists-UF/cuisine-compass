@@ -35,6 +35,14 @@ export default function Profile() {
   const [isPrivate, setIsPrivate] = useState(false);
 
 
+  //Diaglog for Edit Profile
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editedFirstName, setEditedFirstName] = useState(firstName);
+  const [editedLastName, setEditedLastName] = useState(lastName);
+  const [editedUserName, setEditedUserName] = useState(userName);
+  const [editedBio, setEditedBio] = useState(bio);
+
+
   // Toggle Dropdown
   const toggleCreateDropdown = () => {
     setShowCreateDropdown(!showCreateDropdown);
@@ -305,7 +313,22 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
       {/* Sidebar */}
       <ProfileNavBar />
       <div className="vl"></div>
+      <div className="edit-profile-wrapper">
+      <button
+        className="edit-profile-btn"
+        onClick={() => {
+          setEditedFirstName(firstName);
+          setEditedLastName(lastName);
+          setEditedUserName(userName);
+          setEditedBio(bio);
+          setShowEditDialog(true);
+        }}
+      >
+        Edit Profile
+      </button>
+    </div>
 
+        
       {/* Main Content */}
       <div className="profile-content">
         <img src={pic} className="profile-pic" />
@@ -321,6 +344,8 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
           {bio}
         </div>
         
+       
+
         {/* Collections Header & Create Button */}
         <div className="collections-header">
           <h2 className="collection-title">Collections</h2>
@@ -513,7 +538,51 @@ const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
           </Dialog.Panel>
         </div>
       </Dialog>
-    
+      <Dialog open={showEditDialog} onClose={() => setShowEditDialog(false)} className="dialog-overlay">
+  <div className="dialog-container">
+    <Dialog.Panel className="dialog-box">
+      <button className="close-btn" onClick={() => setShowEditDialog(false)}>×</button>
+      <Dialog.Title className="dialog-title">Edit Profile</Dialog.Title>
+
+      <label className="dialog-title">First Name</label>
+      <input className="dialog-input" value={editedFirstName} onChange={(e) => setEditedFirstName(e.target.value)} />
+
+      <label className="dialog-title">Last Name</label>
+      <input className="dialog-input" value={editedLastName} onChange={(e) => setEditedLastName(e.target.value)} />
+
+      <label className="dialog-title">Username</label>
+      <input className="dialog-input" value={editedUserName} onChange={(e) => setEditedUserName(e.target.value)} />
+
+      <label className="dialog-title">Bio</label>
+      <textarea className="dialog-input" value={editedBio} onChange={(e) => setEditedBio(e.target.value)} />
+
+      <button className="dialog-create-btn" onClick={async () => {
+        const { error } = await supabase
+          .from("Profiles")
+          .update({
+            first_name: editedFirstName,
+            last_name: editedLastName,
+            username: editedUserName,
+            biography: editedBio
+          })
+          .eq("id", session.user.id);
+
+        if (error) {
+          alert("Error updating profile: " + error.message);
+        } else {
+          setFirstName(editedFirstName);
+          setLastName(editedLastName);
+          setUsername(editedUserName);
+          setBio(editedBio);
+          setShowEditDialog(false);
+        }
+      }}>
+        Save Changes
+      </button>
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
  
 
     </div>
