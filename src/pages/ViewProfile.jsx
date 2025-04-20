@@ -84,7 +84,6 @@ export default function ViewProfile() {
       setBio(data.biography);
     };
     const fetchRecipeCount = async () => {
-         const userId = userId;
          const { count: createdCount, error: createdError } = await supabase
           .from("Recipes")
           .select("*", { count: "exact" })
