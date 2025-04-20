@@ -4,7 +4,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import PageWrapper from './components/PageWrapper';
 import MenuBar from './layouts/MenuBar';
 import Explore from './pages/Explore';
-import Following from './pages/Following';
 import About from './pages/About';
 import { AuthProvider } from './AuthProvider';
 
