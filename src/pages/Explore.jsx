@@ -1,7 +1,8 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { AuthContext } from "../AuthProvider";
-import { useNavigate } from "react-router-dom";
+// Import useOutletContext
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { Container, Card, Image } from "semantic-ui-react";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
@@ -10,14 +11,72 @@ import { supabase } from "../AuthProvider";
 import "./Explore.css";
 
 const ExplorePage = () => {
+  const { searchValue } = useOutletContext(); 
   const { session } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [recipes, setRecipes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [allCollections, setAllCollections] = useState([]);
   const [savedCollections, setSavedCollections] = useState([]);
   const [bookmarkPopup, setBookmarkPopup] = useState(null);
   const bookmarkRefs = useRef({});
+
+  useEffect(() => {
+    const searchRecipes = async () => {
+      setIsLoading(true);
+      if (!searchValue) {
+        await fetchRecipes();
+        setIsLoading(false);
+        return;
+      }
+      console.log("Search value in ExplorePage:", searchValue); 
+      const { data, error } = await supabase
+        .from("Recipes")
+        .select()
+        .textSearch("title", searchValue, {
+          type: "websearch",
+          config: "english",
+        });
+
+      if (error) throw error;
+
+      const updatedRecipes = await Promise.all(
+        data.map(async (recipe) => {
+          const { count: likesCount, error: likesError } = await supabase
+            .from("Likes")
+            .select("*", { count: "exact" })
+            .eq("recipe_id", recipe.id);
+  
+          if (likesError) {
+            console.error(`Error fetching likes for recipe ${recipe.id}:`, likesError.message);
+          }
+  
+          const { data: profileData, error: profileError } = await supabase
+            .from("Profiles")
+            .select("username")
+            .eq("id", recipe.user_id)
+            .single();
+  
+          if (profileError) {
+            console.error(`Error fetching username for user ${recipe.user_id}:`, profileError.message);
+          }
+  
+          return {
+            ...recipe,
+            likes: likesCount || 0,
+            username: profileData?.username || "Unknown",
+          };
+        })
+      );
+      
+      setRecipes(data ? updatedRecipes : []);
+      setIsLoading(false);
+    }
+
+    searchRecipes();
+
+  }, [searchValue]);
 
   useEffect(() => {
     fetchRecipes();
@@ -25,6 +84,7 @@ const ExplorePage = () => {
   }, [session?.user?.id]);
 
   const fetchRecipes = async () => {
+    setIsLoading(true);
     const { data: recipesData, error: recipesError } = await supabase
       .from("Recipes")
       .select("id, title, image_url, cost, prep_time, cook_time, user_id");
@@ -63,7 +123,10 @@ const ExplorePage = () => {
       })
     );
 
+    console.log("Updated recipes:", updatedRecipes);
+
     setRecipes(updatedRecipes);
+    setIsLoading(false);
   };
 
   const createCollection = async (newCollection) => {
@@ -145,7 +208,7 @@ const ExplorePage = () => {
   return (
     <Container>
       <div className="pinterest-grid">
-        {recipes.map((recipe) => {
+        {recipes.length > 0 ? recipes.map((recipe) => {
           return (<div key={recipe.id} className="pinterest-card">
             <div className="image-wrapper">
               <Image src={recipe.image_url} className="pinterest-image" onClick={() => navigate(`/recipe/${recipe.id}`)}/>
@@ -188,7 +251,7 @@ const ExplorePage = () => {
               </div>
             </div>
           </div>)
-        })}
+        }) : (!isLoading && <span className="text-3xl">Couldn't find any recipes...</span>)}
       </div>
     </Container>
   );
