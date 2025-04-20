@@ -15,7 +15,8 @@ export default function ViewProfile() {
   const [pic, setPic] = useState("");
   const [userName, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  const [folders, setFolders] = useState([]);
+  const [userRecipes, setUserRecipes] = useState([]);
+
   const [recipeCount, setRecipeCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -126,138 +127,46 @@ export default function ViewProfile() {
         setFollowingCount(count);
       };
 
-      const fetchCollections = async () => {
-        try {
-          const { data: collections, error: collectionsError } = await supabase
-            .from("saved_collections")
-            .select("id, name, cover_img")
-            .eq("user_id", userId);
+      const fetchUserRecipes = async () => {
+        const { data, error } = await supabase
+          .from("Recipes")
+          .select("id, title, image_url, cost, prep_time, cook_time")
+          .eq("user_id", userId);
       
-          if (collectionsError) throw collectionsError;
-      
-          const { data: savedRecipes, error: savedRecipesError } = await supabase
-            .from("saved_recipes")
-            .select("folder_id, recipe_id")
-            .eq("user_id", userId);
-      
-          if (savedRecipesError) throw savedRecipesError;
-      
-          const recipeCounts = {};
-          const folderToRecipeId = {}; // for most recent recipe
-      
-          savedRecipes.forEach((row) => {
-            const folderId = row.folder_id;
-            recipeCounts[folderId] = (recipeCounts[folderId] || 0) + 1;
-      
-            // Only store the most recent for each folder
-            if (!folderToRecipeId[folderId]) {
-              folderToRecipeId[folderId] = row.recipe_id;
-            }
-          });
-      
-          const foldersWithCountsAndImages = await Promise.all(
-            collections.map(async (folder) => {
-              let finalImage = folder.cover_img;
-      
-              if (!finalImage) {
-                const recentRecipeId = folderToRecipeId[folder.id];
-                if (recentRecipeId) {
-                  const { data: recipeData, error: recipeError } = await supabase
-                    .from("Recipes")
-                    .select("image_url")
-                    .eq("id", recentRecipeId)
-                    .single();
-      
-                  if (!recipeError && recipeData?.image_url) {
-                    finalImage = recipeData.image_url;
-                  }
-                }
-              }
-      
-              if (!finalImage) {
-                finalImage = DEFAULT_IMAGE_URL;
-              }
-      
-              return {
-                ...folder,
-                recipeCount: recipeCounts[folder.id] || 0,
-                cover_img: finalImage,
-              };
-            })
-          );
-      
-          setFolders(foldersWithCountsAndImages);
-        } catch (err) {
-          console.error("Error fetching collections:", err.message);
+        if (error) {
+          console.error("Error fetching user recipes:", error.message);
+          return;
         }
-      };
       
-
-
-    const fetchCookedRecipes = async () => {
-      const {data, error} = await supabase  
-        .from("Cooked Recipes")
-        .select("recipe_id")
-        .eq("user_id", userId)
-        .eq("have_cooked", true);
-
-       if (error) {
-        console.error("Error fetching cooked recipes:", error.message);
-        return;
-      }
-
-      setCookedRecipes(data);
-    };
-
-    const fetchLikedRecipes = async () => {
-      const {data, error} = await supabase  
-        .from("Likes")
-        .select("recipe_id")
-        .eq("user_id", userId);
-
-       if (error) {
-        console.error("Error fetching liked recipes:", error.message);
-        return;
-      }
-
-      setLikedRecipes(data);
-    };
-
+        setUserRecipes(data);
+      };
+    
     Promise.all([
       fetchUserPicture(),
-      fetchLikedRecipes(),
-      fetchCookedRecipes(),
-      fetchCollections(),
       fetchRecipeCount(),
       fetchUserProfile(),
       fetchFollowersCount(),
-      fetchFollowingCount()
+      fetchFollowingCount(),
+      fetchUserRecipes()
     ]);
 
   }, [userId, recipeCount, cookedRecipes.length, likedRecipes.length]);
 
-  const DEFAULT_COLLECTIONS = [
-    {
-      id: "your-recipes",
-      name: "Your Recipes",
-      recipeCount: recipeCount,
-      cover_img: DEFAULT_IMAGE_URL,
-      isDefault: true,
-    },
-    {
-      id: "cooked",
-      name: "Cooked Recipes",
-      recipeCount: cookedRecipes.length,
-      cover_img: DEFAULT_IMAGE_URL,
-      isDefault: true,
-    },
-  ];
-  
-  const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
-
-  
   return (
     <div className="view-profile-container">
+      {/* Back button */}
+      <button
+        onClick={() =>
+          navigate("/explore")
+        }
+        className="back">
+        <img 
+          src="/back_arrow.png" 
+          alt="Back" 
+          className="w-10 h-10 hover:opacity-60 transition"
+        />
+      </button>
+
       {/* Main Content */}
       <div className="profile-content">
         <img src={pic} className="profile-pic" />
@@ -269,43 +178,37 @@ export default function ViewProfile() {
         <span> {followersCount} {followersCount === 1 ? "follower" : "followers"}  </span>
           <span> {followingCount} following</span>
         </p>
+        <div className = "follow-btn">
+          <button>
+            Follow
+          </button>
+        </div>
         <div className="bio"> 
           {bio}
         </div>
         
-                {/* Collections Header & Create Button */}
-                <div className="collections-header">
-                  <h2 className="collection-title">Collections</h2>
-                  <div className="collections-grid">
-    
+        {/* Collections Header & Create Button */}
+        <div className="collections-header">
+          <h2 className="collection-title">Recipes</h2>
+        </div>
+
+        <div className="pinterest-grid">
+          {userRecipes.map((recipe) => (
+            <div key={recipe.id} className="pinterest-card">
+              <div className="image-wrapper" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                <img src={recipe.image_url} alt={recipe.title} className="pinterest-image" />
+                <div className="overlay">
+                  <div className="recipe-info">
+                    <h3>{recipe.title}</h3>
+                    <p>${recipe.cost}</p>
+                    <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="collections-grid">
-          {collectionsToShow.map((col) => (
-            <div
-              key={col.id}
-              className="collection-card cursor-pointer"
-              onClick={() => navigate(`/collection/${col.id}`)}
-            >
-              {/* 3‑dot menu only for user collections */}
-        
-              {/* Cover image */}
-              <img
-                src={col.cover_img}
-                alt={col.name}
-                className="w-full h-32 object-cover rounded mb-2"
-              />
-        
-              {/* Title + count */}
-              <div className="collection-info">
-                <h3 className="collection-title">{col.name}</h3>
-                <p className="collection-recipe-count">
-                  {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
-                </p>
               </div>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

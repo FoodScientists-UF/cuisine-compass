@@ -256,6 +256,7 @@ export default function ViewRecipe() {
 
   return (
     <div className="min-h-screen flex flex-col p-10 space-y-8 py-20">
+      
       {/* Page Wrapper */}
       <div className="w-full flex flex-row items-start space-x-8">
         {/* Recipe Image */}
