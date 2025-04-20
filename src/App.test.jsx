@@ -45,15 +45,17 @@ describe('Routing', () => {
     it('should render Following page on /following route', () => {
         render(
             <MemoryRouter initialEntries={['/following']}>
-                <Routes>
-                    <Route path="/" element={
-                        <PageWrapper>
-                            <MenuBar />
-                        </PageWrapper>
-                    }>
-                        <Route path="following" element={<Explore following={true}/>} />
-                    </Route>
-                </Routes>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={
+                            <PageWrapper>
+                                <MenuBar />
+                            </PageWrapper>
+                        }>
+                            <Route path="following" element={<Explore following={true}/>} />
+                        </Route>
+                    </Routes>
+                </AuthProvider>
             </MemoryRouter>
         );
         expect(screen.getAllByText(/Following/i).length).toBeGreaterThan(0);
