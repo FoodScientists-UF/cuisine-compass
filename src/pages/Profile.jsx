@@ -20,7 +20,6 @@ export default function Profile() {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [cookedRecipes, setCookedRecipes] = useState([]);
-  const [likedRecipes, setLikedRecipes] = useState([]);
   const [collectionImage, setCollectionImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
@@ -253,7 +252,6 @@ export default function Profile() {
       };
       
 
-
     const fetchCookedRecipes = async () => {
       const {data, error} = await supabase  
         .from("Cooked Recipes")
@@ -269,23 +267,8 @@ export default function Profile() {
       setCookedRecipes(data);
     };
 
-    const fetchLikedRecipes = async () => {
-      const {data, error} = await supabase  
-        .from("Likes")
-        .select("recipe_id")
-        .eq("user_id", session.user.id);
-
-       if (error) {
-        console.error("Error fetching liked recipes:", error.message);
-        return;
-      }
-
-      setLikedRecipes(data);
-    };
-
     Promise.all([
       fetchUserPicture(),
-      fetchLikedRecipes(),
       fetchCookedRecipes(),
       fetchCollections(),
       fetchRecipeCount(),
@@ -293,9 +276,28 @@ export default function Profile() {
       fetchFollowersCount(),
       fetchFollowingCount()
     ]);
+    
 
-  }, [session?.user?.id, recipeCount, cookedRecipes.length, likedRecipes.length]);
+  }, [session?.user?.id, recipeCount, cookedRecipes.length]);
 
+const DEFAULT_COLLECTIONS = [
+  {
+    id: "your-recipes",
+    name: "Your Recipes",
+    recipeCount: recipeCount,
+    cover_img: DEFAULT_IMAGE_URL,
+    isDefault: true,
+  },
+  {
+    id: "cooked",
+    name: "Cooked Recipes",
+    recipeCount: cookedRecipes.length,
+    cover_img: DEFAULT_IMAGE_URL,
+    isDefault: true,
+  },
+];
+
+const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
 
   
   return (
@@ -336,115 +338,80 @@ export default function Profile() {
           </div>
         </div>
       </div>
-       {/* Default Collections */}
-       <div className="collections-grid">
-            {[
-              {
-                id: "your-recipes",
-                name: "Your Recipes",
-                recipeCount: recipeCount,
-                cover_img: DEFAULT_IMAGE_URL,
-              },
-              {
-                id: "likes",
-                name: "Likes",
-                recipeCount: likedRecipes.length,
-                cover_img: DEFAULT_IMAGE_URL,
-              },
-              {
-                id: "cooked",
-                name: "Recipes You've Cooked",
-                recipeCount: cookedRecipes.length,
-                cover_img: DEFAULT_IMAGE_URL,
-              },
-            ].map((folder) => (
-              <div key={folder.id} className="collection-card cursor-pointer"
-                  onClick={() => navigate(`/collection/${folder.id}`)}>                
-                <img
-                    src={folder.cover_img}
-                    alt={folder.name}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                <div className="collection-info">
-                <h3 className="collection-title">{folder.name}</h3>
-                <p className="collection-recipe-count">
-                  {folder.recipeCount}{" "}
-                  {folder.recipeCount === 1 ? "recipe" : "recipes"}
-                </p>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="collections-grid">
+  {collectionsToShow.map((col) => (
+    <div
+      key={col.id}
+      className="collection-card cursor-pointer"
+      onClick={() => navigate(`/collection/${col.id}`)}
+    >
+      {/* 3‑dot menu only for user collections */}
+      {!col.isDefault && (
+        <div className="collection-options">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdownForId((prev) => (prev === col.id ? null : col.id));
+            }}
+          >
+            <BsThreeDotsVertical />
+          </button>
 
-        {/* User-Created Collections */}
-        {folders.length > 0 && (
-        <div className="collections-grid">
-          {folders.map((folder) => (
-            <div key={folder.id} className="collection-card cursor-pointer" 
-            onClick={() => navigate(`/collection/${folder.id}`)} >
-             <div className="collection-options">
-             <button
+          {showDropdownForId === col.id && (
+            <div className="collection-actions-dropdown">
+              <div
+                className="dropdown-option"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowDropdownForId((prevId) => (prevId === folder.id ? null : folder.id));
+                  setSelectedCollection(col);
+                  setCollectionName(col.name);
+                  setCollectionImage(col.cover_img || null);
+                  setIsPrivate(col.is_private);
+                  setShowDropdownForId(null);
+                  setIsDialogOpen(true);
                 }}
               >
-                <BsThreeDotsVertical />
-              </button>
-
-
-            {showDropdownForId === folder.id && (
-              <div className="collection-actions-dropdown">
-                <div
-                  className="dropdown-option"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedCollection(folder); 
-                    setCollectionName(folder.name);
-                    setCollectionImage(folder.cover_img || null);
-                    setIsPrivate(folder.is_private);
-                    setShowDropdownForId(null); 
-                    setIsDialogOpen(true); 
-                  }}
-                >
-                  Edit
-                </div>
-                <div
-                  className="dropdown-option"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const { error } = await supabase
-                      .from("saved_collections")
-                      .delete()
-                      .eq("id", folder.id);
-                    if (!error) {
-                      setFolders((prev) => prev.filter((f) => f.id !== folder.id));
-                    }
-                    setShowDropdownForId(null);
-                  }}
-                >
-                  Delete
-                </div>
+                Edit
               </div>
-            )}
-          </div>
-                <img
-                  src={folder.cover_img}
-                  alt={folder.name}
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
-             
-              <div className="collection-info">
-              <h3 className="collection-title">{folder.name}</h3>
-              <p className="collection-recipe-count">
-                {folder.recipeCount}{" "}
-                {folder.recipeCount === 1 ? "recipe" : "recipes"}
-              </p>
+              <div
+                className="dropdown-option"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const { error } = await supabase
+                    .from("saved_collections")
+                    .delete()
+                    .eq("id", col.id);
+                  if (!error) {
+                    setFolders((prev) => prev.filter((f) => f.id !== col.id));
+                  }
+                  setShowDropdownForId(null);
+                }}
+              >
+                Delete
+              </div>
             </div>
-            </div>
-          ))}
+          )}
         </div>
       )}
+
+      {/* Cover image */}
+      <img
+        src={col.cover_img}
+        alt={col.name}
+        className="w-full h-32 object-cover rounded mb-2"
+      />
+
+      {/* Title + count */}
+      <div className="collection-info">
+        <h3 className="collection-title">{col.name}</h3>
+        <p className="collection-recipe-count">
+          {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">
