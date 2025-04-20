@@ -52,7 +52,7 @@ describe('Routing', () => {
                             <MenuBar />
                         </PageWrapper>
                     }>
-                        <Route path="following" element={<Explore />} />
+                        <Route path="following" element={<Explore following={true}/>} />
                     </Route>
                 </Routes>
             </MemoryRouter>
