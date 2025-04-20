@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+
 .profile-container {
     display: flex;
     justify-content: center;
@@ -14,6 +17,8 @@
   .profile-sidebar {
     position: absolute;
     width: 80px;
+    min-width: 130px;
+    z-index: 2;
     left: 40px;
     top: 200px; 
     display: flex;
@@ -69,7 +74,7 @@
   .vl {
     position: absolute;
     top: 209px;
-    left: 130px;
+    left: 155px;
     width: 2px;
     height: 115%;
     background-color: #e0e0e0;
@@ -732,4 +737,32 @@
   background: rgba(0, 0, 0, 0.6);
   padding: 10px;
   border-radius: 50%;
+}
+.edit-profile-wrapper {
+  position: absolute;
+  top: 20rem;
+  right: 12rem;
+  z-index: 10;
+}
+
+.edit-profile-btn {
+  background-color: #D75600;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-family: "Abhaya Libre";
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-profile-btn:hover {
+  background-color: #ea580c;
+}
+
+.dialog-box .w-10 {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
 }
