@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
@@ -19,7 +19,11 @@ import MenuBar from "./layouts/MenuBar";
 import Profile from "./pages/Profile.jsx";
 import ViewRecipe from "./pages/ViewRecipe.jsx";
 import GroceryList from "./pages/GroceryList.jsx";
+import NutrientTracker from "./pages/NutrientTracker.jsx";
 import { AuthProvider } from "./AuthProvider.jsx";
+import Collection from "./pages/Collection.jsx";
+import ViewProfile from "./pages/ViewProfile.jsx";
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -29,9 +33,7 @@ createRoot(document.getElementById("root")).render(
           <Route
             path="/"
             element={
-              <PageWrapper>
-                <MenuBar />
-              </PageWrapper>
+              <PageWrapper />
             }
           >
             <Route index element={<Explore />} />
@@ -40,8 +42,11 @@ createRoot(document.getElementById("root")).render(
             <Route path="about" element={<About />} />
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<ViewProfile />} />
             <Route path="/grocery-list" element={<GroceryList />} />
+            <Route path="/tracker" element={<NutrientTracker />} />
             <Route path="recipe/:id" element={<ViewRecipe />} />
+            <Route path="collection/:collectionId" element={<Collection />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

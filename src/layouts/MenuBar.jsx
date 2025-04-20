@@ -16,6 +16,7 @@ const MenuBar = (props) => {
 
 class MenuBarComponent extends Component {
   state = { activeItem: "", pic: "" };
+  debounceTimeout = null;
 
   componentDidMount() {
     this.fetchUserPicture();
@@ -24,6 +25,10 @@ class MenuBarComponent extends Component {
   componentDidUpdate(prevProps) {
     if (prevProps.session?.user?.id == this.props.session?.user?.id) return;
     this.fetchUserPicture();
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.debounceTimeout);
   }
 
   fetchUserPicture = async () => {
@@ -44,6 +49,17 @@ class MenuBarComponent extends Component {
   handleItemClick = (e, { name }) => {
     this.setState({ activeItem: name });
   };
+
+  handleSearchChange = (e) => {
+    const { value } = e.target;
+
+    clearTimeout(this.debounceTimeout);
+
+    this.debounceTimeout = setTimeout(() => {
+      this.props.setSearchValue(value);
+      console.log("Debounced Search value:", value);
+    }, 300);
+  }
 
   render() {
     const { color } = this.props;
@@ -71,6 +87,7 @@ class MenuBarComponent extends Component {
               icon="search"
               placeholder="What would you like to cook?"
               fluid
+              onChange={this.handleSearchChange}
             />
           </Menu.Item>
           <Menu.Item position="right">

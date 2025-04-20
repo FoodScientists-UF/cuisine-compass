@@ -1,0 +1,140 @@
+/* set height to min of screen */
+.collection-pg-container{
+  min-height: 100vh;
+  padding-top: 40px;
+  padding-left: 30px;
+}
+
+
+.pinterest-grid-coll {
+  column-width: 300px;
+  column-count: repeat(auto-fit, minmax(300px, 1fr));
+  column-gap: 16px;
+  padding: 16px;
+  padding-left: 60px;
+}
+
+.pinterest-card {
+  position: relative;
+  /* overflow: hidden; */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 16px;
+  break-inside: avoid;
+  cursor: pointer;
+}
+
+.pinterest-card:hover {
+  transform: translateY(-5px);
+}
+
+.image-wrapper {
+  width: 100%;
+  display: flex;
+}
+
+.pinterest-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  opacity: 0;
+  padding: 15px;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.pinterest-card:hover .overlay {
+  opacity: 1;
+}
+
+.recipe-info {
+  color: #fff;
+  text-align: left;
+  width: 100%;
+}
+
+.recipe-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.recipe-info p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.tags {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+.tag {
+  background: #228f2d;
+  color: white;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.bookmark-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 50%;
+}
+
+.collection-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 100px;
+  margin-bottom: 10px;
+}
+
+.collection-name {
+  font-size: 22px;
+  font-weight: bold;
+  /* padding-top: 20px;; */
+  margin-bottom: 7px;
+  font-family: "Abhaya Libre", serif;
+  margin-right: 80px;
+}
+
+.collection-recipe-count-collection {
+  font-family: "Abhaya Libre", serif;
+  margin-right: 80px;
+}
+
+.no-recipes-message {
+  text-align: center;
+  font-family: "Abhaya Libre", serif;
+  font-size: 18px;
+  color: #333;
+  margin-top: 40px;
+  padding: 20px;
+}
+
+.back{
+  padding-left: 20px;
+  padding-top:10px;
+}

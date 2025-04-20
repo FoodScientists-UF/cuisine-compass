@@ -20,13 +20,14 @@ export default function Profile() {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [cookedRecipes, setCookedRecipes] = useState([]);
-  const [likedRecipes, setLikedRecipes] = useState([]);
   const [collectionImage, setCollectionImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [showDropdownForId, setShowDropdownForId] = useState(null);
   
 
+  const DEFAULT_IMAGE_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
+  
   // Dropdown & Dialog States
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -141,7 +142,7 @@ export default function Profile() {
       setUsername(data.username);
       setBio(data.biography);
     };
-        const fetchRecipeCount = async () => {
+    const fetchRecipeCount = async () => {
          const userId = session.user.id;
          const { count: createdCount, error: createdError } = await supabase
           .from("Recipes")
@@ -184,20 +185,72 @@ export default function Profile() {
         setFollowingCount(count);
       };
 
-    const fetchCollections = async () => {    
-
-     const { data, error } = await supabase
-        .from("saved_collections") 
-        .select("id, name, cover_img") 
-        .eq("user_id", session.user.id); 
-
-      if (error) {
-        console.error("Error fetching collections:", error.message);
-        return;
-      }
+      const fetchCollections = async () => {
+        try {
+          const { data: collections, error: collectionsError } = await supabase
+            .from("saved_collections")
+            .select("id, name, cover_img")
+            .eq("user_id", session.user.id);
       
-      setFolders([...data.map((folder) => ({ ...folder, recipeCount: 0 }))]);
-    };
+          if (collectionsError) throw collectionsError;
+      
+          const { data: savedRecipes, error: savedRecipesError } = await supabase
+            .from("saved_recipes")
+            .select("folder_id, recipe_id")
+            .eq("user_id", session.user.id);
+      
+          if (savedRecipesError) throw savedRecipesError;
+      
+          const recipeCounts = {};
+          const folderToRecipeId = {}; // for most recent recipe
+      
+          savedRecipes.forEach((row) => {
+            const folderId = row.folder_id;
+            recipeCounts[folderId] = (recipeCounts[folderId] || 0) + 1;
+      
+            // Only store the most recent for each folder
+            if (!folderToRecipeId[folderId]) {
+              folderToRecipeId[folderId] = row.recipe_id;
+            }
+          });
+      
+          const foldersWithCountsAndImages = await Promise.all(
+            collections.map(async (folder) => {
+              let finalImage = folder.cover_img;
+      
+              if (!finalImage) {
+                const recentRecipeId = folderToRecipeId[folder.id];
+                if (recentRecipeId) {
+                  const { data: recipeData, error: recipeError } = await supabase
+                    .from("Recipes")
+                    .select("image_url")
+                    .eq("id", recentRecipeId)
+                    .single();
+      
+                  if (!recipeError && recipeData?.image_url) {
+                    finalImage = recipeData.image_url;
+                  }
+                }
+              }
+      
+              if (!finalImage) {
+                finalImage = DEFAULT_IMAGE_URL;
+              }
+      
+              return {
+                ...folder,
+                recipeCount: recipeCounts[folder.id] || 0,
+                cover_img: finalImage,
+              };
+            })
+          );
+      
+          setFolders(foldersWithCountsAndImages);
+        } catch (err) {
+          console.error("Error fetching collections:", err.message);
+        }
+      };
+      
 
     const fetchCookedRecipes = async () => {
       const {data, error} = await supabase  
@@ -214,23 +267,8 @@ export default function Profile() {
       setCookedRecipes(data);
     };
 
-    const fetchLikedRecipes = async () => {
-      const {data, error} = await supabase  
-        .from("Likes")
-        .select("recipe_id")
-        .eq("user_id", session.user.id);
-
-       if (error) {
-        console.error("Error fetching liked recipes:", error.message);
-        return;
-      }
-
-      setLikedRecipes(data);
-    };
-
     Promise.all([
       fetchUserPicture(),
-      fetchLikedRecipes(),
       fetchCookedRecipes(),
       fetchCollections(),
       fetchRecipeCount(),
@@ -238,9 +276,28 @@ export default function Profile() {
       fetchFollowersCount(),
       fetchFollowingCount()
     ]);
+    
 
-  }, [session?.user?.id, recipeCount, cookedRecipes.length, likedRecipes.length]);
+  }, [session?.user?.id, recipeCount, cookedRecipes.length]);
 
+const DEFAULT_COLLECTIONS = [
+  {
+    id: "your-recipes",
+    name: "Your Recipes",
+    recipeCount: recipeCount,
+    cover_img: DEFAULT_IMAGE_URL,
+    isDefault: true,
+  },
+  {
+    id: "cooked",
+    name: "Cooked Recipes",
+    recipeCount: cookedRecipes.length,
+    cover_img: DEFAULT_IMAGE_URL,
+    isDefault: true,
+  },
+];
+
+const collectionsToShow = [...DEFAULT_COLLECTIONS, ...folders];
 
   
   return (
@@ -266,7 +323,7 @@ export default function Profile() {
         
         {/* Collections Header & Create Button */}
         <div className="collections-header">
-          <h2 className="collection-name">Collections</h2>
+          <h2 className="collection-title">Collections</h2>
           <div className="collections-grid">
    
           <div className="create-container">
@@ -281,104 +338,80 @@ export default function Profile() {
           </div>
         </div>
       </div>
-       {/* Default Collections */}
-       <div className="collections-grid">
-            {[
-              {
-                id: "your-recipes",
-                name: "Your Recipes",
-                recipeCount: recipeCount,
-                cover_img: null, // No image support for default collections (yet)
-              },
-              {
-                id: "likes",
-                name: "Likes",
-                recipeCount: likedRecipes.length,
-                cover_img: null,
-              },
-              {
-                id: "cooked",
-                name: "Recipes You've Cooked",
-                recipeCount: cookedRecipes.length,
-                cover_img: null,
-              },
-            ].map((folder) => (
-              <div key={folder.id} className="collection-card">
-                {/* Default gray box for now */}
-                <div className="default-image" />
-                <h3 className="collection-title">{folder.name}</h3>
-                <p className="collection-recipe-count">
-                  {folder.recipeCount}{" "}
-                  {folder.recipeCount === 1 ? "recipe" : "recipes"}
-                </p>
+      <div className="collections-grid">
+  {collectionsToShow.map((col) => (
+    <div
+      key={col.id}
+      className="collection-card cursor-pointer"
+      onClick={() => navigate(`/collection/${col.id}`)}
+    >
+      {/* 3‑dot menu only for user collections */}
+      {!col.isDefault && (
+        <div className="collection-options">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdownForId((prev) => (prev === col.id ? null : col.id));
+            }}
+          >
+            <BsThreeDotsVertical />
+          </button>
+
+          {showDropdownForId === col.id && (
+            <div className="collection-actions-dropdown">
+              <div
+                className="dropdown-option"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCollection(col);
+                  setCollectionName(col.name);
+                  setCollectionImage(col.cover_img || null);
+                  setIsPrivate(col.is_private);
+                  setShowDropdownForId(null);
+                  setIsDialogOpen(true);
+                }}
+              >
+                Edit
               </div>
-            ))}
-          </div>
-
-        {/* User-Created Collections */}
-        {folders.length > 0 && (
-        <div className="collections-grid">
-          {folders.map((folder) => (
-            <div key={folder.id} className="collection-card">
-             <div className="collection-options">
-             <button onClick={() => setShowDropdownForId((prevId) => (prevId === folder.id ? null : folder.id))}>
-              <BsThreeDotsVertical />
-            </button>
-
-            {showDropdownForId === folder.id && (
-              <div className="collection-actions-dropdown">
-                <div
-                  className="dropdown-option"
-                  onClick={() => {
-                  
-                    setSelectedCollection(folder); 
-                    setCollectionName(folder.name);
-                    setCollectionImage(folder.cover_img || null);
-                    setIsPrivate(folder.is_private);
-                    setShowDropdownForId(null); 
-                    setIsDialogOpen(true); 
-                  }}
-                >
-                  Edit
-                </div>
-                <div
-                  className="dropdown-option"
-                  onClick={async () => {
-                    const { error } = await supabase
-                      .from("saved_collections")
-                      .delete()
-                      .eq("id", folder.id);
-                    if (!error) {
-                      setFolders((prev) => prev.filter((f) => f.id !== folder.id));
-                    }
-                    setShowDropdownForId(null);
-                  }}
-                >
-                  Delete
-                </div>
+              <div
+                className="dropdown-option"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const { error } = await supabase
+                    .from("saved_collections")
+                    .delete()
+                    .eq("id", col.id);
+                  if (!error) {
+                    setFolders((prev) => prev.filter((f) => f.id !== col.id));
+                  }
+                  setShowDropdownForId(null);
+                }}
+              >
+                Delete
               </div>
-            )}
-          </div>
-
-
-              {folder.cover_img ? (
-                <img
-                  src={folder.cover_img}
-                  alt={folder.name}
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
-              ) : (
-                <div className="default-image" />
-              )}
-              <h3 className="collection-title">{folder.name}</h3>
-              <p className="collection-recipe-count">
-                {folder.recipeCount}{" "}
-                {folder.recipeCount === 1 ? "recipe" : "recipes"}
-              </p>
             </div>
-          ))}
+          )}
         </div>
       )}
+
+      {/* Cover image */}
+      <img
+        src={col.cover_img}
+        alt={col.name}
+        className="w-full h-32 object-cover rounded mb-2"
+      />
+
+      {/* Title + count */}
+      <div className="collection-info">
+        <h3 className="collection-title">{col.name}</h3>
+        <p className="collection-recipe-count">
+          {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <Dialog open={isDialogOpen} onClose={closeCollectionDialog} className="dialog-overlay">

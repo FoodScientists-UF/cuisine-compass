@@ -1,13 +1,14 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import img1 from "../layouts/images/Img1.jpg";
 import { supabase, AuthContext } from "../AuthProvider";
-import { FaRegHeart, FaChevronDown } from "react-icons/fa";
+import { FaRegHeart, FaChevronDown, FaBookmark } from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
 import WriteReviewPopup from "../components/WriteReviewPopup";
 import defaultAvatar from "../layouts/images/default-avatar.png";
 
 export default function ViewRecipe() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { session } = useContext(AuthContext);
   const [selectedSize, setSelectedSize] = useState("1X");
@@ -23,6 +24,7 @@ export default function ViewRecipe() {
 
   const [recipeTitle, setRecipeTitle] = useState("");
   const [likes, setLikes] = useState(0);
+  const [userId, setUserId] = useState("");
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState("");
@@ -30,6 +32,7 @@ export default function ViewRecipe() {
   const [servingSize, setServingSize] = useState("");
   const [ingredients, setIngredients] = useState([]);
   const [instructions, setInstructions] = useState([]);
+  const [tags, setTags] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [nutritionalInformation, setNutritionalInformation] = useState([]);
 
@@ -72,7 +75,7 @@ export default function ViewRecipe() {
       const { data: recipeData, error: recipeError } = await supabase
         .from("Recipes")
         .select(
-          "title, user_id, description, cook_time, prep_time, serving_size, image_url, ingredients, instructions"
+          "title, user_id, description, cook_time, prep_time, serving_size, image_url, ingredients, instructions, tags"
         )
         .eq("id", id)
         .single();
@@ -88,6 +91,8 @@ export default function ViewRecipe() {
         setServingSize(recipeData.serving_size);
         setIngredients(recipeData.ingredients);
         setInstructions(recipeData.instructions);
+        setTags(recipeData.tags);
+        setUserId(recipeData.user_id);
       }
 
       const [
@@ -100,7 +105,7 @@ export default function ViewRecipe() {
         nutritional,
       ] = await Promise.all([
         supabase
-          .from("Likes")
+          .from("recipe_unique_savers")
           .select("*", { count: "exact" })
           .eq("recipe_id", id),
         supabase
@@ -135,7 +140,7 @@ export default function ViewRecipe() {
           .from("Reviews")
           .select("review_text, created_at, Profiles(username, avatar_url)")
           .eq("recipe_id", id),
-        supabase.from("Recipes").select("nutrition").eq("id", id),
+        supabase.functions.invoke("fetch-nutrition", { body: JSON.stringify({ ingredient: recipeData.title, id: id }) }),
       ]);
 
       if (likes.error) throw likes.error;
@@ -186,48 +191,7 @@ export default function ViewRecipe() {
       }
 
       if (nutritional.error) throw nutritional.error;
-      else if (nutritional.data.nutrition) {
-        console.log("Fetched nutrition data:", nutritional.data.nutrition);
-        setNutritionalInformation(nutritional.data.nutrition);
-      } else {
-        const { data: dataFunc, error: errorFunc } =
-          await supabase.functions.invoke("fetch-nutrition", {
-            body: JSON.stringify({ ingredient: recipeData.title }),
-          });
-
-        if (errorFunc) throw errorFunc;
-        // Format nutrition data for display
-        const nutritionFields = [
-          "calories",
-          "serving_size_g",
-          "fat_total_g",
-          "fat_saturated_g",
-          "protein_g",
-          "sodium_mg",
-          "potassium_mg",
-          "cholesterol_mg",
-          "carbohydrates_total_g",
-          "fiber_g",
-          "sugar_g",
-        ];
-
-        const formattedNutrition = nutritionFields
-          .filter((field) => dataFunc[field] !== undefined)
-          .map((field) => {
-            const displayName = field
-              .replace(/_/g, " ")
-              .replace(/^./, (str) => str.toUpperCase())
-              .split(" ")[0];
-
-            return {
-              nutrient: displayName,
-              amount: `${dataFunc[field]}${
-                field.includes("_g") ? "g" : field.includes("_mg") ? "mg" : ""
-              }`,
-            };
-          });
-        setNutritionalInformation(formattedNutrition);
-      }
+      else setNutritionalInformation(nutritional.data);
     }
 
     if (id) {
@@ -327,15 +291,18 @@ export default function ViewRecipe() {
           </div>
 
           {/* Likes Button */}
+          {/* <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-2">
-            <FaRegHeart className="text-3xl text-black" />
+            <FaBookmark className="text-3xl text-black" />
             <span className="text-3xl abhaya-libre-regular text-black-600">
               {likes}
             </span>
-          </div>
+          </div> */}
 
           {/* Username */}
-          <p className="text-2xl abhaya-libre-semibold text-black-600 mt-4">
+          <p href="#" 
+          className="text-2xl abhaya-libre-semibold text-black-600 hover:underline hover:opacity-80 mt-4"
+          onClick={() => navigate(`/profile/${userId}`)}>
             @{username}
           </p>
 
@@ -376,8 +343,28 @@ export default function ViewRecipe() {
               </p>
             </div>
           </div>
+
+          {/* Tags Section */}
+          {tags != null && tags.length > 0 && (
+            <div className="mt-4">
+              <p className="text-3xl abhaya-libre-semibold text-black-600 mb-2">
+                Tags
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="bg-[#F3F3F3] text-black text-2xl abhaya-libre-regular px-4 py-2 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
 
       {/* Divider Line */}
       <hr className="w-full border-t-2 border-gray-300" />
@@ -407,7 +394,7 @@ export default function ViewRecipe() {
         </div>
 
         {/* Serving Size */}
-        <div className="flex border-2 border-[#D75600] rounded-full overflow-hidden w-64">
+        <div className="flex border-2 border-[#D75600] rounded-full overflow-hidden w-64 mt-4">
           {sizes.map((size, index) => (
             <button
               key={size}
@@ -425,7 +412,7 @@ export default function ViewRecipe() {
           ))}
         </div>
 
-        <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none">
+        <h1 className="text-xl abhaya-libre-extrabold text-[#7A7A7A] leading-none mt-4">
           This will yield {servingSize * parseInt(selectedSize.substring(0, 1))}{" "}
           {servingSize > 1 ? "servings" : "serving"}
         </h1>
@@ -474,14 +461,14 @@ export default function ViewRecipe() {
         </ul>
 
         {/* Directions */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-8">
           Directions
         </h1>
 
         {/* List of Instructions */}
         {instructions.map((instruction, index) => (
           <div key={index} className="mb-6">
-            <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none">
+            <h1 className="text-3xl abhaya-libre-extrabold text-black leading-none mt-4">
               Step {index + 1}
             </h1>
             <p className="text-2xl abhaya-libre-regular text-black-600">
@@ -595,14 +582,14 @@ export default function ViewRecipe() {
         <hr className="w-full border-t-2 border-gray-300 mt-4" />
 
         {/* Nutritional Info */}
-        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none">
+        <h1 className="text-5xl abhaya-libre-extrabold text-black leading-none mt-4 mb-4">
           Nutritional Information
         </h1>
 
         {/* Nutritional Info Table */}
         {/* https://flowbite.com/docs/components/tables/ */}
         {nutritionalInformation.length > 0 && (
-          <div className="relative overflow-x-auto flex">
+          <div className="relative overflow-x-auto flex mt-4">
             <table className="w-[500px] text-lg text-left abhaya-libre-extrabold text-white bg-[#D75600] rounded-2xl overflow-hidden">
               <thead className="text-lg uppercase bg-[#bf4c00]">
                 <tr>
