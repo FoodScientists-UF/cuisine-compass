@@ -295,9 +295,9 @@ export default function ViewProfile() {
           {bio || "User hasn't added a bio yet."}
         </div>
 
-        <div className="collections-header mt-8">
+        {/*<div className="collections-header mt-8">
           <h2 className="collection-title">Recipes</h2>
-        </div>
+        </div>*/}
         {userRecipes.length > 0 ? (
           <div className="pinterest-grid">
             {userRecipes.map((recipe) => (
