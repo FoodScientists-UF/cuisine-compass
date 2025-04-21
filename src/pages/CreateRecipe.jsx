@@ -14,8 +14,8 @@ export default function CreateRecipe() {
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
     const [servingSize, setServingSize] = useState("");
-    const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
-    const [steps, setSteps] = useState([{ id: 1, description: ""}]);
+    const [ingredients, setIngredients] = useState([{amount: "", unit: "", name: "" }]);
+    const [steps, setSteps] = useState([{description: ""}]);
     const [tags, setTags] = useState([]);
     const { session } = useContext(AuthContext);
 
@@ -119,9 +119,7 @@ export default function CreateRecipe() {
                 return;
             }
         }
-
-            
-           
+  
         navigate("/profile"); 
     };
 
@@ -137,29 +135,29 @@ export default function CreateRecipe() {
     const addIngredient = () => {
         setIngredients((prevIngredients) => [
             ...prevIngredients,
-            { name: "", amount: "", unit: "" }
+            {name: "", amount: "", unit: "" }
         ]);
     };
 
-    // Delete an ingredient by id
-    const deleteIngredient = (id) => {
+    // Delete an ingredient by index
+    const deleteIngredient = (indexToRemove) => {
         setIngredients((prevIngredients) =>
-            prevIngredients.filter((ingredient) => ingredient.id !== id)
+        prevIngredients.filter((_, index) => index !== indexToRemove)
         );
     };
 
-    //Add a new step
+    // Add a new step
     const addSteps = () => {
         setSteps((prevSteps) => [
             ...prevSteps,
-            ''
+            { description: "" }
         ]);
     };
 
-    //Dele†e a step by id
-    const deleteStep = (id) => {
+    // Delete a step by index
+    const deleteStep = (indexToRemove) => {
         setSteps((prevSteps) =>
-            prevSteps.filter((step) => step.id !== id)
+        prevSteps.filter((_, index) => index !== indexToRemove)
         );
     };
 
@@ -341,7 +339,7 @@ export default function CreateRecipe() {
             <div className="mt-6">
                 <span className="abhaya-libre-extrabold text-lg text-left block">Ingredients</span>
                 {ingredients.map((ingredient, index) => (
-                <div key={ingredient.id} className="flex space-x-4 mt-2 items-center">
+                <div key={index} className="flex space-x-4 mt-2 items-center">
                     {/* Numbering (1., 2., 3., ...) */}
                     <span className="flex items-center justify-center w-1/12">
                     <span>{index + 1}.</span>
@@ -398,7 +396,7 @@ export default function CreateRecipe() {
                     {/* Trash icon */}
                     <span className="flex items-center justify-center w-1/10">
                 <FaTrash
-                    onClick={() => deleteIngredient(ingredient.id)}
+                    onClick={() => deleteIngredient(index)}
                     className="text-red-500 cursor-pointer"
                     size={20}
                     style={{ color: "#999999" }}
@@ -423,7 +421,7 @@ export default function CreateRecipe() {
             <div className="mt-6">
                 <span className="abhaya-libre-extrabold text-lg text-left block">Steps</span>
                 {steps.map((step, index) => (
-                <div key={step.id} className="flex space-x-4 mt-2 items-center">
+                <div key={index} className="flex space-x-4 mt-2 items-center">
                     {/* Numbering (1., 2., 3., ...) */}
                     <span className="flex items-center justify-center w-1/12">
                     <span>{index + 1}.</span>
@@ -433,13 +431,11 @@ export default function CreateRecipe() {
                     <span className="flex flex-col">
                         <input
                             type="text"
-                            value={step.amount}
-                            key={index}
+                            value={step.description}
                             onChange={(e) => {
                             const updatedSteps = [...steps];
-                            const value = e.target.value;
-                            updatedSteps[index] = value;
-                            console.log(updatedSteps);
+                            updatedSteps[index].description = e.target.value;
+                            {/*console.log(updatedSteps);*/}
                             setSteps(updatedSteps);
                             }}
                         className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-left"
@@ -450,7 +446,7 @@ export default function CreateRecipe() {
                     {/* Trash icon */}
                     <span className="flex items-center justify-center w-1/10">
                     <FaTrash
-                        onClick={() => deleteStep(step.id)}
+                        onClick={() => deleteStep(index)}
                         className="text-red-500 cursor-pointer"
                         size={20}
                         style={{ color: "#999999" }}
