@@ -77,11 +77,18 @@ export default function ViewProfile() {
     }
 
     const fetchUserPicture = async () => {
+      const { data: exists } = await supabase.storage.from("profile_pictures").exists(profileUserId);
+      if (!exists) {
+        console.error("Profile picture does not exist for user ID:", profileUserId);
+        setPic(DEFAULT_AVATAR_URL);
+        return;
+      }
       const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(profileUserId);
       if (error || !data?.publicUrl) {
         console.error("Error fetching profile picture or URL is null:", error?.message);
         setPic(DEFAULT_AVATAR_URL);
       } else {
+        console.log("Fetched profile picture URL:", data.publicUrl);
         setPic(data.publicUrl);
       }
     };
