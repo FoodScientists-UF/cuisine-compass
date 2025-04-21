@@ -1,9 +1,8 @@
 import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from "react";
 import ReactDOM from "react-dom";
 import { AuthContext } from "../AuthProvider";
-// Import useOutletContext
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { Container, Card, Image } from "semantic-ui-react";
+import { Container, Image } from "semantic-ui-react";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import SavePopup from "../components/SavePopup";
 import "semantic-ui-css/semantic.min.css";
@@ -93,10 +92,9 @@ const ExplorePage = ({ following = false }) => {
       const { data, error } = await supabase
         .from("Recipes")
         .select()
-        .textSearch("title", searchValue, {
-          type: "websearch",
-          config: "english",
-        });
+        .or(`title.ilike.%${searchValue}%,description.ilike.%${searchValue}%`)
+        .order("created_at", { ascending: false });
+
 
       if (error) throw error;
 
@@ -160,8 +158,9 @@ const ExplorePage = ({ following = false }) => {
     }
 
     let recipesQuery = supabase
-      .from("Recipes")
-      .select("id, title, image_url, cost, prep_time, cook_time, user_id");
+    .from("Recipes")
+    .select("id, title, image_url, cost, prep_time, cook_time, user_id, created_at")
+    .order("created_at", { ascending: false });
     
     setIsLoading(true);
     
