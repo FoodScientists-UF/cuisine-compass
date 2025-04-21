@@ -29,10 +29,13 @@ const Collections = () => {
     useEffect(() => {
         if (!collectionId || !session?.user?.id) return;
         fetchCollectionName();
-        fetchRecipesForCollection();
         fetchCollections();
-      }, [collectionId, session?.user?.id]);
-    
+    }, [collectionId, session?.user?.id]);
+
+    useEffect(() => {
+        if (!collectionId || !ownerId) return;
+        fetchRecipesForCollection();
+    }, [collectionId, ownerId]);
 
     const isDefaultCollection = (id) => {
     return ["your-recipes", "likes", "cooked"].includes(id);
@@ -60,6 +63,8 @@ const Collections = () => {
           console.error("Error fetching collection name:", error.message);
           return;
         }
+
+        console.log("Collection data:", data);
       
         setCollectionName(data.name);
         setOwnerId(data.user_id);  
