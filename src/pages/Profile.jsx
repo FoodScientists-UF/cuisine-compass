@@ -551,9 +551,9 @@ export default function Profile() {
                 className="collection-card cursor-pointer"
                 onClick={() => {
                   if (col.id === "your-recipes")
-                    navigate(`/collection/user/${profileUserId}`);
+                    navigate(`/collection/your-recipes`);
                   else if (col.id === "cooked")
-                    navigate(`/collection/cooked/${profileUserId}`);
+                    navigate(`/collection/cooked`);
                   else navigate(`/collection/${col.id}`);
                 }}
               >
