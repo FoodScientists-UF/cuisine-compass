@@ -9,6 +9,7 @@ import "./Profile.css";
 
 
 export default function CreateRecipe() {
+    const { session } = useContext(AuthContext);
     const [recipeTitle, setRecipeTitle] = useState("");
     const [recipeDescription, setRecipeDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
