@@ -162,7 +162,7 @@
   align-items: right;
   gap: 4px;              
   color: #D75600;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   font-family: "Abhaya Libre", serif;
   cursor: pointer;
@@ -199,7 +199,7 @@
   display:flex;
   justify-content: flex-start;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: bold;
   color: black;
   cursor: pointer;
@@ -245,6 +245,8 @@
   font-weight: bold;
   text-align: left;
   flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 /* Dialog Overlay */
@@ -784,23 +786,13 @@
   opacity: 80%;
 }
 
-.pinterest-grid {
-  margin-left: 60px;
-  column-count: 3;
+.pinterest-grid-profile {
+  display: grid;
+  column-width: 300px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   column-gap: 16px;
   padding: 16px;
-}
-
-@media (max-width: 1024px) {
-  .pinterest-grid {
-    column-count: 2;
-  }
-}
-
-@media (max-width: 640px) {
-  .pinterest-grid {
-    column-count: 1;
-  }
+  padding-left: 60px;
 }
 
 .pinterest-card {
@@ -894,3 +886,15 @@
 .following-active {
   background-color: gray;
 }
+
+.recipe-collection-toggle {
+  position: absolute;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 10px 0;
+  width: 200px;
+  left: 250px;
+  font-size: 20px;
+}
+

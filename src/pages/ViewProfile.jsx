@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
 import FollowDialog from "../components/FollowDialog";
 import "./Profile.css";
+import { RiArrowDropDownLine } from "react-icons/ri";
+import { BsBookmarkFill } from "react-icons/bs";
 
 export default function ViewProfile() {
   const navigate = useNavigate();
@@ -16,6 +18,8 @@ export default function ViewProfile() {
   const [bio, setBio] = useState("");
   const [userRecipes, setUserRecipes] = useState([]);
   const [publicCollections, setPublicCollections] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showRecipes, setShowRecipes] = useState(true);
 
   const [recipeCount, setRecipeCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
@@ -30,6 +34,12 @@ export default function ViewProfile() {
 
   const DEFAULT_AVATAR_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures//default-avatar.png";
   const DEFAULT_COLLECTION_IMAGE_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+    console.log("showRecipes:", showRecipes);
+    console.log("Dropdown toggled:", !showDropdown);
+  };
 
   const handleFollowStateUpdate = (didFollow) => {
     if (didFollow) {
@@ -149,6 +159,8 @@ export default function ViewProfile() {
         .select("id, title, image_url, cost, prep_time, cook_time")
         .eq("user_id", profileUserId);
 
+
+      console.log("Fetched user recipes:", data);
       if (error) console.error("Error fetching user recipes:", error.message);
       else setUserRecipes(data || []);
     };
@@ -194,6 +206,8 @@ export default function ViewProfile() {
       }
     };
 
+    console.log("showRecipes is", showRecipes);
+    
     Promise.all([
       fetchUserPicture(),
       fetchUserProfile(),
@@ -205,7 +219,7 @@ export default function ViewProfile() {
       fetchFollowerUsers(),
       fetchFollowingUsers(),
     ]);
-  }, [profileUserId, session?.user?.id, navigate]);
+  }, [profileUserId, session?.user?.id, navigate, showRecipes]);
 
 
 
@@ -256,7 +270,7 @@ export default function ViewProfile() {
     <div className="view-profile-container pt-16">
       <button
         onClick={() => navigate(-1)}
-        className="back absolute top-20 left-5 z-10"
+        className="back absolute top-60 left-5 z-10"
       >
         <img
           src="/back_arrow.png"
@@ -295,10 +309,91 @@ export default function ViewProfile() {
           {bio || "User hasn't added a bio yet."}
         </div>
 
+        <div className="collections-header mt-8">
+          <button onClick={toggleDropdown} className="collection-title">
+            {showRecipes ? "Recipes" : "Public Collections"}
+            <RiArrowDropDownLine />
+          </button>
+          {showDropdown && (
+            <div className="recipe-collection-toggle">
+              <p
+                className="create-option"
+                onClick={() => {
+                  setShowRecipes(true);
+                  setShowDropdown(false);
+                }}
+              >
+                Recipes
+              </p>
+              <p className="create-option"
+              onClick={() => {
+                setShowRecipes(false);
+                setShowDropdown(false);
+              }}
+              >
+                Public Collections
+              </p>
+            </div>
+          )}
+        </div>
+        
         {/*<div className="collections-header mt-8">
           <h2 className="collection-title">Recipes</h2>
         </div>*/}
-        {userRecipes.length > 0 ? (
+
+          
+        {showRecipes ? (
+          userRecipes.length > 0 ? (
+            <div className="pinterest-grid-profile">
+              {userRecipes.map((recipe) => (
+                <div key={recipe.id} className="pinterest-card" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                  <div className="image-wrapper">
+                    <img src={recipe.image_url || DEFAULT_COLLECTION_IMAGE_URL} alt={recipe.title} className="pinterest-image" />
+                    <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                      <div className="recipe-info">
+                        <h3>{recipe.title}</h3>
+                        <p>{recipe.username}</p>
+                        <p>${recipe.cost}</p>
+                        <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 mt-4">This user hasn't created any recipes yet.</p>
+          )
+        ) : (
+          publicCollections.length > 0 ? (
+            <div className="collections-grid">
+              {publicCollections.map((col) => (
+              <div
+                key={col.id}
+                className="collection-card cursor-pointer"
+                onClick={() => navigate(`/collection/${col.id}`)}
+              >
+                <img
+                  src={col.cover_img || DEFAULT_COLLECTION_IMAGE_URL}
+                  alt={col.name}
+                  className="w-full h-32 object-cover rounded mb-2"
+                />
+                <div className="collection-info">
+                  <h3 className="collection-title-card">{col.name}</h3>
+                  <p className="collection-recipe-count">
+                    {col.recipeCount} {col.recipeCount === 1 ? "recipe" : "recipes"}
+                  </p>
+                </div>
+              </div>
+            ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 mt-4">This user has no public collections.</p>
+          )
+        )}
+{/* 
+
+        {showRecipes && userRecipes.length > 0 ? (
           <div className="pinterest-grid">
             {userRecipes.map((recipe) => (
               <div key={recipe.id} className="pinterest-card" onClick={() => navigate(`/recipe/${recipe.id}`)}>
@@ -319,12 +414,13 @@ export default function ViewProfile() {
           </div>
         ) : (
           <p className="text-gray-500 mt-4">This user hasn't created any recipes yet.</p>
-        )}
+        )} */}
 
+{/* 
         <div className="collections-header mt-8">
           <h2 className="collection-title">Public Collections</h2>
-        </div>
-        {publicCollections.length > 0 ? (
+        </div> */}
+        {/* {!showRecipes && publicCollections.length > 0 ? (
           <div className="collections-grid">
             {publicCollections.map((col) => (
               <div
@@ -348,7 +444,7 @@ export default function ViewProfile() {
           </div>
         ) : (
           <p className="text-gray-500 mt-4">This user has no public collections.</p>
-        )}
+        )} */}
       </div>
 
       <FollowDialog
