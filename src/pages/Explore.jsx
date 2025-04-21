@@ -325,18 +325,20 @@ const ExplorePage = ({ following = false }) => {
                   <FaRegBookmark size={20} color="white" />
                 )}
                 {bookmarkPopup === recipe.id && ReactDOM.createPortal(
-                  <SavePopup
-                    collections={allCollections}
-                    savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
-                    recipeId={recipe.id}
-                    callback={handleSave}
-                    style={{ 
-                      position: "absolute", 
-                      top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
-                      left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
-                    }}
-                    onCollectionCreated={createCollection}
-                  />, 
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <SavePopup
+                      collections={allCollections}
+                      savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
+                      recipeId={recipe.id}
+                      callback={handleSave}
+                      style={{ 
+                        position: "absolute", 
+                        top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
+                        left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
+                      }}
+                      onCollectionCreated={createCollection}
+                    />
+                  </div>,
                   document.body
                 )}
               </div>
