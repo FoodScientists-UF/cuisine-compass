@@ -18,7 +18,6 @@ export default function CreateRecipe() {
     const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([{ id: 1, description: ""}]);
     const [tags, setTags] = useState([]);
-    const { session } = useContext(AuthContext);
 
     const [recipePic, setRecipePic] = useState(null);
     const [recipePicUrl, setRecipePicUrl] = useState(null);
