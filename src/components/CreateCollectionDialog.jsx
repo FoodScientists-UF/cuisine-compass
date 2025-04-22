@@ -8,6 +8,7 @@ const CreateCollectionDialog = ({ isOpen, onClose, onCreate }) => {
   const [collectionName, setCollectionName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [collectionImage, setCollectionImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   
 
   const handleCreateCollection = async (e) => {
@@ -67,7 +68,7 @@ const CreateCollectionDialog = ({ isOpen, onClose, onCreate }) => {
           >
             {collectionImage ? (
               <img
-                src={collectionImage}
+                src={imagePreview}
                 alt="Collection Preview"
                 className="w-full h-full object-cover rounded-lg"
               />
@@ -96,9 +97,10 @@ const CreateCollectionDialog = ({ isOpen, onClose, onCreate }) => {
               accept="image/*"
               onChange={(e) => {
                 const file = e.target.files[0];
+                console.log(e.target.files[0]);
                 if (file) {
-                  setImageFile(file);
-                  setCollectionImage(URL.createObjectURL(file));
+                  setCollectionImage(file);
+                  setImagePreview(URL.createObjectURL(file));
                 }
               }}
               className="hidden"
