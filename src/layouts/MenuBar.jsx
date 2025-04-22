@@ -1,7 +1,7 @@
 import React, { Component, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, Input, Button, Image, Container } from "semantic-ui-react";
-import logo from "../layouts/images/CuisineCompassLogo.png";
+// import logo from "../layouts/images/CuisineCompassLogo.png";
 import title from "../layouts/images/CuisineCompass.png";
 import { supabase, AuthContext } from "../AuthProvider";
 
@@ -68,6 +68,7 @@ class MenuBarComponent extends Component {
     const pathname = location.pathname;
 
     const iconImg = this.state.pic ? this.state.pic : 'user';
+    const logo = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
 
     return (
       <Container

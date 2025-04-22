@@ -284,10 +284,6 @@ export default function Profile() {
     };
 
     const fetchCollections = async () => {
-      if (!isMe) {
-        setFolders([]);
-        return;
-      }
       try {
         const { data: collections, error: collectionsError } = await supabase
           .from("saved_collections")
@@ -330,10 +326,6 @@ export default function Profile() {
     };
 
     const fetchCookedRecipes = async () => {
-      if (!isMe) {
-        setCookedRecipes([]);
-        return;
-      }
       const { data, error } = await supabase
         .from("Cooked Recipes")
         .select("recipe_id", { count: "exact", head: true })
@@ -453,29 +445,7 @@ export default function Profile() {
         </div>
       )}
 
-      {!isMe && session?.user?.id && (
-        <div
-          className="follow-button-wrapper"
-          style={{
-            position: "absolute",
-            top: "20rem",
-            right: "12rem",
-            zIndex: 10,
-          }}
-        >
-          <button
-            onClick={handleProfileFollowToggle}
-            className={`px-4 py-2 rounded-lg font-bold font-["Abhaya_Libre"] transition ${
-              isFollowingProfile
-                ? "bg-gray-300 text-black hover:bg-gray-400"
-                : "bg-[#D75600] text-white hover:opacity-80"
-            }`}
-          >
-            {isFollowingProfile ? "Following" : "Follow"}
-          </button>
-        </div>
-      )}
-
+     
       <div
         className={`profile-content ${!isMe ? "pt-10" : ""}`}
         style={{ marginLeft: isMe ? "0" : "-100px" }}
@@ -532,11 +502,6 @@ export default function Profile() {
                 </div>
               )}
             </div>
-          </div>
-        )}
-        {!isMe && (
-          <div className="collections-header">
-            <h2 className="collection-title">Public Collections</h2>
           </div>
         )}
 
@@ -634,14 +599,6 @@ export default function Profile() {
                 </div>
               </div>
             ))}
-          {!isMe &&
-            collectionsToShow.filter(
-              (col) => !col.is_private && !col.isDefault
-            ).length === 0 && (
-              <p className="text-gray-500 col-span-3 text-center">
-                This user has no public collections.
-              </p>
-            )}
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import FollowDialog from "../components/FollowDialog";
 import "./Profile.css";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { BsBookmarkFill } from "react-icons/bs";
+import { TbBowlSpoonFilled } from "react-icons/tb";
 
 export default function ViewProfile() {
   const navigate = useNavigate();
@@ -169,42 +170,61 @@ export default function ViewProfile() {
       try {
         const { data: collections, error: collectionsError } = await supabase
           .from("saved_collections")
-          .select("id, name, cover_img")
+          .select("id, name")
           .eq("user_id", profileUserId)
           .eq("is_private", false);
-
+    
         if (collectionsError) throw collectionsError;
-
+    
         const collectionIds = collections.map((c) => c.id);
         if (collectionIds.length === 0) {
           setPublicCollections([]);
           return;
         }
-
+    
+        // Get the first recipe for each collection, including image_url
+        const { data: savedRecipes, error: savedError } = await supabase
+          .from("saved_recipes")
+          .select("folder_id, recipe_id, Recipes(image_url)")
+          .in("folder_id", collectionIds)
+          .eq("user_id", profileUserId)
+          .order("folder_id", { ascending: true })
+          .order("id", { ascending: true }); // Get first recipe per folder
+    
+        if (savedError) throw savedError;
+    
+        const coverImages = {};
+        for (const recipe of savedRecipes) {
+          if (!coverImages[recipe.folder_id] && recipe.Recipes?.image_url) {
+            coverImages[recipe.folder_id] = recipe.Recipes.image_url;
+          }
+        }
+    
         const { data: recipeCountsData, error: countsError } = await supabase
           .from("saved_recipes")
           .select("folder_id", { count: "exact" })
           .in("folder_id", collectionIds)
           .eq("user_id", profileUserId);
-
+    
         if (countsError) throw countsError;
-
+    
         const recipeCounts = recipeCountsData.reduce((acc, { folder_id }) => {
           acc[folder_id] = (acc[folder_id] || 0) + 1;
           return acc;
         }, {});
-
-        const collectionsWithCounts = collections.map((folder) => ({
+    
+        const collectionsWithMeta = collections.map((folder) => ({
           ...folder,
           recipeCount: recipeCounts[folder.id] || 0,
-          cover_img: folder.cover_img || DEFAULT_COLLECTION_IMAGE_URL,
+          cover_img: coverImages[folder.id],
         }));
-
-        setPublicCollections(collectionsWithCounts);
+    
+        setPublicCollections(collectionsWithMeta);
       } catch (err) {
         console.error("Error fetching public collections:", err.message);
       }
     };
+    
 
     console.log("showRecipes is", showRecipes);
     
@@ -367,7 +387,30 @@ export default function ViewProfile() {
         ) : (
           publicCollections.length > 0 ? (
             <div className="collections-grid">
-              {publicCollections.map((col) => (
+              {publicCollections.map((collection) => (
+                <div key={collection.id} 
+                className="collection-card cursor-pointer"
+                onClick={() => navigate(`/collection/${collection.id}`)}>
+                  {collection.cover_img ? (
+                    <img
+                      src={collection.cover_img}
+                      alt={collection.name}
+                      className="w-full h-48 object-cover rounded mb-2"
+                    />
+                  ) : (
+                    <div className="w-full h-48 object-cover rounded mb-2 flex items-center justify-center bg-gray-200">
+                      <TbBowlSpoonFilled className="placeholder-icon" />
+                    </div>
+                  )}
+                  <div className="collection-info">
+                    <h3 className="collection-title-card">{collection.name}</h3>
+                    <p className="collection-recipe-count">
+                      {collection.recipeCount} {collection.recipeCount === 1 ? "recipe" : "recipes"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {/* {publicCollections.map((col) => (
               <div
                 key={col.id}
                 className="collection-card cursor-pointer"
@@ -385,7 +428,7 @@ export default function ViewProfile() {
                   </p>
                 </div>
               </div>
-            ))}
+            ))} */}
             </div>
           ) : (
             <p className="text-gray-500 mt-4">This user has no public collections.</p>

@@ -159,9 +159,10 @@ const ExplorePage = ({ following = false }) => {
 
     let recipesQuery = supabase
     .from("Recipes")
-    .select("id, title, image_url, cost, prep_time, cook_time, user_id, created_at")
-    .order("created_at", { ascending: false });
-    
+    .select("id, title, image_url, cost, prep_time, cook_time, user_id, created_at, tags")
+    .order("created_at", { ascending: false })
+    .neq("user_id", session.user.id);
+
     setIsLoading(true);
     
     if (following) {
@@ -350,6 +351,15 @@ const ExplorePage = ({ following = false }) => {
                   <p>${recipe.cost}</p>
                   <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
                   <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                  {recipe.tags && recipe.tags.length > 0 && (
+                      <div className="tags">
+                        {recipe.tags.map((tag, index) => (
+                          <span key={index} className="tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

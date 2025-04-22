@@ -786,20 +786,17 @@
   opacity: 80%;
 }
 
-{/* make me a pinterest grid. it should be called 
-  pinterest-grid-profile. each column should be 300px wide 
-  and there should be a max of 3 columns. it should fill in from left to right*/}
-  .pinterest-grid-profile {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    column-gap: 16px;
-    padding: 16px;
-    padding-left: 60px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    justify-items: center;
-    align-items: start;
-  }
+.pinterest-grid-profile {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: 16px;
+  padding: 16px;
+  padding-left: 60px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  justify-items: center;
+  align-items: start;
+}
 
 
 /* .pinterest-grid-profile {
@@ -914,3 +911,17 @@
   font-size: 20px;
 }
 
+.collection-placeholder {
+  background-color: #d1d5db; 
+  height: 32;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.5rem;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  color: #6b7280;
+}
