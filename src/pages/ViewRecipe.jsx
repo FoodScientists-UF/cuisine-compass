@@ -312,7 +312,7 @@ export default function ViewRecipe() {
 
           {/* Username */}
           <p href="#" 
-          className="text-2xl abhaya-libre-semibold text-black-600 hover:underline hover:opacity-80 mt-4"
+          className="text-2xl abhaya-libre-semibold text-black-600 hover:underline hover:opacity-80 mt-4 cursor-pointer"
           onClick={() => navigate(`/profile/${userId}`)}>
             @{username}
           </p>
