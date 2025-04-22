@@ -15,6 +15,7 @@ export default function CreateRecipe() {
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
     const [servingSize, setServingSize] = useState("");
+    const [approxCost, setApproxCost] = useState("");
     const [ingredients, setIngredients] = useState([{amount: "", unit: "", name: "" }]);
     const [steps, setSteps] = useState([""]);
     const [tags, setTags] = useState([]);
@@ -46,6 +47,7 @@ export default function CreateRecipe() {
         const parsedPrepTime = parseInt(prepTime, 10);
         const parsedCookTime = parseInt(cookTime, 10);
         const parsedServingSize = parseInt(servingSize, 10);
+        const parsedApproxCost = parseInt(approxCost, 10);
 
         if (isNaN(parsedPrepTime) || parsedPrepTime <= 0) {
          alert("Please enter a valid prep time for your recipe");
@@ -62,6 +64,16 @@ export default function CreateRecipe() {
             return;
         }
 
+        if (approxCost.includes('$')) {
+            alert("Do not include '$' in your approximate cost— just enter the number only.");
+            return;
+        }
+
+        if (isNaN(parsedApproxCost) || parsedApproxCost <= 0) {
+            alert("Please enter a valid cost for your recipe");
+            return;
+        }
+
         if(!ingredients.length){
             alert("Please enter at least 1 ingredient for your recipe");
             return;
@@ -71,7 +83,6 @@ export default function CreateRecipe() {
             alert("Please enter at least 1 step for your recipe");
             return;
         }
-
 
         const recipeUUID = crypto.randomUUID();
 
@@ -88,6 +99,7 @@ export default function CreateRecipe() {
             prep_time: parsedPrepTime,
             cook_time: parsedCookTime,
             serving_size: parsedServingSize,
+            cost: parsedApproxCost,
             ingredients: ingredients,    
             instructions: steps,
             tags: tags,
@@ -314,6 +326,29 @@ export default function CreateRecipe() {
                 <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">servings</span>
                 </div>
             </div>
+
+            {/* Inputting approximate cost*/}
+                <div className="mt-6 flex flex-col abhaya-libre-extrabold text-lg text-left block">
+                    <div className="flex items-center"> 
+                    Approximate Cost 
+                    {/* Tooltip Icon */}
+                        <span className="ml-2 tooltip" data-tooltip="Numerical value only">
+                            <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
+                        </span>
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                    <input
+                        type="text"
+                        name="approxCost"
+                        value={approxCost}
+                        onChange={(e) => setApproxCost(e.target.value)}
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-[90px] h-12 mt-2 text-center"
+                        style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
+                    />
+                    <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">in USD</span>
+                    </div>
+                </div>
 
 
             {/* Inputting recipe description */}
