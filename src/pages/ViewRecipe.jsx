@@ -7,6 +7,8 @@ import SavePopup from "../components/SavePopup";
 import WriteReviewPopup from "../components/WriteReviewPopup";
 import defaultAvatar from "../layouts/images/default-avatar.png";
 
+const DEFAULT_AVATAR_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures//default-avatar.png";
+
 export default function ViewRecipe() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -138,7 +140,7 @@ export default function ViewRecipe() {
           : null,
         supabase
           .from("Reviews")
-          .select("review_text, created_at, Profiles(username, avatar_url)")
+          .select("review_text, created_at, user_id, Profiles(username, avatar_url)")
           .eq("recipe_id", id),
         supabase.functions.invoke("fetch-nutrition", { body: JSON.stringify({ ingredient: recipeData.title, id: id }) }),
       ]);
@@ -175,18 +177,7 @@ export default function ViewRecipe() {
       else {
         console.log("Fetched reviews data:", reviews.data);
         reviews.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        reviews.data.forEach((review) => {
-          review.created_at = new Date(review.created_at).toLocaleDateString(
-            "en-US",
-            {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            }
-          );
-          review.review_text = review.review_text || "No review text";
-          review.avatar_url = review.Profiles?.avatar_url || defaultAvatar;
-        });
+        await setReviewAvatar(reviews.data);
         setReviews(reviews.data);
       }
 
@@ -198,6 +189,44 @@ export default function ViewRecipe() {
       fetchRecipe(id);
     }
   }, [id, session?.user?.id]);
+
+  const setReviewAvatar = async (reviews) => {
+    console.log("Reviews data:", reviews);
+    if (!reviews || reviews.length === 0) return;
+
+    for (const review of reviews) {
+      review.created_at = new Date(review.created_at).toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }
+      );
+      review.review_text = review.review_text || "No review text";
+      review.avatar_url = await fetchUserPicture(review.user_id);
+    }
+
+  }
+    
+
+  const fetchUserPicture = async (profileUserId) => {
+    if (!profileUserId) return DEFAULT_AVATAR_URL;
+    console.log("Fetching user picture for user ID:", profileUserId);
+    const { data: exists } = await supabase.storage.from("profile_pictures").exists(profileUserId);
+    if (!exists) {
+      console.error("Profile picture does not exist for user ID:", profileUserId);
+      return DEFAULT_AVATAR_URL;
+    }
+    const { data, error } = await supabase.storage.from("profile_pictures").getPublicUrl(profileUserId);
+    if (error || !data?.publicUrl) {
+      console.error("Error fetching profile picture or URL is null:", error?.message);
+      return DEFAULT_AVATAR_URL;
+    } else {
+      console.log("Fetched profile picture URL:", data.publicUrl);
+      return data.publicUrl;
+    }
+  };
 
   async function setCooked() {
     if (!session.user.id) return;
@@ -531,7 +560,7 @@ export default function ViewRecipe() {
               <div key={index} className="w-full rounded-2xl bg-[#F3F3F3] p-4">
                 <div className="w-full h-40 rounded-2xl bg-[#F3F3F3] mt-4 relative p-4">
                   <p className="text-2xl abhaya-libre-regular text-[#555555]">
-                    "{review.review_text || "No review text"}"
+                    {review.review_text || "No review text"}
                   </p>
                   <div className="absolute bottom-4 left-4 flex">
                     <img
