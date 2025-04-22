@@ -19,7 +19,6 @@ const NutrientTracker = () => {
   const [open, setOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodAmount, setFoodAmount] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loggedFood, setLoggedFood] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -30,6 +29,13 @@ const NutrientTracker = () => {
   const [previewNutrition, setPreviewNutrition] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
 
+  const getLocalDateString = () => {
+    const now = new Date();
+    const offsetDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000); // adjust to local time
+    return offsetDate.toISOString().split("T")[0]; // format
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
 
   const formatDate = () => {
     if (!selectedDate) return "";
