@@ -76,7 +76,7 @@ export default function Goals() {
 
       {/* Continue Button */}
       <button
-        onClick={() => navigate("/Explore")}
+        onClick={() => navigate("/onboarding/friends")}
         className="mt-4 pb-2 p-2 rounded-xl bg-[#D75600] text-white abhaya-libre-extrabold text-lg w-96 hover:opacity-80 transition"
       >
         Continue
@@ -84,7 +84,7 @@ export default function Goals() {
 
       {/* Skip For Now Button */}
       <button
-        onClick={() => navigate("/onboarding/goals")}
+        onClick={() => navigate("/onboarding/friends")}
         className="abhaya-libre-extrabold text-[#7A7A7A] pb-12"
       >
         Skip for now

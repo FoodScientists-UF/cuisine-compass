@@ -3,23 +3,31 @@ import { FaTrash } from "react-icons/fa";
 import { AiOutlineClose } from 'react-icons/ai';
 import { supabase, AuthContext } from "../AuthProvider";
 import { useNavigate } from "react-router-dom";
-import {useContext, useState} from "react";
+import {useContext, useState, useEffect } from "react";
 import ProfileNavBar from "../components/ProfileNavBar";
 import "./Profile.css";
 
 
 export default function CreateRecipe() {
+    const { session } = useContext(AuthContext);
     const [recipeTitle, setRecipeTitle] = useState("");
     const [recipeDescription, setRecipeDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
     const [cookTime, setCookTime] = useState("");
-    const [ingredients, setIngredients] = useState([{ id: 1, amount: "", unit: "", name: "" }]);
-    const [steps, setSteps] = useState([{ id: 1, description: ""}]);
+    const [servingSize, setServingSize] = useState("");
+    const [ingredients, setIngredients] = useState([{amount: "", unit: "", name: "" }]);
+    const [steps, setSteps] = useState([{description: ""}]);
     const [tags, setTags] = useState([]);
 
     const [recipePic, setRecipePic] = useState(null);
+    const [recipePicUrl, setRecipePicUrl] = useState(null);
 
     const navigate = useNavigate(); 
+
+    useEffect(() => {
+        if (!recipePic) return;
+        setRecipePicUrl(URL.createObjectURL(recipePic));
+    }, [recipePic]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,6 +45,7 @@ export default function CreateRecipe() {
         //Convert text time to an integer 
         const parsedPrepTime = parseInt(prepTime, 10);
         const parsedCookTime = parseInt(cookTime, 10);
+        const parsedServingSize = parseInt(servingSize, 10);
 
         if (isNaN(parsedPrepTime) || parsedPrepTime <= 0) {
          alert("Please enter a valid prep time for your recipe");
@@ -45,6 +54,11 @@ export default function CreateRecipe() {
 
         if (isNaN(parsedCookTime) || parsedCookTime <= 0) {
             alert("Please enter a valid cook time for your recipe");
+            return;
+        }
+
+        if (isNaN(parsedServingSize) || parsedServingSize <= 0) {
+            alert("Please enter a valid serving size for your recipe");
             return;
         }
 
@@ -58,18 +72,22 @@ export default function CreateRecipe() {
             return;
         }
 
+
+        const recipeUUID = crypto.randomUUID();
+
         try {
             const { data, error } = await supabase
             //this is what needs to match with supabase
             .from("Recipes")
             .upsert([
             { 
-            id: crypto.randomUUID(), // Generate a unique ID
+            id: recipeUUID, // Generate a unique ID
+            image_url: recipePic ? 'https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/recipe_pictures/' + recipeUUID : null, // Placeholder URL, replace with actual image URL after upload
             title: recipeTitle.trim(), 
             description: recipeDescription.trim(), 
             prep_time: parsedPrepTime,
             cook_time: parsedCookTime,
-            //not sure if this is right with an array
+            serving_size: parsedServingSize,
             ingredients: ingredients,    
             instructions: steps,
             tags: tags,
@@ -84,19 +102,32 @@ export default function CreateRecipe() {
             
             alert("Recipe created successfully!");
             
-            } catch (error) {
+        } catch (error) {
             alert("Error creating collection: " + error.message);
+        }
+
+        if (recipePic) {
+            console.log("Uploading recipe picture:", recipePic);
+            const { data, error } = await supabase.storage
+            .from("recipe_pictures")
+            .upload(`${recipeUUID}`, recipePic, {
+                cacheControl: "3600",
+                upsert: false,
+            });
+            if (error) {
+                alert("Error uploading recipe picture: " + error.message);
+                return;
             }
-            //how do I send the recipe to the Created collection?
-            navigate("/profile"); 
+        }
+  
+        navigate("/profile"); 
     };
 
     // Handle recipe picture selection
     const handleRecipePicChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-        setFile(selectedFile);
-        setRecipePic(URL.createObjectURL(selectedFile));
+            setRecipePic(selectedFile);
         }
     };
 
@@ -104,36 +135,35 @@ export default function CreateRecipe() {
     const addIngredient = () => {
         setIngredients((prevIngredients) => [
             ...prevIngredients,
-            { id: prevIngredients.length + 1, amount: "", unit: "", name: "" }
+            {name: "", amount: "", unit: "" }
         ]);
     };
 
-    // Delete an ingredient by id
-    const deleteIngredient = (id) => {
+    // Delete an ingredient by index
+    const deleteIngredient = (indexToRemove) => {
         setIngredients((prevIngredients) =>
-            prevIngredients.filter((ingredient) => ingredient.id !== id)
+        prevIngredients.filter((_, index) => index !== indexToRemove)
         );
     };
 
-    //Add a new step
+    // Add a new step
     const addSteps = () => {
         setSteps((prevSteps) => [
             ...prevSteps,
-            { id: prevSteps.length + 1, description: ""}
+            { description: "" }
         ]);
     };
 
-    //Dele†e a step by id
-    const deleteStep = (id) => {
+    // Delete a step by index
+    const deleteStep = (indexToRemove) => {
         setSteps((prevSteps) =>
-            prevSteps.filter((step) => step.id !== id)
+        prevSteps.filter((_, index) => index !== indexToRemove)
         );
     };
 
-
     return (
     
-        <div className="mt-6 w-[600px] ml-auto">
+        <div className="mt-6 mx-auto">
 
             {/* Recipe Picture*/}
             <div className="flex absolute transform -translate-y-1/2 justify-center items-center -mt-[-200px] -ml-[405px]">
@@ -141,7 +171,7 @@ export default function CreateRecipe() {
                 <div
                 className="w-[280px] h-[280px] rounded-3xl bg-[#D9D9D9] flex justify-center items-center overflow-hidden"
                 style={{
-                    backgroundImage: `url(${recipePic})`,
+                    backgroundImage: recipePicUrl ? `url(${recipePicUrl})` : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     }}
@@ -225,52 +255,72 @@ export default function CreateRecipe() {
 
 
             {/* Inputting times */}
-            <div className="mt-6 flex space-x-12">
+            <div className="mt-6 flex w-full gap-x-6">
                 {/* Inputting prep time in minutes */}
-                <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
-                <div className="flex items-center"> 
+                <div className="flex flex-col abhaya-libre-extrabold text-lg text-left block">
+                    <div className="flex items-center"> 
                     Prep Time
-                    {/* Tooltip Icon (next to Prep Time title) */}
+                    {/* Tooltip Icon */}
                         <span className="ml-2 tooltip" data-tooltip="Time required for preparing the recipe in minutes. Ex. 2 hours = 120 minutes">
                             <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
                         </span>
                     </div>
 
-                    <div className="flex items-end gap-2 mt-2">
+                    <div className="flex items-end gap-2">
                     <input
                         type="text"
                         name="prepTime"
                         value={prepTime}
                         onChange={(e) => setPrepTime(e.target.value)}
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-[90px] h-12 mt-2 text-center"
                         style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                     />
                     <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
                     </div>
-                </span>
+                </div>
        
                {/* Inputting cook time in minutes */}
-               <span className="flex flex-col w-1/4 abhaya-libre-extrabold text-lg text-left block">
+               <div className="flex flex-col abhaya-libre-extrabold text-lg text-left block">
                     <div className="flex items-center"> 
                     Cook Time
-                    {/* Tooltip Icon (next to Prep Time title) */}
+                    {/* Tooltip Icon */}
                         <span className="ml-2 tooltip" data-tooltip="Time required for cooking the recipe in minutes. Ex. 2 hours = 120 minutes">
                             <span className="w-5 h-5 mt-[-2px] flex items-center justify-center rounded-full border border-black text-black cursor-pointer text-sm" style={{lineHeight: '1'}}>i</span> {/* Tooltip trigger (the "i" icon) */}
                         </span>
                     </div>
-                    <div className="flex items-end gap-2 mt-2">
+                    <div className="flex items-end gap-2">
                     <input
                         type="text"
                         name="cookTime"
                         value={cookTime}
                         onChange={(e) => setCookTime(e.target.value)}
-                        className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-center"
+                        className="abhaya-libre-regular p-3.5 rounded-lg w-[90px] h-12 mt-2 text-center"
                         style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
                     />
                     <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">minutes</span>
                     </div>
-                </span>
+                </div>
             </div>
+
+
+            {/* Inputting serving size*/}
+            <div className="mt-6 flex flex-col abhaya-libre-extrabold text-lg text-left block">
+                <div className="flex items-center"> 
+                Recipe Serving Size
+                </div>
+                <div className="flex items-end gap-2">
+                <input
+                    type="text"
+                    name="servingSize"
+                    value={servingSize}
+                    onChange={(e) => setServingSize(e.target.value)}
+                    className="abhaya-libre-regular p-3.5 rounded-lg w-[170px] h-12 mt-2 text-center"
+                    style={{ borderColor: '#999999' , borderWidth: '1.5px'}}
+                />
+                <span className="text-lg abhaya-libre-regular ml-2 whitespace-nowrap">servings</span>
+                </div>
+            </div>
+
 
             {/* Inputting recipe description */}
             <span className="flex flex-col w-[600px] mt-6 abhaya-libre-extrabold text-lg text-left">
@@ -289,7 +339,7 @@ export default function CreateRecipe() {
             <div className="mt-6">
                 <span className="abhaya-libre-extrabold text-lg text-left block">Ingredients</span>
                 {ingredients.map((ingredient, index) => (
-                <div key={ingredient.id} className="flex space-x-4 mt-2 items-center">
+                <div key={index} className="flex space-x-4 mt-2 items-center">
                     {/* Numbering (1., 2., 3., ...) */}
                     <span className="flex items-center justify-center w-1/12">
                     <span>{index + 1}.</span>
@@ -346,7 +396,7 @@ export default function CreateRecipe() {
                     {/* Trash icon */}
                     <span className="flex items-center justify-center w-1/10">
                 <FaTrash
-                    onClick={() => deleteIngredient(ingredient.id)}
+                    onClick={() => deleteIngredient(index)}
                     className="text-red-500 cursor-pointer"
                     size={20}
                     style={{ color: "#999999" }}
@@ -371,7 +421,7 @@ export default function CreateRecipe() {
             <div className="mt-6">
                 <span className="abhaya-libre-extrabold text-lg text-left block">Steps</span>
                 {steps.map((step, index) => (
-                <div key={step.id} className="flex space-x-4 mt-2 items-center">
+                <div key={index} className="flex space-x-4 mt-2 items-center">
                     {/* Numbering (1., 2., 3., ...) */}
                     <span className="flex items-center justify-center w-1/12">
                     <span>{index + 1}.</span>
@@ -381,10 +431,11 @@ export default function CreateRecipe() {
                     <span className="flex flex-col">
                         <input
                             type="text"
-                            value={step.amount}
+                            value={step.description}
                             onChange={(e) => {
                             const updatedSteps = [...steps];
-                            updatedSteps[index].amount = e.target.value;
+                            updatedSteps[index].description = e.target.value;
+                            {/*console.log(updatedSteps);*/}
                             setSteps(updatedSteps);
                             }}
                         className="abhaya-libre-regular p-3.5 rounded-lg w-full h-12 mt-2 text-left"
@@ -395,7 +446,7 @@ export default function CreateRecipe() {
                     {/* Trash icon */}
                     <span className="flex items-center justify-center w-1/10">
                     <FaTrash
-                        onClick={() => deleteStep(step.id)}
+                        onClick={() => deleteStep(index)}
                         className="text-red-500 cursor-pointer"
                         size={20}
                         style={{ color: "#999999" }}

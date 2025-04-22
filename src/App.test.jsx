@@ -4,7 +4,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import PageWrapper from './components/PageWrapper';
 import MenuBar from './layouts/MenuBar';
 import Explore from './pages/Explore';
-import Following from './pages/Following';
 import About from './pages/About';
 import { AuthProvider } from './AuthProvider';
 
@@ -46,15 +45,17 @@ describe('Routing', () => {
     it('should render Following page on /following route', () => {
         render(
             <MemoryRouter initialEntries={['/following']}>
-                <Routes>
-                    <Route path="/" element={
-                        <PageWrapper>
-                            <MenuBar />
-                        </PageWrapper>
-                    }>
-                        <Route path="following" element={<Following />} />
-                    </Route>
-                </Routes>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={
+                            <PageWrapper>
+                                <MenuBar />
+                            </PageWrapper>
+                        }>
+                            <Route path="following" element={<Explore following={true}/>} />
+                        </Route>
+                    </Routes>
+                </AuthProvider>
             </MemoryRouter>
         );
         expect(screen.getAllByText(/Following/i).length).toBeGreaterThan(0);

@@ -58,11 +58,10 @@ export default function GroceryList() {
                 console.error("Error fetching grocery lists:", error);
                 return;
             }
-            if(order == "oldest"){
-                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            } 
-            if(order == "newest"){
+            if (order === "oldest") {
                 data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            } else if (order === "newest") {
+                data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             }
             
             data.forEach((list) => {
@@ -91,7 +90,7 @@ export default function GroceryList() {
             document.removeEventListener("click", handleClickOutside);
         };
 
-    }, [session?.user?.id]);
+    }, [session?.user?.id, order]);
 
     const handleEditClick = (listId) => {
         setSelectedNoteId(listId);

@@ -67,32 +67,46 @@ const Collections = () => {
       
   
       const fetchRecipesForCollection = async () => {
-        let data, error;
+        let data = [];
+        let error;
       
         if (collectionId === "your-recipes") {
-          ({ data, error } = await supabase
+          const result = await supabase
             .from("Recipes")
-            .select("id, title, image_url, cost, prep_time, cook_time, tags")
-            .eq("user_id", ownerId ?? session.user.id));
-        } 
-
-        else if (collectionId === "cooked") {
-          ({ data, error } = await supabase
-            .from("Cooked Recipes")
-            .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags)")
+            .select("id, title, image_url, cost, prep_time, cook_time, tags, user_id, created_at")
             .eq("user_id", ownerId ?? session.user.id)
-            .eq("have_cooked", true));
-          
-          data = data.map((entry) => entry.Recipes);
+            .order("created_at", { ascending: false });
+      
+          data = result.data || [];
+          error = result.error;
+        } 
+        else if (collectionId === "cooked") {
+          const result = await supabase
+            .from("Cooked Recipes")
+            .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags, user_id)")
+            .eq("user_id", ownerId ?? session.user.id)
+            .eq("have_cooked", true);
+      
+          if (result.error) {
+            console.error("Error fetching cooked recipes:", result.error.message);
+            return;
+          }
+      
+          data = (result.data || []).map((entry) => entry.Recipes);
         } 
         else {
-          ({ data, error } = await supabase
+          const result = await supabase
             .from("saved_recipes")
-            .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags)")
+            .select("recipe_id, Recipes:recipe_id (id, title, image_url, cost, prep_time, cook_time, tags, user_id)")
             .eq("folder_id", collectionId)
-            .eq("user_id", ownerId ?? session.user.id));
+            .eq("user_id", ownerId ?? session.user.id);
       
-          data = data.map((entry) => entry.Recipes);
+          if (result.error) {
+            console.error("Error fetching saved recipes:", result.error.message);
+            return;
+          }
+      
+          data = (result.data || []).map((entry) => entry.Recipes);
         }
       
         if (error) {
@@ -100,8 +114,38 @@ const Collections = () => {
           return;
         }
       
-        setRecipes(data);
-      };
+        if (!data || data.length === 0) {
+          setRecipes([]);
+          return;
+        }
+      
+        const updatedData = await Promise.all(
+          data.map(async (recipe) => {
+            if (!recipe.user_id) return recipe;
+      
+            const { data: profileData, error: profileError } = await supabase
+              .from("Profiles")
+              .select("username")
+              .eq("id", recipe.user_id)
+              .single();
+      
+            if (profileError) {
+              console.error(`Error fetching username for user ${recipe.user_id}:`, profileError.message);
+              return {
+                ...recipe,
+                username: "Unknown",
+              };
+            }
+      
+            return {
+              ...recipe,
+              username: profileData?.username || "Unknown",
+            };
+          })
+        );
+      
+        setRecipes(updatedData);
+      };          
       
   
     const fetchCollections = async () => {
@@ -235,7 +279,7 @@ const Collections = () => {
                 <div className="overlay" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                   <div className="recipe-info">
                     <h3>{recipe.title}</h3>
-                    <p>{recipe.id}</p>
+                    <p>{recipe.username}</p>
                     {recipe.tags && recipe.tags.length > 0 && (
                       <div className="tags">
                         {recipe.tags.map((tag, index) => (
@@ -246,7 +290,6 @@ const Collections = () => {
                       </div>
                     )}
                     <p>${recipe.cost}</p>
-                    {/* <p>❤ {recipe.likes}</p> */}
                     <p>🕒 {recipe.prep_time+recipe.cook_time}</p>
                   </div>
                 </div>

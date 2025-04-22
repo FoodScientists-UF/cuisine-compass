@@ -1,9 +1,8 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Explore from "./pages/Explore.jsx";
-import Following from "./pages/Following.jsx";
 import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -25,6 +24,7 @@ import { AuthProvider } from "./AuthProvider.jsx";
 import Collection from "./pages/Collection.jsx";
 import ViewProfile from "./pages/ViewProfile.jsx";
 
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
@@ -33,14 +33,12 @@ createRoot(document.getElementById("root")).render(
           <Route
             path="/"
             element={
-              <PageWrapper>
-                <MenuBar />
-              </PageWrapper>
+              <PageWrapper />
             }
           >
             <Route index element={<Explore />} />
             <Route path="explore" element={<Explore />} />
-            <Route path="following" element={<Following />} />
+            <Route path="following" element={<Explore following={true} />} />
             <Route path="about" element={<About />} />
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />
