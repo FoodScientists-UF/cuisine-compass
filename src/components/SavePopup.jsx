@@ -57,7 +57,7 @@ export default function SavePopup({ collections, savedCollections, callback, rec
             <img className="w-12 h-12 rounded-md bg-gray-300" />
             <FiPlus className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black w-5 h-5"/>
           </div>
-          <button onClick={handleOpenCollectionDialog}>Create a collection</button>
+          <button className="abhaya-libre-regular text-xl" onClick={handleOpenCollectionDialog}>Create a collection</button>
            </div>
         </div>
 

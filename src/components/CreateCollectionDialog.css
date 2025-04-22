@@ -1,0 +1,139 @@
+/* Dialog Overlay */
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    font-family: "Abhaya Libre", serif;
+    font-size: 18px;
+    text-align: left;
+    line-height: 30px; 
+  }
+  
+  /* Dialog Box */
+  .dialog-box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-family: "Abhaya Libre", serif;
+    font-size: 18px;
+    text-align: left;
+    line-height: 30px; 
+  }
+  
+  /* Close Button */
+  .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  /* Dialog Title */
+  .dialog-title {
+    font-size: 200px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    font-family: "Abhaya Libre", serif;
+    font-size: 20px;
+    text-align: center;
+    font-style: bold;
+    line-height: 30px; 
+  }
+  
+  .title-input-txt{
+    font-weight: normal;
+  }
+  
+  .dialog-label{
+    font-family: "Abhaya Libre", serif;
+    text-align: center;
+    font-weight: normal;
+    line-height: 30px; 
+  }
+  
+  .dialog-label-two{
+    font-size: 10px;
+    font-weight: 800;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-family: "Abhaya Libre", serif;
+    font-size: 18px;
+    text-align: center;
+    font-style: bold;
+    line-height: 30px; 
+  }
+  
+  /* Input Field */
+  .dialog-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-family: "Abhaya Libre", serif;
+    font-weight: normal;
+  
+  }
+  
+  .dialog-private {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    font-family: "Abhaya Libre", serif;
+    font-weight: 800;
+    font-size: 16px;
+    font-style: normal;
+  }
+  
+  .dialog-private input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    appearance: auto;
+    cursor: pointer;
+  }
+  
+  /* Create Button */
+  .dialog-create-btn {
+    background: #D75600;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: "Abhaya Libre", serif;
+    font-weight: 800;
+  }
+  
+  .dialog-create-btn:hover {
+    background: #b54500;
+  }
+  
+  .upload-placeholder {
+    width: 100%;
+    height: 300px;
+    background-color: #d9d9d9;
+    border-radius: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  

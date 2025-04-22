@@ -255,8 +255,7 @@ export default function ViewRecipe() {
     }
 
   return (
-    <div className="min-h-screen flex flex-col p-10 space-y-8">
-
+    <div className="min-h-screen flex flex-col p-10 space-y-8 py-20">
       <button
         onClick={() => navigate(-1)}
         className="back absolute top-60 left-5 z-10"
@@ -267,7 +266,7 @@ export default function ViewRecipe() {
           className="w-10 h-10 hover:opacity-60 transition"
         />
       </button>
-
+      
       {/* Page Wrapper */}
       <div className="w-full flex flex-row items-start space-x-8">
         {/* Recipe Image */}
@@ -301,15 +300,15 @@ export default function ViewRecipe() {
               )}
             </div>
           </div>
-
+          
+          
           {/* Likes Button */}
-          {/* <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-2">
             <FaBookmark className="text-3xl text-black" />
             <span className="text-3xl abhaya-libre-regular text-black-600">
               {likes}
             </span>
-          </div> */}
+          </div>
 
           {/* Username */}
           <p href="#" 
