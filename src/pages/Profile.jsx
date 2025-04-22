@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../AuthProvider";
 import { Dialog } from "@headlessui/react";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { TbBowlSpoonFilled } from "react-icons/tb";
 import ProfileNavBar from "../components/ProfileNavBar";
 import FollowDialog from "../components/FollowDialog";
 import "./Profile.css";
@@ -30,9 +31,6 @@ export default function Profile() {
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [showDropdownForId, setShowDropdownForId] = useState(null);
   const [isFollowingProfile, setIsFollowingProfile] = useState(false);
-
-  const DEFAULT_IMAGE_URL =
-    "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/collection-picture//default.png";
 
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
@@ -151,32 +149,38 @@ export default function Profile() {
   };
 
   const handleFollowStateUpdate = (didFollow) => {
-    if (didFollow) {
-      setFollowersCount((prev) => prev + 1);
-    } else {
-      setFollowersCount((prev) => Math.max(0, prev - 1));
+    if (!isMe) {
+      setFollowersCount((prev) => didFollow ? prev + 1 : Math.max(0, prev - 1));
     }
-    if (isMe) setIsFollowingProfile(didFollow);
+    if (isMe) {
+      setFollowingCount?.((prev) => didFollow ? prev + 1 : Math.max(0, prev - 1)); // Assuming you track this
+    }
+  
+    setIsFollowingProfile(didFollow);
   };
-
+  
   const handleProfileFollowToggle = async () => {
     if (!session?.user?.id || isMe) return;
-
+  
     try {
       const { data, error } = await supabase
         .from("Following")
-        .upsert({ follower_id: session.user.id, following_id: profileUserId, is_following: !isFollowingProfile })
+        .upsert({
+          follower_id: session.user.id,
+          following_id: profileUserId,
+          is_following: !isFollowingProfile,
+        })
         .select();
-
+  
       if (error) throw error;
-
-      setIsFollowingProfile(!isFollowingProfile);
-      setFollowersCount((prev) => isFollowingProfile ? Math.max(0, prev - 1) : prev + 1);
-    } catch (error) {
-      console.error("Error toggling profile follow:", error.message);
-      alert("Failed to update follow status.");
+  
+      const didFollow = data[0]?.is_following ?? !isFollowingProfile;
+      handleFollowStateUpdate(didFollow);
+    } catch (err) {
+      console.error("Follow toggle error:", err);
     }
   };
+  
 
   useEffect(() => {
     if (!profileUserId) {
@@ -290,16 +294,32 @@ export default function Profile() {
           .select("id, name, cover_img, is_private")
           .eq("user_id", profileUserId);
 
-        if (collectionsError) throw collectionsError;
+          if (collectionsError) throw collectionsError;
 
-        const collectionIds = collections.map((c) => c.id);
-        if (collectionIds.length === 0) {
-          setFolders(
-            collections.map((c) => ({ ...c, recipeCount: 0 }))
-          );
-          return;
-        }
+          const collectionIds = collections.map((c) => c.id);
+          if (collectionIds.length === 0) {
+            setFolders([]);
+            return;
+          }
+      
+          const { data: savedRecipes, error: savedError } = await supabase
+            .from("saved_recipes")
+            .select("folder_id, recipe_id, Recipes(image_url)")
+            .in("folder_id", collectionIds)
+            .eq("user_id", profileUserId)
+            .order("folder_id", { ascending: true })
+            .order("id", { ascending: true }); 
+      
+          if (savedError) throw savedError;
+      
+          const coverImages = {};
+          for (const recipe of savedRecipes) {
+            if (!coverImages[recipe.folder_id] && recipe.Recipes?.image_url) {
+              coverImages[recipe.folder_id] = recipe.Recipes.image_url;
+            }
+          }
 
+          
         const { data: recipeCountsData, error: countsError } = await supabase
           .from("saved_recipes")
           .select("folder_id", { count: "exact" })
@@ -316,7 +336,7 @@ export default function Profile() {
         const foldersWithCounts = collections.map((folder) => ({
           ...folder,
           recipeCount: recipeCounts[folder.id] || 0,
-          cover_img: folder.cover_img || DEFAULT_IMAGE_URL,
+           cover_img: coverImages[folder.id] || null,
         }));
 
         setFolders(foldersWithCounts);
@@ -357,26 +377,30 @@ export default function Profile() {
   const fetchFollowerUsers = async () => {
     const { data: followers, error } = await supabase
       .from("Following")
-      .select("*")
+      .select("follower_id")
       .eq("following_id", profileUserId)
       .eq("is_following", true);
-
-
+  
     if (error) return console.error("Error fetching follower IDs:", error.message);
-    console.log("Fetched followers:", followers);
-
+  
     const ids = followers.map((f) => f.follower_id);
-    if (ids.length === 0) return setFollowerUsers([]);
-
+    if (ids.length === 0) {
+      setFollowerUsers([]);
+      setIsFollowingProfile(false);
+      return;
+    }
+  
     const { data: profiles, error: profileError } = await supabase
       .from("Profiles")
       .select("id, first_name, last_name, username")
       .in("id", ids);
-
-    if (profileError)
-      return console.error("Error fetching follower profiles:", profileError.message);
+  
+    if (profileError) return console.error("Error fetching follower profiles:", profileError.message);
+  
     setFollowerUsers(profiles || []);
+    setIsFollowingProfile(ids.includes(session?.user?.id));
   };
+  
 
   const fetchFollowingUsers = async () => {
     const { data: following, error } = await supabase
@@ -406,7 +430,7 @@ export default function Profile() {
           id: "your-recipes",
           name: "Your Recipes",
           recipeCount: recipeCount,
-          cover_img: DEFAULT_IMAGE_URL,
+          cover_img: null,
           isDefault: true,
           isOwner: true,
         },
@@ -414,7 +438,7 @@ export default function Profile() {
           id: "cooked",
           name: "Cooked Recipes",
           recipeCount: cookedRecipes.length,
-          cover_img: DEFAULT_IMAGE_URL,
+          cover_img: null,
           isDefault: true,
           isOwner: true,
         },
@@ -584,11 +608,18 @@ export default function Profile() {
                   </div>
                 )}
 
-                <img
-                  src={col.cover_img || DEFAULT_IMAGE_URL}
-                  alt={col.name}
-                  className="w-full h-32 object-cover rounded mb-2"
-                />
+  {col.cover_img ? (
+    <img
+      src={col.cover_img}
+      alt={col.name}
+      className="w-full h-32 object-cover rounded mb-2"
+    />
+  ) : (
+    <div className="w-full h-48 object-cover rounded mb-2 flex items-center justify-center bg-gray-200">
+      <TbBowlSpoonFilled className="placeholder-icon text-4xl text-gray-500" />
+    </div>
+  )}
+
 
                 <div className="collection-info">
                   <h3 className="collection-title-card">{col.name}</h3>
