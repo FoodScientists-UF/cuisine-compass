@@ -49,17 +49,17 @@ export default function CreateRecipe() {
         const parsedServingSize = parseInt(servingSize, 10);
         const parsedApproxCost = parseInt(approxCost, 10);
 
-        if (isNaN(parsedPrepTime) || parsedPrepTime <= 0) {
+        if (isNaN(parsedPrepTime) || parsedPrepTime < 0) {
          alert("Please enter a valid prep time for your recipe");
          return;
         }
 
-        if (isNaN(parsedCookTime) || parsedCookTime <= 0) {
+        if (isNaN(parsedCookTime) || parsedCookTime < 0) {
             alert("Please enter a valid cook time for your recipe");
             return;
         }
 
-        if (isNaN(parsedServingSize) || parsedServingSize <= 0) {
+        if (isNaN(parsedServingSize) || parsedServingSize < 0) {
             alert("Please enter a valid serving size for your recipe");
             return;
         }
@@ -69,7 +69,7 @@ export default function CreateRecipe() {
             return;
         }
 
-        if (isNaN(parsedApproxCost) || parsedApproxCost <= 0) {
+        if (isNaN(parsedApproxCost) || parsedApproxCost < 0) {
             alert("Please enter a valid cost for your recipe");
             return;
         }
