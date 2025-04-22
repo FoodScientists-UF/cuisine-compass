@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+
 .profile-container {
     display: flex;
     justify-content: center;
@@ -14,6 +17,8 @@
   .profile-sidebar {
     position: absolute;
     width: 80px;
+    min-width: 130px;
+    z-index: 2;
     left: 40px;
     top: 200px; 
     display: flex;
@@ -69,7 +74,7 @@
   .vl {
     position: absolute;
     top: 209px;
-    left: 130px;
+    left: 155px;
     width: 2px;
     height: 115%;
     background-color: #e0e0e0;
@@ -157,7 +162,7 @@
   align-items: right;
   gap: 4px;              
   color: #D75600;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   font-family: "Abhaya Libre", serif;
   cursor: pointer;
@@ -194,7 +199,7 @@
   display:flex;
   justify-content: flex-start;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: bold;
   color: black;
   cursor: pointer;
@@ -240,6 +245,8 @@
   font-weight: bold;
   text-align: left;
   flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 /* Dialog Overlay */
@@ -608,4 +615,313 @@
 .grocery-item {
   border-bottom: 1px solid #000000;
   margin-right: 10px;
+}
+
+.follow-btn{
+  background: #D75600;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+.follow-btn:hover {
+  opacity: 80%;
+}
+
+.pinterest-grid {
+  margin-left: 60px;
+  column-count: 3;
+  column-gap: 16px;
+  padding: 16px;
+}
+
+@media (max-width: 1024px) {
+  .pinterest-grid {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .pinterest-grid {
+    column-count: 1;
+  }
+}
+
+.pinterest-card {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  break-inside: avoid;
+  cursor: pointer;
+}
+
+
+.pinterest-card:hover {
+  transform: translateY(-5px);
+}
+
+.image-wrapper {
+  width: 100%;
+  display: flex;
+}
+
+.pinterest-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  opacity: 0;
+  padding: 15px;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.pinterest-card:hover .overlay {
+  opacity: 1;
+}
+
+.recipe-info {
+  color: #fff;
+  text-align: left;
+  width: 100%;
+}
+
+.recipe-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.recipe-info p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.tags {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+.tag {
+  background: #228F2D;
+  color: white;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.bookmark-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 50%;
+}
+.edit-profile-wrapper {
+  position: absolute;
+  top: 20rem;
+  right: 12rem;
+  z-index: 10;
+}
+
+.edit-profile-btn {
+  background-color: #D75600;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-family: "Abhaya Libre";
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-profile-btn:hover {
+  background-color: #ea580c;
+}
+
+.dialog-box .w-10 {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.follow-btn{
+  background: #D75600;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-family: "Abhaya Libre", serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+.follow-btn:hover {
+  opacity: 80%;
+}
+
+.pinterest-grid-profile {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: 16px;
+  padding: 16px;
+  padding-left: 60px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  justify-items: center;
+  align-items: start;
+}
+
+
+/* .pinterest-grid-profile {
+  display: grid;
+  column-width: 300px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: 16px;
+  padding: 16px;
+  padding-left: 60px;
+} */
+
+.pinterest-card {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  break-inside: avoid;
+  cursor: pointer;
+}
+
+
+.pinterest-card:hover {
+  transform: translateY(-5px);
+}
+
+.image-wrapper {
+  width: 100%;
+  display: flex;
+}
+
+.pinterest-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  opacity: 0;
+  padding: 15px;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.pinterest-card:hover .overlay {
+  opacity: 1;
+}
+
+.recipe-info {
+  color: #fff;
+  text-align: left;
+  width: 100%;
+}
+
+.recipe-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.recipe-info p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.tags {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+.tag {
+  background: #228F2D;
+  color: white;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.bookmark-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 50%;
+}
+
+.following-active {
+  background-color: gray;
+}
+
+.recipe-collection-toggle {
+  position: absolute;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 10px 0;
+  width: 200px;
+  left: 250px;
+  font-size: 20px;
+}
+
+.collection-placeholder {
+  background-color: #d1d5db; 
+  height: 32;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 1rem;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+  color: #6b7280;
 }

@@ -2,6 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, AuthContext } from "../../AuthProvider";
 
+const DEFAULT_AVATAR_URL = "https://gdjiogpkggjwcptkosdy.supabase.co/storage/v1/object/public/profile_pictures//default-avatar.png";
+
 export default function FriendsOnboarding() {
   const { session } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -14,6 +16,21 @@ export default function FriendsOnboarding() {
   useEffect(() => {
     fetchTopUsers();
   }, []);
+
+  const fetchProfilePicture = async (userId) => {
+    const { data: exists } = await supabase.storage.from("profile_pictures").exists(userId);
+    if (!exists) return DEFAULT_AVATAR_URL;
+    const { data, error } = await supabase
+      .storage
+      .from("profile_pictures")
+      .getPublicUrl(userId);
+
+    if (error || !data?.publicUrl) {
+      console.error("Error fetching profile picture for user ID:", userId);
+      return DEFAULT_AVATAR_URL;
+    }
+    return data.publicUrl;
+  }
 
   const fetchTopUsers = async () => {
     const { data: followData, error: followError } = await supabase
@@ -41,7 +58,7 @@ export default function FriendsOnboarding() {
   
     const { data: profiles, error: profilesError } = await supabase
       .from('Profiles')
-      .select('id, username, first_name, last_name, avatar_url')
+      .select('id, username, first_name, last_name')
       .in('id', sortedFollowingIds);
   
     if (profilesError) {
@@ -49,7 +66,12 @@ export default function FriendsOnboarding() {
       return;
     }
   
-    setTopUsers(profiles);
+    const updatedProfiles = await Promise.all(profiles.map(async (user) => ({
+      ...user,
+      avatar_url: await fetchProfilePicture(user.id),
+    })));
+  
+    setTopUsers(updatedProfiles);
   };
   
 
@@ -79,7 +101,12 @@ export default function FriendsOnboarding() {
       return;
     }
   
-    setSearchResults(data);
+    const updatedProfiles = await Promise.all(data.map(async (user) => ({
+      ...user,
+      avatar_url: await fetchProfilePicture(user.id),
+    })));
+  
+    setTopUsers(updatedProfiles);
   };
   
 
