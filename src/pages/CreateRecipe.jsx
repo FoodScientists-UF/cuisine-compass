@@ -16,7 +16,7 @@ export default function CreateRecipe() {
     const [cookTime, setCookTime] = useState("");
     const [servingSize, setServingSize] = useState("");
     const [ingredients, setIngredients] = useState([{amount: "", unit: "", name: "" }]);
-    const [steps, setSteps] = useState([{description: ""}]);
+    const [steps, setSteps] = useState([""]);
     const [tags, setTags] = useState([]);
 
     const [recipePic, setRecipePic] = useState(null);
@@ -148,17 +148,11 @@ export default function CreateRecipe() {
 
     // Add a new step
     const addSteps = () => {
-        setSteps((prevSteps) => [
-            ...prevSteps,
-            { description: "" }
-        ]);
+        setSteps((prevSteps) => [...prevSteps, ""]);
     };
 
-    // Delete a step by index
     const deleteStep = (indexToRemove) => {
-        setSteps((prevSteps) =>
-        prevSteps.filter((_, index) => index !== indexToRemove)
-        );
+        setSteps((prevSteps) => prevSteps.filter((_, index) => index !== indexToRemove));
     };
 
     return (
@@ -431,10 +425,10 @@ export default function CreateRecipe() {
                     <span className="flex flex-col">
                         <input
                             type="text"
-                            value={step.description}
+                            value={step}
                             onChange={(e) => {
                             const updatedSteps = [...steps];
-                            updatedSteps[index].description = e.target.value;
+                            updatedSteps[index] = e.target.value;
                             {/*console.log(updatedSteps);*/}
                             setSteps(updatedSteps);
                             }}
