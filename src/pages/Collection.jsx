@@ -9,6 +9,7 @@ import { supabase } from "../AuthProvider";
 import "./Collection.css";
 import ProfileNavBar from "../components/ProfileNavBar";
 import SavePopup from "../components/SavePopup";
+import { formatTime } from "./Explore";
 
 
 const Collections = () => {
@@ -295,7 +296,7 @@ const Collections = () => {
                       </div>
                     )}
                     <p>${recipe.cost}</p>
-                    <p>🕒 {recipe.prep_time+recipe.cook_time}</p>
+                    <p>🕒 {formatTime(recipe.prep_time+recipe.cook_time)}</p>
                   </div>
                 </div>
               </div>

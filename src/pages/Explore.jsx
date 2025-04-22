@@ -10,6 +10,15 @@ import { supabase } from "../AuthProvider";
 import "./Explore.css";
 import { BsBookmarkFill } from "react-icons/bs";
 
+export function formatTime(totalMinutes) {
+  if (!totalMinutes) return '0m';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+};
+
 const ExplorePage = ({ following = false }) => {
   const { searchValue } = useOutletContext(); 
   const { session } = useContext(AuthContext);
@@ -350,7 +359,7 @@ const ExplorePage = ({ following = false }) => {
                   <p>{recipe.username}</p>
                   <p>${recipe.cost}</p>
                   <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
-                  <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                  <p>🕒 {formatTime(recipe.prep_time + recipe.cook_time)}</p>
                   {recipe.tags && recipe.tags.length > 0 && (
                       <div className="tags">
                         {recipe.tags.map((tag, index) => (

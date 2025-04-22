@@ -6,6 +6,7 @@ import "./Profile.css";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { BsBookmarkFill } from "react-icons/bs";
 import { TbBowlSpoonFilled } from "react-icons/tb";
+import { formatTime } from "./Explore";
 
 export default function ViewProfile() {
   const navigate = useNavigate();
@@ -374,7 +375,7 @@ export default function ViewProfile() {
                         <h3>{recipe.title}</h3>
                         <p>{recipe.username}</p>
                         <p>${recipe.cost}</p>
-                        <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                        <p>🕒 {formatTime(recipe.prep_time + recipe.cook_time)}</p>
                       </div>
                     </div>
                   </div>
