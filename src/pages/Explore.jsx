@@ -159,9 +159,10 @@ const ExplorePage = ({ following = false }) => {
 
     let recipesQuery = supabase
     .from("Recipes")
-    .select("id, title, image_url, cost, prep_time, cook_time, user_id, created_at")
-    .order("created_at", { ascending: false });
-    
+    .select("id, title, image_url, cost, prep_time, cook_time, user_id, created_at, tags")
+    .order("created_at", { ascending: false })
+    .neq("user_id", session.user.id);
+
     setIsLoading(true);
     
     if (following) {
@@ -324,18 +325,20 @@ const ExplorePage = ({ following = false }) => {
                   <FaRegBookmark size={20} color="white" />
                 )}
                 {bookmarkPopup === recipe.id && ReactDOM.createPortal(
-                  <SavePopup
-                    collections={allCollections}
-                    savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
-                    recipeId={recipe.id}
-                    callback={handleSave}
-                    style={{ 
-                      position: "absolute", 
-                      top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
-                      left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
-                    }}
-                    onCollectionCreated={createCollection}
-                  />, 
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <SavePopup
+                      collections={allCollections}
+                      savedCollections={savedCollections.filter(c => c.recipe_id === recipe.id)}
+                      recipeId={recipe.id}
+                      callback={handleSave}
+                      style={{ 
+                        position: "absolute", 
+                        top: bookmarkRefs.current[recipe.id]?.getBoundingClientRect().bottom + window.scrollY, 
+                        left: (bookmarkRefs.current[recipe.id]?.getBoundingClientRect().left + window.scrollX) - 200
+                      }}
+                      onCollectionCreated={createCollection}
+                    />
+                  </div>,
                   document.body
                 )}
               </div>
@@ -348,6 +351,15 @@ const ExplorePage = ({ following = false }) => {
                   <p>${recipe.cost}</p>
                   <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
                   <p>🕒 {recipe.prep_time + recipe.cook_time}</p>
+                  {recipe.tags && recipe.tags.length > 0 && (
+                      <div className="tags">
+                        {recipe.tags.map((tag, index) => (
+                          <span key={index} className="tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

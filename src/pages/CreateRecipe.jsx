@@ -163,7 +163,7 @@ export default function CreateRecipe() {
 
     return (
     
-        <div className="mt-6 mx-auto">
+        <div className="mt-6 mx-auto ml-[600px]">
 
             {/* Recipe Picture*/}
             <div className="flex absolute transform -translate-y-1/2 justify-center items-center -mt-[-200px] -ml-[405px]">

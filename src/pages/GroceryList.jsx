@@ -98,6 +98,11 @@ export default function GroceryList() {
         setShowMenu(null);
     };
 
+    const handleAddClick = () => {
+        setSelectedNoteId(null);
+        setShowNotePopup(true);
+    };
+
     return (
         <div className="profile-container">
             {/* Sidebar */}
@@ -112,7 +117,7 @@ export default function GroceryList() {
                     {/* Icons (Add, Filter) */}
                     <div className="grocery-icons-container">
 
-                        <button className="filter-icon" onClick={() => setShowNotePopup(!showNotePopup)}> 
+                        <button className="filter-icon" onClick={handleAddClick}> 
                             <BsPlusCircle  />
                         </button>
 
@@ -135,6 +140,7 @@ export default function GroceryList() {
                 {showNotePopup && (
                     <CreateNote setLists={setLists} onClose={() => {
                         setShowNotePopup(false);
+                        setSelectedNoteId(null);
                     }} listId={selectedNoteId} />
 
                 )}
