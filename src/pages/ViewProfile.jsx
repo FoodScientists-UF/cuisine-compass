@@ -374,7 +374,7 @@ export default function ViewProfile() {
                       <div className="recipe-info">
                         <h3>{recipe.title}</h3>
                         <p>{recipe.username}</p>
-                        <p>${recipe.cost}</p>
+                        {recipe.cost && <p>${recipe.cost}</p>}
                         <p>🕒 {formatTime(recipe.prep_time + recipe.cook_time)}</p>
                       </div>
                     </div>

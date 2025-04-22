@@ -295,7 +295,7 @@ const Collections = () => {
                         ))}
                       </div>
                     )}
-                    <p>${recipe.cost}</p>
+                    {recipe.cost && <p>${recipe.cost}</p>}
                     <p>🕒 {formatTime(recipe.prep_time+recipe.cook_time)}</p>
                   </div>
                 </div>

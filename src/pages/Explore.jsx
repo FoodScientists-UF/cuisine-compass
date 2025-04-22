@@ -357,7 +357,7 @@ const ExplorePage = ({ following = false }) => {
                 <div className="recipe-info">
                   <h3>{recipe.title}</h3>
                   <p>{recipe.username}</p>
-                  <p>${recipe.cost}</p>
+                  {recipe.cost && <p>${recipe.cost}</p>}
                   <p className="flex flex-row items-center gap-x-1"><BsBookmarkFill /> {recipe.likes}</p>
                   <p>🕒 {formatTime(recipe.prep_time + recipe.cook_time)}</p>
                   {recipe.tags && recipe.tags.length > 0 && (
