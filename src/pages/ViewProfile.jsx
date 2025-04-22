@@ -228,21 +228,6 @@ export default function ViewProfile() {
 
     console.log("showRecipes is", showRecipes);
     
-    Promise.all([
-      fetchUserPicture(),
-      fetchUserProfile(),
-      fetchRecipeCount(),
-      fetchFollowersCount(),
-      fetchFollowingCount(),
-      fetchUserRecipes(),
-      fetchPublicCollections(),
-      fetchFollowerUsers(),
-      fetchFollowingUsers(),
-    ]);
-  }, [profileUserId, session?.user?.id, navigate, showRecipes]);
-
-
-
   const fetchFollowerUsers = async () => {
     const { data: followers, error } = await supabase
       .from("Following")
@@ -285,6 +270,21 @@ export default function ViewProfile() {
     if (profileError) return console.error("Error fetching following profiles:", profileError.message);
     setFollowingUsers(profiles || []);
   };
+    Promise.all([
+      fetchUserPicture(),
+      fetchUserProfile(),
+      fetchRecipeCount(),
+      fetchFollowersCount(),
+      fetchFollowingCount(),
+      fetchUserRecipes(),
+      fetchPublicCollections(),
+      fetchFollowerUsers(),
+      fetchFollowingUsers(),
+    ]);
+  }, [profileUserId, session?.user?.id, navigate, showRecipes]);
+
+
+
 
   return (
     <div className="view-profile-container pt-16">
