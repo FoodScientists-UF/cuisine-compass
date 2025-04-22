@@ -14,9 +14,77 @@ export default function SavePopup({ collections, savedCollections, callback, rec
     setIsDialogOpen(false);
   };
 
-  const handleCreateCollection = (name) => {
-    onCollectionCreated(name);
-  };
+  const handleCreateCollection = async (e) => {
+      e.preventDefault();
+  
+      if (!collectionName.trim()) {
+        alert("Please enter a collection name");
+        return;
+      }
+  
+      let uploadedImageUrl = selectedCollection?.cover_img || null;
+  
+      if (imageFile) {
+        const fileName = `${session.user.id}-${crypto.randomUUID()}`;
+        const { data: imageData, error: uploadError } = await supabase.storage
+          .from("collection-picture")
+          .upload(fileName, imageFile, { upsert: true });
+  
+        if (uploadError) {
+          alert("Error uploading collection image: " + uploadError.message);
+          return;
+        }
+  
+        const { data: urlData } = supabase.storage
+          .from("collection-picture")
+          .getPublicUrl(fileName);
+        uploadedImageUrl = urlData.publicUrl;
+      }
+  
+      const collectionData = {
+        name: collectionName.trim(),
+        user_id: session.user.id,
+        is_private: isPrivate,
+        cover_img: uploadedImageUrl,
+        ...(selectedCollection && { id: selectedCollection.id }),
+        ...(!selectedCollection && { id: crypto.randomUUID() }),
+      };
+  
+      try {
+        const { data, error } = await supabase
+          .from("saved_collections")
+          .upsert([collectionData])
+          .select()
+          .single();
+  
+        if (error) throw error;
+  
+        alert(
+          `Collection ${selectedCollection ? "updated" : "created"} successfully!`
+        );
+  
+        setFolders((prevFolders) => {
+          if (selectedCollection) {
+            return prevFolders.map((folder) =>
+              folder.id === data.id
+                ? { ...folder, ...data, recipeCount: folder.recipeCount }
+                : folder
+            );
+          } else {
+            return [...prevFolders, { ...data, recipeCount: 0 }];
+          }
+        });
+  
+        closeCollectionDialog();
+      } catch (error) {
+        alert(
+          `Error ${selectedCollection ? "updating" : "creating"} collection: ${
+            error.message
+          }`
+        );
+      }
+    };
+
   
   const isCollectionSaved = (collection) => {
     return savedCollections.map((c) => c.folder_id).includes(collection.id);
@@ -57,7 +125,7 @@ export default function SavePopup({ collections, savedCollections, callback, rec
             <img className="w-12 h-12 rounded-md bg-gray-300" />
             <FiPlus className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black w-5 h-5"/>
           </div>
-          <button onClick={handleOpenCollectionDialog}>Create a collection</button>
+          <button className="abhaya-libre-regular text-xl" onClick={handleOpenCollectionDialog}>Create a collection</button>
            </div>
         </div>
 
