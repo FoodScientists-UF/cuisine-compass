@@ -1,7 +1,6 @@
 import React, { Component, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, Input, Button, Image, Container } from "semantic-ui-react";
-// import logo from "../layouts/images/CuisineCompassLogo.png";
 import title from "../layouts/images/CuisineCompass.png";
 import { supabase, AuthContext } from "../AuthProvider";
 
@@ -135,6 +134,15 @@ class MenuBarComponent extends Component {
             onClick={this.handleItemClick}
             style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px"}}
             color={pathname === "/about" ? "orange" : "black"}
+          />
+          <Menu.Item
+            as={Link}
+            to="/faq"
+            name="FAQ"
+            active={pathname === "/faq"}
+            onClick={this.handleItemClick}
+            style={{ fontFamily: '"Abhaya Libre", serif', fontWeight: 400, fontSize: "18px"}}
+            color={pathname === "/faq" ? "orange" : "black"}
           />
         </Menu>
       </Container>
