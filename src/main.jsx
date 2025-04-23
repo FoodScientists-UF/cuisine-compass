@@ -23,6 +23,7 @@ import NutrientTracker from "./pages/NutrientTracker.jsx";
 import { AuthProvider } from "./AuthProvider.jsx";
 import Collection from "./pages/Collection.jsx";
 import ViewProfile from "./pages/ViewProfile.jsx";
+import FAQ from "./pages/FAQ.jsx";
 
 
 createRoot(document.getElementById("root")).render(
@@ -40,6 +41,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="explore" element={<Explore />} />
             <Route path="following" element={<Explore following={true} />} />
             <Route path="about" element={<About />} />
+            <Route path="faq" element={<FAQ />} />
             <Route path="createrecipe" element={<CreateRecipe />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<ViewProfile />} />
